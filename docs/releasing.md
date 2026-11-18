@@ -1,7 +1,7 @@
 # Prepare a GitHub release and Pages site
 
 Repository: <https://github.com/patx/erdos>. Website:
-<https://patx.github.io/erdos/>. These instructions prepare artifacts locally;
+<https://patx.gitman.io/erdos/>. These instructions prepare artifacts locally;
 none of the project scripts commit, tag, push, upload or publish anything.
 
 ## Source repository
@@ -55,9 +55,8 @@ from the matching Debian archives with source repositories enabled.
 
 After those assets actually exist on a published release, set the chosen tag and
 `published: true` in `docs/release.json`. Its existing filenames and digest must
-still match those assets. The website will link directly to that tag’s downloads.
-While unpublished it links to the releases list and says the preview is being
-prepared. Future builds use current Debian packages, so reusing a date does not
+still match those assets. The download buttons currently link directly to the `v1.0.0-alpha.1` ISO,
+as configured in `index.html` and `assets/site.js`. Update both for a future release. Future builds use current Debian packages, so reusing a date does not
 imply an identical ISO or checksum.
 
 Checksums verify bytes, not publisher identity. If you add artifact signing,
@@ -72,19 +71,17 @@ python3 scripts/prepare-release.py --verify-only --iso dist/erdos-amd64.iso
 
 `build.sh` uses this same check before copying a new image to `dist/`.
 
-## GitHub Pages
+## Gitman Pages
 
 `docs/index.html` and `docs/guide.html` are standalone static pages. They use local
 CSS, JavaScript, the supplied logo and actual screenshots. There is no Jekyll,
 Node.js, npm, frontend build step, analytics or external font dependency.
 `docs/.nojekyll` prevents Jekyll processing.
 
-After the repository is pushed and you choose to publish the site:
-
-1. Open **Settings → Pages** in `patx/erdos`.
-2. Choose **Deploy from a branch**.
-3. Choose **main** and **/docs**, then save.
-4. Check the deployed site and release links.
+The repository is mirrored on GitHub and Gitman. Publish the contents of `docs/`
+with Gitman Pages at <https://patx.gitman.io/erdos/>. Keep relative page and asset
+links so the same source works under `/erdos/`. ISO downloads remain on GitHub
+Releases.
 
 Preview locally:
 
@@ -95,7 +92,8 @@ python3 -m http.server 8000 --directory docs
 Open <http://localhost:8000/>. Relative paths also work under the project prefix
 `/erdos/`. The user guide and release links work without JavaScript; build details
 and the screenshot selector are optional enhancements. Keep release metadata
-accurate when uploading a new image. GitHub Pages hosts the site, not the ISO.
+accurate when uploading a new image. Gitman Pages hosts the site; GitHub Releases
+hosts the ISO.
 
 ## Checks before publication
 

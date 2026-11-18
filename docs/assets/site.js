@@ -11,7 +11,6 @@ async function showRelease() {
         !Number.isSafeInteger(release.iso.bytes) || release.iso.bytes < 1) {
       throw new Error('Invalid release metadata');
     }
-    const repository = `https://github.com/${release.repository}`;
     const download = document.querySelector('#release-download');
     const date = new Date(`${release.date}T12:00:00Z`);
     document.querySelector('#release-date').textContent = new Intl.DateTimeFormat('en', {
@@ -21,18 +20,13 @@ async function showRelease() {
       `${(release.iso.bytes / 2 ** 30).toFixed(2)} GiB (${release.iso.bytes.toLocaleString('en')} bytes)`;
     document.querySelector('#release-checksum').textContent = release.iso.sha256;
     document.querySelector('#checksum-details').hidden = false;
-    if (release.published === true && typeof release.tag === 'string' && release.tag.length > 0) {
-      download.href = `${repository}/releases/download/${encodeURIComponent(release.tag)}/${encodeURIComponent(release.iso.filename)}`;
-      download.textContent = 'Download amd64 ISO ↓';
-      document.querySelector('#release-status').textContent =
-        `${release.status} · ${release.tag} · amd64`;
-    } else {
-      download.href = `${repository}/releases`;
-    }
+    download.href = 'https://github.com/patx/erdos/releases/download/v1.0.0-alpha.1/erdos-amd64.iso';
+    download.textContent = 'Download amd64 ISO ↓';
+    document.querySelector('#release-status').textContent = `${release.status} · amd64`;
   } catch {
-    // The ordinary releases link remains usable if release metadata is unavailable.
+    // Keep the direct ISO link usable if build metadata is unavailable.
     document.querySelector('#release-status').textContent =
-      'See GitHub Releases for download availability, build details and checksums.';
+      'Version 1 Alpha · amd64';
   }
 }
 
