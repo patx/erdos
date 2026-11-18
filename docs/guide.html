@@ -48,7 +48,7 @@
       <section id="desktop"><h2>Desktop and applications</h2>
         <p>Right-click the desktop for <strong>Sakura</strong>, <strong>Chromium</strong>, <strong>PCManFM</strong> and <strong>Twig</strong>. The Applications submenu reads installed desktop entries when opened, so added or removed graphical applications appear without a polling daemon or APT hook. Command-line tools need a desktop entry to show there.</p>
         <p>The desktop has no panel or tray. Use Super+Space or the Menu key for the Openbox menu, Super alone or Super+O for windows, and Super+Shift+O for workspaces. Settings provides sound, network, battery and time controls. Openbox briefly shows its own popup when switching workspaces.</p>
-        <ul><li><strong>Audio:</strong> left-click the music note for pulsemixer, right-click to mute, or scroll over it to adjust volume.</li><li><strong>Networking:</strong> use the NetworkManager tray icon. A wired VM shows a wired icon rather than Wi-Fi.</li><li><strong>Files:</strong> PCManFM handles USB mounting and network shares. Open <code>smb://server/share</code> for SMB; automatic Windows WS-Discovery browsing is not guaranteed. SFTP uses the SSH client.</li><li><strong>Text:</strong> Twig opens plain text and common source files by default. Mounted shares are exposed through GVfs FUSE for editor access.</li><li><strong>Touchpad:</strong> natural scrolling, two-finger scrolling and two-finger right-click are enabled on supported devices.</li></ul>
+        <ul><li><strong>Audio:</strong> open Settings → Sound to choose output/input devices, adjust volume or mute. Supported volume and mute keys also work.</li><li><strong>Networking:</strong> open Settings → Network to enable Wi-Fi, refresh networks, connect or manage saved connections. Advanced profiles are available through Network Connections in Applications.</li><li><strong>Bluetooth:</strong> open Settings → Bluetooth to scan, pair and connect devices.</li><li><strong>Battery:</strong> open Settings → Power for charge, charging status and hardware-reported health.</li><li><strong>Clock:</strong> open Settings → Date &amp; Time for the current time, time zone and automatic synchronization status.</li><li><strong>Files:</strong> PCManFM handles USB mounting and network shares. Open <code>smb://server/share</code> for SMB; automatic Windows WS-Discovery browsing is not guaranteed. SFTP uses the SSH client.</li><li><strong>Text:</strong> Twig opens plain text and common source files by default. Mounted shares are exposed through GVfs FUSE for editor access.</li><li><strong>Touchpad:</strong> natural scrolling, two-finger scrolling and two-finger right-click are enabled on supported devices.</li></ul>
         <p>Network passwords are requested when needed; there is no bundled desktop keyring. Most manuals, package documentation and non-English translations are trimmed. Package copyright notices remain.</p>
         <p>The bottom of the right-click menu contains Logout, Reboot and Power off. Logout ends both X and the tty1 login session.</p>
       </section>
@@ -61,9 +61,22 @@
         <p><a href="footprint.json">November 16 build: raw measurements and tested ISO checksum</a></p>
       </section>
       <section id="settings"><h2>Settings</h2>
-        <p>Press <strong>Super + I</strong> or choose <strong>Settings</strong> in the desktop right-click menu. Appearance, Touchpad, Keyboard, Menu, Gestures, Displays, Sound, Network, Bluetooth, Power and Date &amp; Time share one window. Use each section’s Apply button to save changes.</p>
+        <p>Press <strong>Super + I</strong> or choose <strong>Settings</strong> in the desktop right-click menu. Appearance, Touchpad, Keyboard, Menu, Gestures, Displays, Sound, Network, Bluetooth, Power and Date &amp; Time share one window. Use the Apply button for the setting you change; connection and pairing actions use their own buttons. Power is an information page.</p>
         <p>Change themes, fonts, desktop color; edit shortcuts, add custom application commands and change swipe actions; adjust touchpad behavior, automatic monitor extension, brightness, audio and Wi-Fi. The app reuses Python and GTK already in ErdOS and closes completely when you close its window.</p>
         <p>Displays lists advertised resolutions with a 15-second Keep/Revert confirmation. Confirmed modes are restored at login for the same outputs. Power shows battery information; Date &amp; Time lets you view the clock, change the system time zone and check automatic time synchronization. Bluetooth supports scanning, pairing, connection and trusted devices. Advanced network profiles use the existing Network Connections app. <a href="settings.md">Controls, persistence and limitations</a>. <a href="settings.png">View Settings</a>.</p>
+        <div class="table-wrap"><table><thead><tr><th scope="col">Settings section</th><th scope="col">Controls</th></tr></thead><tbody>
+          <tr><td>Appearance</td><td>GTK theme, font, dark preference and desktop color</td></tr>
+          <tr><td>Touchpad</td><td>Scrolling direction, tap to click, two-finger right-click and pointer speed</td></tr>
+          <tr><td>Keyboard</td><td>Workspaces, Super-only overview, existing shortcuts and custom commands</td></tr>
+          <tr><td>Menu</td><td>Add, edit, delete and reorder right-click menu entries</td></tr>
+          <tr><td>Gestures</td><td>Swipe distance and actions</td></tr>
+          <tr><td>Displays</td><td>Resolution, automatic monitor extension and laptop brightness</td></tr>
+          <tr><td>Sound</td><td>Output/input devices, volume and mute</td></tr>
+          <tr><td>Network</td><td>Wi-Fi and saved connections</td></tr>
+          <tr><td>Bluetooth</td><td>Adapter power, scan, pair, connect, trust and forget</td></tr>
+          <tr><td>Power</td><td>Battery and external-power information; no sleep-policy controls</td></tr>
+          <tr><td>Date &amp; Time</td><td>Current time, time zone and automatic synchronization</td></tr>
+        </tbody></table></div>
       </section>
       <section id="menu"><h2>Customize the right-click menu</h2>
         <p>Open Settings → Menu. Double-click a name or command to edit it. Use Add item, Add separator, Delete, Move up and Move down, then Apply menu. Changes take effect immediately and persist for your user.</p>
