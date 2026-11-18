@@ -2,7 +2,10 @@
 
 Repository: <https://github.com/patx/erdos>. Website:
 <https://patx.gitman.io/erdos/>. These instructions prepare artifacts locally;
-none of the project scripts commit, tag, push, upload or publish anything.
+the release-packaging script does not commit, tag, push, upload or publish.
+The current public release is [ErdOS 1 Alpha 1](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.1).
+Both source remotes use `main`: GitHub at the URL above and Gitman at
+<https://gitman.io/git/patx/erdos>.
 
 ## Source repository
 
@@ -21,7 +24,7 @@ performing either. The intended default branch is `main`.
 
 Build on Debian 13 amd64 as described in [building.md](building.md), then complete
 [testing.md](testing.md). A successful build is not a boot/install test. Retain
-its logs outside Git. The first alpha version is `1.0.0-alpha.1`, with planned tag `v1.0.0-alpha.1`.
+its logs outside Git. The first alpha version is `1.0.0-alpha.1`, with tag `v1.0.0-alpha.1`.
 Keep it marked as a prerelease on GitHub.
 
 After testing a unique build, promote it to `dist/erdos-amd64.iso`, then run:
@@ -34,7 +37,9 @@ This verifies the ISO’s embedded installer policy and core-package retention,
 extracts its package/version manifest, creates a source-only project ZIP, writes
 checksums, and refreshes `docs/release.json` from the actual ISO. It requires
 `xorriso` and `unsquashfs` in addition to Python 3. It leaves
-`published` false so the site does not advertise nonexistent release downloads.
+`published` false and clears the tag for the newly prepared image. Restore the
+actual published tag and status only after its assets are available. Packaging
+a future build must not be mistaken for publishing it.
 The source ZIP requires compiling helpers before using the optional updater;
 generated executables are not silently bundled into a source archive.
 
@@ -55,8 +60,9 @@ from the matching Debian archives with source repositories enabled.
 
 After those assets actually exist on a published release, set the chosen tag and
 `published: true` in `docs/release.json`. Its existing filenames and digest must
-still match those assets. The download buttons currently link directly to the `v1.0.0-alpha.1` ISO,
-as configured in `index.html` and `assets/site.js`. Update both for a future release. Future builds use current Debian packages, so reusing a date does not
+still match those assets. The hero button links directly to the `v1.0.0-alpha.1` ISO; the bottom download
+section links to its release page. Update both links in `index.html` for a future
+release, together with the version text and release metadata. Future builds use current Debian packages, so reusing a date does not
 imply an identical ISO or checksum.
 
 Checksums verify bytes, not publisher identity. If you add artifact signing,
@@ -90,9 +96,9 @@ python3 -m http.server 8000 --directory docs
 ```
 
 Open <http://localhost:8000/>. Relative paths also work under the project prefix
-`/erdos/`. The user guide and release links work without JavaScript; build details
-and the screenshot selector are optional enhancements. Keep release metadata
-accurate when uploading a new image. Gitman Pages hosts the site; GitHub Releases
+`/erdos/`. The user guide and download links work without JavaScript.
+Build details and checksums are available on the GitHub release page. Keep
+release metadata accurate when uploading a new image. Gitman Pages hosts the site; GitHub Releases
 hosts the ISO.
 
 ## Checks before publication
@@ -102,5 +108,3 @@ Review desktop and mobile rendering and keyboard navigation. The CI workflow is
 read-only and source-only; it does not publish Pages, create a release or build an
 ISO. Enable GitHub private vulnerability reporting if you want to use the private
 reporting link in `SECURITY.md`.
-
-- [GitHub Pages publishing sources](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)

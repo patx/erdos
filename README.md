@@ -7,16 +7,18 @@ session or install the same desktop using Debian’s text installer.
 is not supported. Disk selection, partitioning, and the final write confirmation
 remain manual.
 
-[Website](https://patx.github.io/erdos/) ·
-[Downloads](https://github.com/patx/erdos/releases) ·
-[User guide](https://patx.github.io/erdos/guide.html) · [Build instructions](docs/building.md)
+[Website](https://patx.gitman.io/erdos/) ·
+[Downloads](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.1) ·
+[User guide](https://patx.gitman.io/erdos/guide.html) · [Build instructions](docs/building.md)
 
-This first alpha is prepared locally; it has not been published on GitHub. The
-November 17, 2026 ISO is **1,219,100,672 bytes (1.14 GiB)**. Source, UI and checksum
-checks passed; this update still needs a fresh boot/install test. Release assets
-belong on GitHub Releases, rather than in the Git repository or on Pages.
+[ErdOS 1 Alpha 1](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.1) is available now.
+The November 17, 2026 ISO is **1,219,100,672 bytes (1.14 GiB)**. Download the ISO,
+checksums, package manifest and source archive from the release page.
 
-![ErdOS desktop and application menu](docs/desktop-menu.png)
+Source, offscreen GTK and checksum checks passed. The updated alpha still needs
+a fresh boot/install test; see [validation and known limitations](docs/testing.md).
+
+![ErdOS desktop with Twig, Sakura and the Openbox menu](docs/assets/desktop-hero.png)
 
 ## What you get
 
@@ -26,7 +28,7 @@ belong on GitHub Releases, rather than in the Git repository or on Pages.
 - **Sakura**, **Chromium**, **PCManFM**, and **Twig**. PCManFM includes USB mounting,
   SMB and SFTP support; new graphical apps appear in the Applications submenu.
 - Three/four-finger swipe gestures and an on-demand Skippy-XD window overview,
-  built with physics disabled. [Swipe layout](https://patx.github.io/erdos/guide.html#gestures).
+  built with physics disabled. [Swipe layout](https://patx.gitman.io/erdos/guide.html#gestures).
 - Dynamic workspaces with one spare, keyboard tiling, exact window-size restoration, screenshot keys,
   volume and brightness bindings, natural scrolling, and two-finger right-click.
 - Automatic external-monitor extension to the right, with the laptop primary.
@@ -41,7 +43,7 @@ notices are retained.
 
 ## Try or install
 
-1. Download the ISO and its checksum from [Releases](https://github.com/patx/erdos/releases).
+1. Download the ISO and its checksum from [Releases](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.1).
 2. In the download directory, run `sha256sum -c erdos-amd64.iso.sha256`.
 3. Attach the ISO to a VM, or write it to a USB device with an image writer.
    Writing an image erases that USB device. Disable Secure Boot.
@@ -60,7 +62,7 @@ disabled.
 For an alongside installation, first shrink the other OS’s partition using that
 OS’s tools and leave at least **20 GB unallocated**. Choose the largest continuous
 free-space option and review the partition plan. Whole-disk installation erases
-the selected disk when confirmed. [Read the full installation guide](https://patx.github.io/erdos/guide.html#install).
+the selected disk when confirmed. [Read the full installation guide](https://patx.gitman.io/erdos/guide.html#install).
 
 ## Useful shortcuts
 
@@ -80,7 +82,7 @@ the selected disk when confirmed. [Read the full installation guide](https://pat
 | Print / Alt + Print / Shift + Print | Screenshot desktop / window / area |
 
 Screenshots save silently in `~/Pictures/Screenshots`. Super is usually the
-Windows key. [All shortcuts and desktop behavior](https://patx.github.io/erdos/guide.html#shortcuts).
+Windows key. [All shortcuts and desktop behavior](https://patx.gitman.io/erdos/guide.html#shortcuts).
 
 ## Build from source
 
@@ -120,8 +122,8 @@ private test credentials, or build logs.
 
 ## Status and contributing
 
-The current build passed UEFI live boot and a fresh UEFI installation with two
-virtual disks. The disk picker and default-No write confirmation stayed
+The November 16 base image passed UEFI live boot and a fresh UEFI installation
+with two virtual disks. The disk picker and default-No write confirmation stayed
 interactive; the unselected disk remained untouched. Installed-system checks
 passed sudo authentication, online APT repositories, retained scrot, and full,
 window and region screenshots. Physical touchpads, backlights, docks, Windows/macOS
@@ -143,8 +145,9 @@ not an official Debian image.
 ## Settings
 
 Press **Super + I** or select **Settings** in the desktop menu for a single-window
-Python/GTK app covering appearance, touchpad, keyboard, gestures, displays, sound,
-network, power and time zones. It reuses Python/GTK and exits when closed;
+Python/GTK app covering Appearance, Touchpad, Keyboard, Menu, Gestures, Displays,
+Sound, Network, Bluetooth, Power and Date & Time. Add custom keyboard commands
+and edit the right-click menu directly in Settings. It reuses Python/GTK and exits when closed;
 xrandr supplies resolution changes.
 See [Settings controls and limitations](docs/settings.md).
 

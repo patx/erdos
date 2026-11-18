@@ -1,6 +1,24 @@
 # Validation and limitations
 
-## Latest locally tested image — time sync and Bluetooth
+## Public release — 1.0.0-alpha.1
+
+[ErdOS 1 Alpha 1](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.1) is the public November 17, 2026 release.
+The ISO is **1,219,100,672 bytes (1.14 GiB)** with SHA-256:
+
+```text
+4a125062e3e97d40225f4dc18c8e61d2be1a1cf45ec012e5222cd130ac9a9ec3
+```
+
+Source/configuration, offscreen GTK, filesystem metadata and internal/release
+checksum checks passed. This update adds menu editing, custom keyboard shortcuts
+and reversed four-finger workspace swipes to the November 16 package base.
+A fresh boot/install test of this exact alpha remains pending. The disk and RAM
+measurements below belong to the November 16 base image.
+
+The following sections are historical validation records. Statements about
+unpublished work refer to those earlier checks, not the current release.
+
+## November 16 base image — time sync and Bluetooth
 
 Built November 16, 2026, **1,219,952,640 bytes (1.14 GiB)**.
 
@@ -40,9 +58,9 @@ checks. The simulated Bluetooth test does not prove radio, firmware or codec
 compatibility. The current image’s installed disk/RAM measurements are recorded below.
 Nothing was committed or published.
 
-## Installed footprint — latest ISO
+## Installed footprint — November 16 base image
 
-A fresh offline UEFI install of the latest ISO (`0e558028…657241a`) measured
+A fresh offline UEFI install of the November 16 ISO (`0e558028…657241a`) measured
 **1.86 GiB used on root + EFI** (1,994,551,296 bytes), excluding the separate
 **1.25 GiB swap partition**, which had zero bytes in use. Measured November 16,
 2026. No APT indexes were downloaded and no packages were added, removed or
@@ -141,7 +159,7 @@ Built November 16, 2026, **1,248,460,800 bytes (1.16 GiB)**.
 7aa3a02503117e1326d0dcf5bfc19d3c72c07dcd9c0c1625c4645a3caa318467
 ```
 
-This is an experimental preview, not a claim of a published GitHub release.
+This section records an older development image, not the published alpha.
 The source CI checks source/staging integrity and compilation. It does not build
 an ISO or replace VM/physical-hardware testing.
 

@@ -29,12 +29,15 @@ kbd { font-family: inherit; font-size: 12px; line-height: 1; display: inline-fle
 .navigation-heading h2 { margin: 0; }
 .navigation-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 64px; }
 .navigation-heading > a, .shortcuts-section a { font-size: 14px; }
-.shortcut-list { margin: 0; }
-.shortcut-list > div { display: grid; grid-template-columns: 40% minmax(0, 1fr); align-items: center; gap: 12px; min-height: 94px; border-bottom: 1px solid var(--line); }
+.shortcut-list { display: grid; grid-template-columns: minmax(0, 1fr) max-content; column-gap: 32px; margin: 0; }
+.shortcut-list > div { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center; min-height: 94px; border-bottom: 1px solid var(--line); }
 .shortcut-list dt { font-size: 14px; }
 .shortcut-list dd { font-size: 12px; color: #c5cbd0; margin: 0; white-space: nowrap; text-align: left; }
 .home .download-section { display: grid; grid-template-columns: 1fr; gap: 20px; justify-items: center; text-align: center; padding-block: 64px; scroll-margin-top: 30px; }
-.home .download-section h2 { font-size: clamp(36px,4vw,56px); margin: 0 0 16px; }
+.home .download-section h2 { width: 100%; font-size: clamp(40px, 9.5vw, 142px); margin: 0; letter-spacing: -.055em; }
+.download-section h2 a { display: block; color: inherit; text-decoration: none; }
+.download-section h2 a:hover { color: var(--blue); }
+.download-section h2 a span { font-size: .65em; }
 .download-section .primary-link { margin-block: 8px 18px; }
 .download-section #release-status { max-width: 420px; margin-inline: auto; font-size: 12px; }
 .install-link { margin-bottom: 0; font-size: 14px; }
@@ -85,14 +88,19 @@ kbd { font-family: inherit; font-size: 12px; line-height: 1; display: inline-fle
 .gesture-alt { display: block; margin-top: 10px; font-size: 11px; color: var(--muted); }
 .shortcut-list > div { box-sizing: border-box; padding-block: 16px; }
 @media (min-width: 651px) and (max-width: 1000px) { .app-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 1000px) { .shortcut-list > div { grid-template-columns: 1fr; gap: 10px; padding-block: 16px; } }
-
-.home .hero { display: grid; grid-template-columns: 1fr; gap: 36px; justify-items: center; text-align: center; padding-block: 56px 64px; border-bottom: 1px solid var(--line); }
-.home .hero h1 { font-size: clamp(48px, 5.7vw, 82px); line-height: 1.03; letter-spacing: -.055em; }
-.hero-intro > p:first-of-type { max-width: 520px; font-size: 18px; line-height: 1.65; color: #b7bdc2; margin: 24px auto 28px; }
-@media (max-width: 1000px) { .home .hero { padding-block: 40px 56px; } }
-@media (max-width: 650px) {
-  .home .hero { grid-template-columns: 1fr; gap: 32px; padding-block: 32px 48px; }
-  .hero-intro > p:first-of-type { font-size: 16px; margin: 22px auto; }
+@media (max-width: 1000px) {
+  .shortcut-list { grid-template-columns: 1fr; }
+  .shortcut-list > div { grid-template-columns: 1fr; gap: 10px; padding-block: 16px; }
 }
 
+.home .hero { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.35fr); gap: 48px; align-items: center; text-align: left; padding-block: 56px 64px; border-bottom: 1px solid var(--line); }
+.home .hero h1 { font-size: clamp(44px, 4.6vw, 70px); line-height: 1.03; letter-spacing: -.055em; }
+.hero-intro > p:first-of-type { max-width: 520px; font-size: 18px; line-height: 1.65; color: #b7bdc2; margin: 24px 0 28px; }
+@media (max-width: 1000px) { .home .hero { gap: 28px; padding-block: 40px 56px; } }
+@media (max-width: 650px) {
+  .home .hero { grid-template-columns: 1fr; gap: 32px; padding-block: 32px 48px; }
+  .hero-intro > p:first-of-type { font-size: 16px; margin: 22px 0; }
+}
+
+
+.hero-screenshot { display: block; width: 100%; min-width: 0; box-sizing: border-box; height: auto; border: 1px solid var(--line); }

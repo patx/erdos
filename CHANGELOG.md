@@ -35,8 +35,8 @@ First alpha release of ErdOS.
 
 The November 17 image reuses the November 16 package base with updated desktop
 configuration. Source, offscreen GTK, filesystem metadata and checksum checks
-passed. This alpha still needs a fresh boot/install test; it has not been
-published on GitHub.
+passed. This alpha still needs a fresh boot/install test; it is
+published as a GitHub prerelease.
 
 ### Unified Settings
 

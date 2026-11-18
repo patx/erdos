@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "repository": "patx/erdos",
-  "published": false,
-  "tag": null,
+  "published": true,
+  "tag": "v1.0.0-alpha.1",
   "date": "2026-11-17",
   "status": "Version 1 Alpha",
   "iso": {
