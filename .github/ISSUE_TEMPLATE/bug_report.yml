@@ -1,0 +1,40 @@
+name: Bug report
+description: Report a reproducible ErdOS problem.
+body:
+  - type: markdown
+    attributes:
+      value: Do not paste passwords, Wi-Fi keys, private disk data or tokens.
+  - type: input
+    id: image
+    attributes:
+      label: ISO version or SHA256
+      description: Include the release tag or full ISO checksum.
+    validations:
+      required: true
+  - type: dropdown
+    id: session
+    attributes:
+      label: Session
+      options:
+        - Live session
+        - Installed system
+        - Debian Installer
+        - Build or website
+    validations:
+      required: true
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware or VM
+      description: Model, VM software, BIOS/UEFI mode and relevant peripherals.
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps, expected result and actual result
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Relevant logs or screenshots
+      description: Share only a small, redacted excerpt.

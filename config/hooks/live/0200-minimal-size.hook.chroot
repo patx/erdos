@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+# Includes are installed after package installation; trim the existing files too.
+# Copyright files and documentation symlinks are retained.
+if [ -d /usr/share/doc ]; then
+    find /usr/share/doc -type f ! -name copyright -delete
+fi
+for directory in /usr/share/man /usr/share/info /usr/share/lintian; do
+    if [ -d "$directory" ]; then
+        find "$directory" -mindepth 1 -delete
+    fi
+done
+if [ -d /usr/share/locale ]; then
+    find /usr/share/locale -mindepth 1 -maxdepth 1 ! -name 'en*' ! -name locale.alias -exec rm -rf -- {} +
+fi

@@ -1,0 +1,29 @@
+desktop-image: "boot.png"
+title-text: ""
+message-font: "Unifont Regular 16"
+terminal-font: "Unifont Regular 16"
++ boot_menu {
+  left = 10%
+  top = 48%
+  width = 80%
+  height = 38%
+  item_font = "Unifont Regular 16"
+  selected_item_font = "Unifont Regular 16"
+  item_color = "#f5f5f5"
+  selected_item_color = "#159bff"
+  item_height = 24
+  item_spacing = 12
+  item_padding = 0
+  icon_width = 0
+  icon_height = 0
+  item_icon_space = 0
+}
++ label {
+  top = 100%-42
+  left = 10%
+  width = 80%
+  height = 22
+  text = "Arrow keys to choose    Enter to start"
+  color = "#aaaaaa"
+  font = "Unifont Regular 16"
+}

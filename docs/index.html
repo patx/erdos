@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ErdOS. Debian, Openbox, the everyday essentials. A minimal desktop built around your keyboard.">
+  <meta name="theme-color" content="#000000">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'">
+  <meta property="og:title" content="ErdOS — a minimal Linux desktop">
+  <meta property="og:description" content="Debian 13 with Openbox. 1.86 GiB installed and 380 MiB RAM at idle in a fresh VM measurement.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://patx.github.io/erdos/assets/erdos-logo.png">
+  <title>ErdOS — a minimal Linux desktop</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/home.css">
+  <script src="assets/site.js" defer></script>
+</head>
+<body class="home">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header shell">
+    <a class="brand" href="./" aria-label="ErdOS home"><span class="wordmark"><img src="assets/erdos-logo.png" alt="ErdOS" width="2172" height="724"></span></a>
+    <nav aria-label="Main navigation"><a href="guide.html">User Guide</a><a href="screenshots.html">Screenshots</a><a href="https://github.com/patx/erdos">Github</a></nav>
+  </header>
+  <main id="content">
+    <section class="hero shell" aria-labelledby="hero-title">
+      <div class="hero-intro">
+        <h1 id="hero-title">A minimal<br>Linux desktop.</h1>
+        <p>ErdOS pairs Debian 13 with Openbox, a small set of apps, and keyboard-first navigation.</p>
+        <a class="primary-link" href="#download">Download ErdOS <span aria-hidden="true">↓</span></a>
+      </div>
+    </section>
+    <section class="apps-section shell" id="apps" aria-labelledby="apps-title">
+      <div class="navigation-heading"><h2 id="apps-title">Included apps</h2><a href="guide.html#footprint">1.86 GiB installed disk · 380 MiB RAM at idle ↗</a></div>
+      <div class="app-list">
+        <article class="app"><img class="app-icon" src="assets/apps/sakura.svg" alt="Sakura icon" width="80" height="80" loading="lazy"><h3>Sakura</h3><p>Terminal</p><div class="app-shortcut"><kbd>Super</kbd><span>+</span><kbd>Enter</kbd></div></article>
+        <article class="app"><img class="app-icon" src="assets/apps/chromium.png" alt="Chromium logo" width="80" height="80" loading="lazy"><h3>Chromium</h3><p>Browser</p><div class="app-shortcut"><kbd>Super</kbd><span>+</span><kbd>B</kbd></div></article>
+        <article class="app"><div class="file-icon"><img class="app-icon" src="assets/apps/pcmanfm.svg" alt="PCManFM file-manager theme icon" width="64" height="64" loading="lazy"></div><h3>PCManFM</h3><p>Files, USB drives &amp; shares</p><div class="app-shortcut"><kbd>Super</kbd><span>+</span><kbd>E</kbd></div></article>
+        <article class="app"><img class="app-icon" src="assets/apps/twig.png" alt="Twig logo" width="80" height="80" loading="lazy"><h3>Twig</h3><p>Text editor</p><div class="app-shortcut"><kbd>Super</kbd><span>+</span><kbd>T</kbd></div></article>
+        <article class="app"><div class="file-icon"><img class="app-icon" src="assets/apps/settings.svg" alt="Settings theme icon" width="64" height="64" loading="lazy"></div><h3><a href="guide.html#settings">Settings</a></h3><p>System preferences</p><div class="app-shortcut"><kbd>Super</kbd><span>+</span><kbd>I</kbd></div></article>
+      </div>
+    </section>
+    <section class="shortcuts-section shell" aria-labelledby="keys-title">
+      <div class="navigation-heading"><h2 id="keys-title">Intuitive navigation</h2><a href="guide.html#shortcuts">All shortcuts &amp; gestures ↗</a></div>
+      <div class="navigation-columns">
+      <dl class="shortcut-list" aria-label="Window shortcuts">
+        <div><dt>Openbox menu</dt><dd><kbd>Super</kbd> + <kbd>Space</kbd></dd></div>
+        <div><dt>Cycle windows</dt><dd><kbd>Super</kbd> + <kbd>Tab</kbd></dd></div>
+        <div><dt>Tile left / right</dt><dd><kbd>Super</kbd> + <kbd>←</kbd> <kbd>→</kbd></dd></div>
+        <div><dt>Restore a window</dt><dd><kbd>Super</kbd> + <kbd>↓</kbd></dd></div>
+      </dl>
+      <dl class="shortcut-list" aria-label="Gestures and keyboard alternatives">
+        <div><dt>See every window</dt><dd>3 fingers up<span class="gesture-alt"><kbd>Super</kbd> or <kbd>Super</kbd> + <kbd>O</kbd></span></dd></div>
+        <div><dt>Close overview</dt><dd>3 fingers down<span class="gesture-alt"><kbd>Esc</kbd></span></dd></div>
+        <div><dt>Previous / next window</dt><dd>3 fingers left / right<span class="gesture-alt"><kbd>Ctrl</kbd> + <kbd>Super</kbd> + <kbd>← →</kbd></span></dd></div>
+        <div><dt>Switch workspaces</dt><dd>4 fingers left / right<span class="gesture-alt">Choose: <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>1–9</kbd></span></dd></div>
+      </dl>
+      </div>
+    </section>
+    <section class="download-section shell" id="download" aria-labelledby="download-title">
+      <div><h2 id="download-title">Download ErdOS</h2><p id="release-status" class="muted" role="status">Experimental preview. Public download coming soon.</p></div>
+      <div class="download-actions"><a id="release-download" class="primary-link" href="https://github.com/patx/erdos/releases">View GitHub releases <span aria-hidden="true">↗</span></a><details class="build-details"><summary>Build details &amp; checksum</summary>
+          <dl class="release-facts"><div><dt>Built</dt><dd id="release-date">See release notes</dd></div><div><dt>ISO size</dt><dd id="release-size">See release notes</dd></div></dl>
+          <div id="checksum-details" hidden><div class="checksum-heading"><span>ISO SHA256</span><button type="button" id="copy-checksum">Copy</button></div><code id="release-checksum" class="checksum"></code><p id="copy-status" class="muted" role="status"></p></div>
+          <p><a href="guide.html#install">Installation guide</a> · <a href="guide.html#verify">Verify download</a></p>
+          <noscript><p>Find build details and checksums on GitHub Releases.</p></noscript>
+        </details></div>
+    </section>
+  </main>
+  <footer class="site-footer shell"><p>Independent. Open source. Built on Debian.</p><nav aria-label="Footer navigation"><a href="https://github.com/patx/erdos">Source</a><a href="https://github.com/patx/erdos/issues">Issues</a><a href="assets/apps/credits.html">Icon credits</a></nav></footer>
+</body>
+</html>

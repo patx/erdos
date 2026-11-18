@@ -1,0 +1,34 @@
+name: Source checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: source-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    container: debian:13
+    timeout-minutes: 15
+    steps:
+      - name: Install check and compiler prerequisites
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates git python3 gcc libc6-dev pkg-config libx11-dev libxrandr-dev meson ninja-build libxcomposite-dev libxdamage-dev libxext-dev libxfixes-dev libxft-dev libxrender-dev libxi-dev libxinerama-dev libgif-dev libjpeg-dev libpng-dev
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Check source, docs and installer policy
+        run: python3 scripts/check-project.py
+      - name: Compile the native helpers and physics-free overview
+        run: ./scripts/build-helpers.sh /tmp/erdos-helpers
+      - name: Stage the live-image configuration
+        run: ./build.sh --prepare

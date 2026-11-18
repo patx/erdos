@@ -1,0 +1,66 @@
+#!/usr/bin/python3
+"""Generate Openbox's Applications pipe menu from installed desktop entries."""
+import locale
+import os
+import shlex
+import sys
+import xml.etree.ElementTree as ET
+
+os.environ.setdefault("XDG_CURRENT_DESKTOP", "Openbox")
+from gi.repository import Gio
+
+# Hide desktop-shell launchers; connection editing remains available in Applications.
+HIDDEN_ENTRIES = {
+    "nm-applet.desktop",
+    "pcmanfm-desktop-pref.desktop", "tint2.desktop",
+}
+GROUPS = (
+    ("AudioVideo", "Multimedia"),
+    ("Development", "Development"),
+    ("Education", "Education"),
+    ("Game", "Games"),
+    ("Graphics", "Graphics"),
+    ("Network", "Internet"),
+    ("Office", "Office"),
+    ("Science", "Science"),
+    ("Settings", "Settings"),
+    ("System", "System"),
+    ("Utility", "Accessories"),
+)
+
+
+def main():
+    if len(sys.argv) == 3 and sys.argv[1] == "--launch":
+        app = Gio.DesktopAppInfo.new(sys.argv[2])
+        if app is None:
+            raise SystemExit("Application is no longer installed: " + sys.argv[2])
+        # GIO handles quoting, Exec field codes, working directory, and Terminal.
+        app.launch([], None)
+        return
+    if len(sys.argv) != 1:
+        raise SystemExit("Usage: erdos-applications [--launch DESKTOP_ID]")
+    locale.setlocale(locale.LC_ALL, "")
+    groups = {}
+    for app in Gio.AppInfo.get_all():
+        desktop_id = app.get_id()
+        if not desktop_id or desktop_id in HIDDEN_ENTRIES or not app.should_show():
+            continue
+        categories = set((app.get_categories() or "").split(";"))
+        group = next((label for category, label in GROUPS if category in categories), "Other")
+        groups.setdefault(group, []).append(app)
+    root = ET.Element("openbox_pipe_menu")
+    for index, group in enumerate(sorted(groups, key=locale.strxfrm)):
+        menu = ET.SubElement(root, "menu", id=f"erdos-apps-{index}", label=group)
+        for app in sorted(groups[group], key=lambda a: locale.strxfrm(a.get_display_name())):
+            item = ET.SubElement(menu, "item", label=app.get_display_name().replace("_", "__"))
+            action = ET.SubElement(item, "action", name="Execute")
+            ET.SubElement(action, "command").text = shlex.join(
+                [os.path.abspath(__file__), "--launch", app.get_id()]
+            )
+    if not groups:
+        ET.SubElement(root, "separator", label="No applications installed")
+    print(ET.tostring(root, encoding="unicode"))
+
+
+if __name__ == "__main__":
+    main()

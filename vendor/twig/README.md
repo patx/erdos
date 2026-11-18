@@ -1,0 +1,86 @@
+# Twig
+
+[![twig](https://snapcraft.io/twig/badge.svg)](https://snapcraft.io/twig)
+
+Twig is a small GTK code editor intended for lightweight Linux. 
+It focuses on the basics: one file per window, open/save,
+syntax highlighting, line numbers, find/replace, undo/redo, dirty indicators,
+and save-before-close prompts.
+
+
+## Dependencies
+
+On Ubuntu or Debian-based systems:
+
+```sh
+sudo apt install python3 python3-gi gir1.2-gtk-3.0 gir1.2-gtksource-4
+```
+
+Some older systems package GtkSourceView 3 instead of 4:
+
+```sh
+sudo apt install gir1.2-gtksource-3.0
+```
+
+## Run
+
+```sh
+./twig.py
+./twig.py path/to/file.py
+```
+
+## Install
+
+```sh
+sudo make install
+```
+
+Install somewhere else:
+
+```sh
+make install PREFIX="$HOME/.local"
+```
+
+Uninstall:
+
+```sh
+sudo make uninstall
+```
+
+Build a Debian package:
+
+```sh
+make deb
+```
+
+## Shortcuts
+
+Twig intentionally has no toolbar or menu bar. Use these keyboard shortcuts:
+
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl+N` or `Ctrl+T` | Open a new empty editor window |
+| `Ctrl+O` | Open one or more files |
+| `Ctrl+S` | Save the current file |
+| `Ctrl+Shift+S` | Save the current file as a new path |
+| `Ctrl+W` | Close the current window |
+| `Ctrl+P` | Print |
+| `Ctrl+Q` | Quit Twig, prompting for unsaved files |
+| `Ctrl+Z` | Undo |
+| `Ctrl+Shift+Z` | Redo |
+| `Ctrl+X` | Cut |
+| `Ctrl+C` | Copy |
+| `Ctrl+V` | Paste |
+| `Ctrl+A` | Select all |
+| `Ctrl+D` | Delete the selected lines or current line |
+| `Ctrl+F` | Open or focus Find and Replace |
+| `Ctrl+G` | Find next match |
+| `Ctrl+Shift+G` | Find previous match |
+| `Ctrl+R` | Open Find and Replace with the replace field focused |
+| `Ctrl+J` | Jump to line |
+| `Ctrl++` | Increase editor font size |
+| `Ctrl+-` | Decrease editor font size |
+| `Tab` with selected lines | Indent selected lines with spaces |
+| `Shift+Tab` with selected lines | Unindent selected lines |
+| `Enter` in Find | Find next match |
+| `Enter` in Replace | Replace current match |

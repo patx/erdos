@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+# binary hooks run inside binary/. Expose only the selected firmware .debs to d-i.
+mkdir -p firmware
+while read -r package remainder; do
+    case "$package" in ''|\#*) continue ;; esac
+    found=false
+    for deb in ../cache/packages.chroot/"${package}"_*.deb; do
+        [ -f "$deb" ] || continue
+        cp -p "$deb" firmware/
+        found=true
+    done
+    if [ "$found" != true ]; then
+        echo "Missing installer firmware package in build cache: $package" >&2
+        exit 1
+    fi
+done < ../config/package-lists/firmware.list.chroot

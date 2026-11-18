@@ -1,0 +1,3 @@
+# Grant only the active local user access to touchpad event nodes.
+# This must precede 73-seat-late.rules. Do not grant keyboard access/input-group membership.
+SUBSYSTEM=="input", KERNEL=="event*", ENV{ID_INPUT_TOUCHPAD}=="1", TAG+="uaccess"

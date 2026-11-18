@@ -1,0 +1,2 @@
+# Allow the normal video group to adjust keyboard lighting without input-device access.
+ACTION=="add", SUBSYSTEM=="leds", KERNEL=="*::kbd_backlight", RUN+="bright-helper video g+w /sys/class/leds/%k/brightness"

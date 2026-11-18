@@ -1,0 +1,633 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+"""ErdOS Settings: one GTK window, existing system tools, no background service."""
+import sys
+from pathlib import Path
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'lib/erdos'))
+import settings as backend
+
+if '--apply-session' in sys.argv:
+    try:
+        backend.apply_session()
+    except Exception as error:
+        print(f'ErdOS settings: {error}', file=sys.stderr)
+    sys.exit(0)
+
+import configparser
+import json
+import subprocess
+import time
+from datetime import datetime
+from zoneinfo import ZoneInfo
+import display_settings
+import threading
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, Gdk, Gio, GLib
+
+
+class Settings(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id='org.erdos.Settings', flags=Gio.ApplicationFlags.FLAGS_NONE)
+        self.window = None
+
+    def do_activate(self):
+        if self.window:
+            self.window.present(); return
+        self.window = Gtk.ApplicationWindow(application=self, title='ErdOS Settings')
+        self.window.set_default_size(820, 580)
+        self.window.connect('delete-event', lambda *_: not self.stack.get_sensitive())
+        self.window.connect('destroy', lambda *_: setattr(self, 'window', None))
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        body = Gtk.Box()
+        self.stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.NONE)
+        self.stack.set_hexpand(True)
+        sidebar = Gtk.StackSidebar(stack=self.stack)
+        sidebar.set_size_request(155, -1)
+        body.pack_start(sidebar, False, False, 0)
+        body.pack_start(self.stack, True, True, 0)
+        self.status = Gtk.Label(xalign=0, wrap=True, selectable=True)
+        self.status.set_margin_start(16); self.status.set_margin_end(16)
+        self.status.set_margin_top(10); self.status.set_margin_bottom(10)
+        outer.pack_start(body, True, True, 0)
+        outer.pack_start(self.status, False, False, 0)
+        self.resolution_bar = Gtk.Box(spacing=12)
+        self.resolution_bar.set_border_width(12)
+        self.resolution_label = Gtk.Label(xalign=0, wrap=True)
+        self.resolution_label.set_max_width_chars(30)
+        self.resolution_bar.pack_start(self.resolution_label, True, True, 0)
+        for label, answer in [('Revert', 'revert'), ('Keep resolution', 'keep')]:
+            button = Gtk.Button(label=label)
+            button.connect('clicked', lambda _, answer=answer: self.answer_resolution(answer))
+            self.resolution_bar.pack_start(button, False, False, 0)
+        outer.pack_start(self.resolution_bar, False, False, 0)
+        self.trial_process = None
+        self.trial_timer = None
+        self.window.add(outer)
+        for name in ('Appearance', 'Touchpad', 'Keyboard', 'Menu', 'Gestures', 'Displays', 'Sound', 'Network', 'Bluetooth', 'Power', 'Date & Time'):
+            page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+            page.set_border_width(24)
+            title = Gtk.Label(xalign=0); title.set_markup(f'<big><b>{GLib.markup_escape_text(name)}</b></big>')
+            page.pack_start(title, False, False, 0)
+            scroll = Gtk.ScrolledWindow(); scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+            scroll.add(page); self.stack.add_titled(scroll, name, name)
+            try:
+                getattr(self, name.lower().replace(' & ', '_'))(page)
+            except Exception as error:
+                self.note(page, f'Could not load this section: {error}')
+        self.window.show_all()
+        self.resolution_bar.hide()
+
+    def note(self, page, text):
+        label = Gtk.Label(label=text, xalign=0, wrap=True)
+        label.set_max_width_chars(65)
+        page.pack_start(label, False, False, 0)
+        return label
+
+    def row(self, page, title, widget):
+        box = Gtk.Box(spacing=16)
+        label = Gtk.Label(label=title, xalign=0, wrap=True)
+        box.pack_start(label, True, True, 0)
+        box.pack_end(widget, False, False, 0)
+        page.pack_start(box, False, False, 0)
+        return widget
+
+    def toggle(self, page, title, active):
+        return self.row(page, title, Gtk.Switch(active=active, valign=Gtk.Align.CENTER))
+
+    def scale(self, page, title, low, high, value, step=1):
+        widget = Gtk.SpinButton.new_with_range(low, high, step)
+        widget.set_value(value)
+        return self.row(page, title, widget)
+
+    def choice(self, page, title, values, active=None):
+        widget = Gtk.ComboBoxText()
+        for key, label in values:
+            widget.append(str(key), label)
+        if active is not None:
+            widget.set_active_id(str(active))
+        if widget.get_active() < 0:
+            widget.set_active(0)
+        return self.row(page, title, widget)
+
+    def button(self, page, title, action):
+        button = Gtk.Button(label=title, halign=Gtk.Align.START)
+        button.connect('clicked', lambda *_: self.perform(action))
+        page.pack_start(button, False, False, 0)
+        return button
+
+    def perform(self, action):
+        # Gather widget values on GTK's main thread, run commands off-thread.
+        try:
+            job = action()
+        except Exception as error:
+            self.status.set_text(str(error)); return
+        self.stack.set_sensitive(False)
+        self.status.set_text('Applying…')
+        def worker():
+            try:
+                result = job() if callable(job) else job
+                message = result if isinstance(result, str) and result else 'Done.'
+            except Exception as error:
+                message = str(error)
+            GLib.idle_add(finish, message)
+        def finish(message):
+            self.stack.set_sensitive(True); self.status.set_text(message)
+        threading.Thread(target=worker, daemon=True).start()
+
+    def appearance(self, page):
+        parser = configparser.ConfigParser(interpolation=None)
+        parser.read(backend.CONFIG / 'gtk-3.0/settings.ini')
+        values = parser['Settings'] if parser.has_section('Settings') else {}
+        themes = {'Adwaita'}
+        for root in (Path('/usr/share/themes'), Path.home() / '.themes', Path.home() / '.local/share/themes'):
+            themes.update(p.parent.name for p in root.glob('*/gtk-3.0') if p.is_dir())
+        current = values.get('gtk-theme-name', 'Adwaita'); themes.add(current)
+        theme = self.choice(page, 'Application theme', [(t,t) for t in sorted(themes)], current)
+        font = self.row(page, 'Font', Gtk.FontButton(font=values.get('gtk-font-name', 'DejaVu Sans 10')))
+        dark = self.toggle(page, 'Prefer dark applications', values.get('gtk-application-prefer-dark-theme') == 'true')
+        rgba = Gdk.RGBA(); rgba.parse(backend.preferences()['background'])
+        color = self.row(page, 'Desktop color', Gtk.ColorButton(rgba=rgba))
+        self.note(page, 'Themes and fonts apply to newly opened applications. Existing applications may need to be reopened.')
+        def apply():
+            c = color.get_rgba(); hexcolor = '#%02x%02x%02x' % tuple(round(v*255) for v in (c.red,c.green,c.blue))
+            args = theme.get_active_id(), font.get_font_name(), dark.get_active(), hexcolor
+            return lambda: backend.appearance(*args)
+        self.button(page, 'Apply appearance', apply)
+
+    def touchpad(self, page):
+        prefs = backend.preferences()
+        natural = self.toggle(page, 'Natural scrolling', prefs['natural'])
+        self.note(page, 'When enabled, moving fingers up moves the page content down.')
+        tap = self.toggle(page, 'Tap to click', prefs['tapping'])
+        click = self.toggle(page, 'Two-finger click for right-click', prefs['clickfinger'])
+        speed = self.scale(page, 'Pointer speed', -1, 1, prefs['speed'], .1)
+        self.note(page, 'Applies to connected libinput touchpads and at each login. After connecting another touchpad, apply again.')
+        def apply():
+            values = dict(natural=natural.get_active(), tapping=tap.get_active(),
+                          clickfinger=click.get_active(), speed=speed.get_value())
+            return lambda: backend.touchpad(backend.save_preferences(**values))
+        self.button(page, 'Apply touchpad settings', apply)
+
+    def keyboard(self, page):
+        prefs = backend.preferences()
+        dynamic = self.toggle(page, 'Dynamic workspaces', prefs['dynamic_workspaces'])
+        count = self.scale(page, 'Fixed workspace count', 1,32,prefs['workspace_count'])
+        count.set_sensitive(not dynamic.get_active())
+        dynamic.connect('notify::active',lambda *_: count.set_sensitive(not dynamic.get_active()))
+        super_key = self.toggle(page, 'Tap Super alone to show windows', prefs['super_overview'])
+        self.note(page, 'Dynamic mode keeps one spare after the last occupied or current workspace. Empty gaps keep their numbers; only trailing workspaces disappear. Fixed mode never removes a workspace containing windows or the current workspace.')
+        def apply_workspaces():
+            values = dict(dynamic_workspaces=dynamic.get_active(), workspace_count=count.get_value_as_int(), super_overview=super_key.get_active())
+            def job():
+                backend.save_preferences(**values)
+                backend.run('erdos-gesture','reload')
+            return job
+        self.button(page, 'Apply workspace and Super-key settings', apply_workspaces)
+        self.note(page, 'Double-click a shortcut to edit it. W = Super, C = Ctrl, A = Alt, S = Shift. Separate alternatives with spaces. Example: W-Return C-A-t. Fn mode is controlled by your keyboard or firmware.')
+        model = Gtk.ListStore(str, str)
+        for key, action in backend.keyboard(): model.append([key, action])
+        tree = Gtk.TreeView(model=model)
+        renderer = Gtk.CellRendererText(editable=True)
+        renderer.connect('edited', lambda _, path, text: model.set_value(model.get_iter(path), 0, text))
+        tree.append_column(Gtk.TreeViewColumn('Shortcut', renderer, text=0))
+        cell = Gtk.CellRendererText(); cell.set_property('ellipsize', 3)
+        tree.append_column(Gtk.TreeViewColumn('Action', cell, text=1))
+        scroll = Gtk.ScrolledWindow(); scroll.set_min_content_height(260); scroll.add(tree)
+        page.pack_start(scroll, True, True, 0)
+        self.note(page, 'Custom shortcuts: add a key combination and the command to launch. Double-click either field to edit. Commands run as your user when you press the shortcut.')
+        custom = Gtk.ListStore(str, str)
+        for key, command in backend.custom_keyboard():
+            custom.append([key, command])
+        custom_tree = Gtk.TreeView(model=custom)
+        for index, title in enumerate(('Shortcut', 'Command')):
+            cell = Gtk.CellRendererText(editable=True)
+            cell.connect('edited', lambda _, path, text, col=index: custom.set_value(custom.get_iter(path), col, text))
+            custom_tree.append_column(Gtk.TreeViewColumn(title, cell, text=index))
+        custom_scroll = Gtk.ScrolledWindow()
+        custom_scroll.set_min_content_height(140)
+        custom_scroll.add(custom_tree)
+        page.pack_start(custom_scroll, True, True, 0)
+        controls = Gtk.Box(spacing=12)
+        add = Gtk.Button(label='Add shortcut')
+        def add_custom(_):
+            row = custom.append(['', ''])
+            custom_tree.set_cursor(custom.get_path(row), custom_tree.get_column(0), True)
+        add.connect('clicked', add_custom)
+        remove = Gtk.Button(label='Remove selected')
+        def remove_custom(_):
+            selected_model, row = custom_tree.get_selection().get_selected()
+            if row is not None:
+                selected_model.remove(row)
+        remove.connect('clicked', remove_custom)
+        controls.pack_start(add, False, False, 0)
+        controls.pack_start(remove, False, False, 0)
+        page.pack_start(controls, False, False, 0)
+        def apply():
+            keys = [row[0] for row in model]
+            custom_rows = [(row[0], row[1]) for row in custom]
+            for key in [*keys, *(key for key, _ in custom_rows)]:
+                for combo in key.split():
+                    symbol = combo.split('-')[-1]
+                    if symbol.startswith('0x'):
+                        try:
+                            valid = 8 <= int(symbol, 16) <= 255
+                        except ValueError:
+                            valid = False
+                        if not valid:
+                            raise ValueError(f'Invalid X11 keycode: {symbol}')
+                    elif Gdk.keyval_from_name(symbol) in (0, Gdk.KEY_VoidSymbol):
+                        raise ValueError(f'Unknown key name: {symbol}')
+            return lambda: backend.save_keyboard(keys, custom_rows)
+        self.button(page, 'Apply shortcuts', apply)
+
+    def menu(self, page):
+        source, entries = backend.menu_entries()
+        self.note(page, 'Edit the desktop right-click menu. Double-click a name or command. Applications stays automatic; submenu contents and built-in actions are preserved. Changes take effect when you apply.')
+        model = Gtk.ListStore(str, str, str, str)
+        for entry in entries:
+            model.append(entry)
+        tree = Gtk.TreeView(model=model)
+        for index, title in enumerate(('Name', 'Command', 'Type')):
+            cell = Gtk.CellRendererText(editable=index < 2)
+            cell.set_property('ellipsize', 3)
+            if index < 2:
+                cell.connect('edited', lambda _, path, text, col=index: model.set_value(model.get_iter(path), col, text))
+            column = Gtk.TreeViewColumn(title, cell, text=index)
+            column.set_resizable(True)
+            if index == 1:
+                column.set_cell_data_func(cell, lambda _, renderer, rows, row, data: renderer.set_property('editable', rows[row][2] == 'Command'))
+            tree.append_column(column)
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_min_content_height(300)
+        scroll.add(tree)
+        page.pack_start(scroll, True, True, 0)
+        controls = Gtk.Box(spacing=8)
+        def add(kind):
+            row = model.append(['New item' if kind == 'Command' else '', '', kind, ''])
+            tree.set_cursor(model.get_path(row), tree.get_column(0), kind == 'Command')
+        def remove():
+            _, row = tree.get_selection().get_selected()
+            if row is not None:
+                model.remove(row)
+        def move(direction):
+            _, row = tree.get_selection().get_selected()
+            if row is not None:
+                index = model.get_path(row).get_indices()[0] + direction
+                if 0 <= index < len(model):
+                    model.swap(row, model.get_iter(Gtk.TreePath.new_from_indices([index])))
+        for title, callback in [('Add item', lambda: add('Command')), ('Add separator', lambda: add('Separator')),
+                                ('Delete', remove), ('Move up', lambda: move(-1)), ('Move down', lambda: move(1))]:
+            button = Gtk.Button(label=title)
+            button.connect('clicked', lambda _, callback=callback: callback())
+            controls.pack_start(button, False, False, 0)
+        page.pack_start(controls, False, False, 0)
+        def apply():
+            values = [tuple(row) for row in model]
+            def job():
+                nonlocal source
+                backend.save_menu(source, values)
+                source = (backend.CONFIG / 'openbox/menu.xml').read_text()
+            return job
+        self.button(page, 'Apply menu', apply)
+        self.note(page, 'Super + I still opens Settings if you remove its menu entry. A .previous backup is saved beside menu.xml. Commands run only when you select an item.')
+
+    def gestures(self, page):
+        parser = backend.gestures()
+        self.note(page, 'One action per swipe. Lower distance triggers sooner; very short distances can trigger accidentally. Overview physics stay disabled.')
+        distance = self.scale(page, 'Swipe distance', 20, 1000, parser.getfloat('swipe','distance'), 10)
+        actions = [('none','Disabled'), ('overview-show','Show all windows'), ('workspace-overview','Show workspaces'), ('overview-hide','Close overview'),
+                   ('window-previous','Previous window'), ('window-next','Next window'),
+                   ('workspace-previous','Previous workspace'), ('workspace-next','Next workspace')]
+        choices = {}
+        for key in ('3_up','3_down','3_left','3_right','4_left','4_right'):
+            count, direction = key.split('_')
+            choices[key] = self.choice(page, f'{count} fingers {direction}', actions, parser.get('bindings',key))
+        def apply():
+            value = distance.get_value_as_int(); bindings = {k:w.get_active_id() for k,w in choices.items()}
+            return lambda: backend.save_gestures(value, bindings)
+        self.button(page, 'Apply gestures', apply)
+
+    def displays(self, page):
+        modes_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        page.pack_start(modes_box, False, False, 0)
+        def refresh():
+            for child in modes_box.get_children():
+                child.destroy()
+            self.load_section(modes_box, display_settings.outputs, self.resolution_controls)
+        button = Gtk.Button(label='Refresh displays', halign=Gtk.Align.START)
+        button.connect('clicked', lambda *_: refresh())
+        page.pack_start(button, False, False, 0)
+        refresh()
+        self.note(page, 'Test a resolution, then keep it within 15 seconds. Otherwise the previous layout returns. Confirmed modes are restored at login for the same connected outputs. Reconnecting a monitor resets automatic layout to preferred modes; apply your selection again if needed.')
+        self.note(page, 'Automatic layout extends external displays to the right and keeps the laptop primary. Turning it off keeps the current layout and stops automatic rearrangement. Workspaces span all screens.')
+        automatic = self.toggle(page, 'Automatically extend connected displays', backend.preferences()['automatic_displays'])
+        def apply():
+            enabled = automatic.get_active()
+            return lambda: backend.display_policy(enabled)
+        self.button(page, 'Apply display policy', apply)
+        backlights = sorted(Path('/sys/class/backlight').glob('*'))
+        if backlights:
+            device = backlights[0]
+            value = int((device/'brightness').read_text()) * 100 / int((device/'max_brightness').read_text())
+            brightness = self.scale(page, 'Screen brightness (%)', 5, 100, value, 5)
+            def apply_brightness():
+                value = str(brightness.get_value_as_int()) + '%'
+                return lambda: backend.run('brightnessctl','-q','-d',device.name,'set',value)
+            self.button(page, 'Apply brightness', apply_brightness)
+        else:
+            self.note(page, 'No controllable screen backlight detected.')
+
+    def resolution_controls(self, page, outputs):
+        choices = {}
+        for output in outputs:
+            if not output['mode']:
+                self.note(page, output['name'] + ': connected but inactive')
+                continue
+            choices[output['name']] = self.choice(page,
+                output['name'] + (' (primary)' if output['primary'] else ''),
+                [(mode, mode) for mode in output['modes']], output['mode'])
+        if not choices:
+            self.note(page, 'No active display detected.')
+            return
+        button = Gtk.Button(label='Test resolution', halign=Gtk.Align.START)
+        button.connect('clicked', lambda *_: self.test_resolution(
+            {name: widget.get_active_id() for name, widget in choices.items()}))
+        page.pack_start(button, False, False, 0)
+
+    def test_resolution(self, selections):
+        if self.trial_process is not None:
+            return
+        self.stack.set_sensitive(False)
+        self.status.set_text('Testing resolution…')
+        try:
+            self.trial_process = subprocess.Popen(
+                [sys.executable, '-B', str(Path(display_settings.__file__))],
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                text=True, start_new_session=True)
+            process = self.trial_process
+            process.stdin.write(json.dumps(selections) + '\n'); process.stdin.flush()
+        except Exception as error:
+            self.finish_resolution(str(error))
+            return
+        def worker():
+            try:
+                for line in process.stdout:
+                    result = json.loads(line)
+                    if result['status'] == 'ready':
+                        GLib.idle_add(self.confirm_resolution, result['seconds'])
+                    else:
+                        message = {'kept':'Resolution saved.', 'restored':'Previous resolution restored.'}.get(
+                            result['status'], result.get('message', 'Display change failed.'))
+                        process.wait()
+                        GLib.idle_add(self.finish_resolution, message)
+                        return
+                process.wait()
+                GLib.idle_add(self.finish_resolution, 'Display change ended. Refresh displays to check the current mode.')
+            except Exception as error:
+                # EOF tells the independent helper to roll back even if GTK fails.
+                process.stdin.close()
+                GLib.idle_add(self.finish_resolution, str(error))
+        threading.Thread(target=worker, daemon=True).start()
+
+    def confirm_resolution(self, seconds):
+        if self.trial_process is None:
+            return
+        area = Gdk.Display.get_default().get_monitor_at_window(self.window.get_window()).get_workarea()
+        self.window.resize(min(820, max(400, area.width-24)), min(580, max(300, area.height-32)))
+        self.window.move(area.x+12, area.y+16)
+        deadline = time.monotonic() + seconds
+        def tick():
+            remaining = max(0, int(deadline - time.monotonic()))
+            self.resolution_label.set_text(f'Keep this resolution? Reverting in {remaining} seconds.')
+            return self.trial_process is not None and remaining > 0
+        tick()
+        self.resolution_bar.set_sensitive(True)
+        self.resolution_bar.show_all()
+        self.trial_timer = GLib.timeout_add_seconds(1, tick)
+
+    def answer_resolution(self, answer):
+        process = self.trial_process
+        if process is not None:
+            self.resolution_bar.set_sensitive(False)
+            try:
+                process.stdin.write(answer + '\n'); process.stdin.flush()
+            except (OSError, ValueError):
+                pass  # The helper may already have restored the timed-out change.
+
+    def finish_resolution(self, message):
+        if self.trial_timer:
+            # A timer may already have expired; look it up before removing it.
+            if GLib.MainContext.default().find_source_by_id(self.trial_timer):
+                GLib.source_remove(self.trial_timer)
+            self.trial_timer = None
+        if self.trial_process:
+            self.trial_process.stdin.close()
+            self.trial_process.stdout.close()
+        self.trial_process = None
+        self.resolution_bar.hide()
+        self.stack.set_sensitive(True)
+        self.status.set_text(message)
+
+    def load_section(self, page, fetch, populate):
+        loading = self.note(page, 'Loading…')
+        def finish(data, error):
+            if self.window is None:
+                return
+            loading.destroy()
+            if error:
+                self.note(page, f'Unavailable: {error}. Close and reopen Settings to retry.')
+            else:
+                try:
+                    populate(page, data)
+                except Exception as failure:
+                    self.note(page, f'Could not load this section: {failure}')
+            page.show_all()
+        def worker():
+            try:
+                data = fetch()
+            except Exception as error:
+                GLib.idle_add(finish, None, str(error))
+            else:
+                GLib.idle_add(finish, data, None)
+        threading.Thread(target=worker, daemon=True).start()
+
+    def sound(self, page):
+        def fetch():
+            devices = backend.audio_nodes()
+            levels = {}
+            for target in ('@DEFAULT_AUDIO_SINK@', '@DEFAULT_AUDIO_SOURCE@'):
+                try:
+                    levels[target] = backend.run('wpctl', 'get-volume', target)
+                except Exception:
+                    levels[target] = 'Volume: 0.50'
+            return devices, levels
+        self.load_section(page, fetch, self.sound_controls)
+
+    def sound_controls(self, page, data):
+        self.note(page, 'Changes apply to the selected device. New applications use the default device; existing streams may stay on their current device.')
+        devices, levels = data
+        for kind, title, target in [('Audio/Sink','Output','@DEFAULT_AUDIO_SINK@'), ('Audio/Source','Microphone','@DEFAULT_AUDIO_SOURCE@')]:
+            choices = [(target, 'Current default')] + [(i,n) for i,n,k in devices if k == kind]
+            choice = self.choice(page, title + ' device', choices, target)
+            try:
+                info = levels[target]
+                value = round(float(info.split()[1])*100); muted = '[MUTED]' in info
+            except Exception:
+                value, muted = 50, False
+            volume = self.scale(page, title + ' volume (%)', 0,100,min(value,100))
+            mute = self.toggle(page, title + ' muted', muted)
+            def apply(choice=choice, volume=volume, mute=mute):
+                selected, level, silent = choice.get_active_id(), volume.get_value_as_int(), mute.get_active()
+                def job():
+                    if not selected.startswith('@'): backend.run('wpctl','set-default',selected)
+                    backend.run('wpctl','set-volume','-l','1.0',selected,str(level/100))
+                    backend.run('wpctl','set-mute',selected,str(int(silent)))
+                return job
+            self.button(page, 'Apply ' + title.lower(), apply)
+        self.note(page, 'Close and reopen Settings to refresh newly connected audio devices.')
+
+    def every(self, seconds, callback):
+        callback()
+        def tick():
+            if self.window is None:
+                return False
+            callback()
+            return True
+        timer = GLib.timeout_add_seconds(seconds, tick)
+        def stop(*_):
+            if GLib.MainContext.default().find_source_by_id(timer):
+                GLib.source_remove(timer)
+        self.window.connect('destroy', stop)
+
+    def power(self, page):
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        page.pack_start(content, False, False, 0)
+        def update():
+            if self.stack.get_visible_child_name() != 'Power' and content.get_children():
+                return
+            for child in content.get_children():
+                child.destroy()
+            batteries, connected = backend.power_info()
+            self.note(content, 'External power connected' if connected else 'No external power source reported')
+            if not batteries:
+                self.note(content, 'No battery detected. This is normal on desktops and in virtual machines.')
+            for battery in batteries:
+                self.note(content, battery['name'] + ': ' + battery['status'])
+                if battery['capacity']:
+                    self.note(content, 'Charge: ' + battery['capacity'] + '%')
+                if 'health' in battery:
+                    self.note(content, f'Health: {battery["health"]}% of design capacity')
+                if battery['cycles']:
+                    self.note(content, 'Charge cycles: ' + battery['cycles'])
+            content.show_all()
+        self.every(10, update)
+        self.note(page, 'Battery health and cycle counts appear only when reported by the hardware. This page does not change charging limits or suspend policy.')
+
+    def date_time(self, page):
+        current = self.note(page, '')
+        entry = self.row(page, 'System time zone', Gtk.Entry())
+        preview = self.note(page, '')
+        zones = set()
+        def fetch():
+            return backend.run('timedatectl','list-timezones').splitlines(), backend.run('timedatectl','show','--property=Timezone','--value')
+        def loaded(_page, data):
+            names, selected = data
+            zones.update(names)
+            model = Gtk.ListStore(str)
+            for name in names:
+                model.append([name])
+            completion = Gtk.EntryCompletion(model=model, text_column=0)
+            completion.set_minimum_key_length(1)
+            completion.set_match_func(lambda _, key, iterator, *extra: key.lower() in model[iterator][0].lower())
+            entry.set_completion(completion)
+            entry.set_text(selected)
+        self.load_section(page, fetch, loaded)
+        def tick():
+            if self.stack.get_visible_child_name() != 'Date & Time' and current.get_text():
+                return
+            time.tzset()
+            current.set_text('Current system time: ' + datetime.now().astimezone().strftime('%a, %b %d, %Y  %I:%M:%S %p %Z'))
+            try:
+                selected = entry.get_text().strip()
+                preview.set_text('Selected zone: ' + datetime.now(ZoneInfo(selected)).strftime('%I:%M:%S %p %Z') if selected in zones else 'Type a city or region, such as America/New_York.')
+            except (ValueError, KeyError):
+                preview.set_text('Choose a valid time zone.')
+        self.every(1,tick)
+        self.note(page, 'The system time zone applies to all users. Administrator authentication may be requested. This changes how time is displayed, not the clock itself.')
+        def apply():
+            selected = entry.get_text().strip()
+            if selected not in zones:
+                raise ValueError('Select a time zone from the suggestions.')
+            return lambda: backend.run('timedatectl','set-timezone',selected,timeout=120)
+        self.button(page, 'Apply time zone', apply)
+        sync_status = self.note(page, 'Checking automatic time synchronization…')
+        def sync_fetch():
+            values = dict(line.split('=', 1) for line in backend.run('timedatectl', 'show',
+                '--property=NTP', '--property=NTPSynchronized').splitlines() if '=' in line)
+            return 'Automatic time sync: ' + ('on' if values.get('NTP') == 'yes' else 'off') + '. Clock synchronized: ' + values.get('NTPSynchronized', 'unknown') + '.'
+        def refresh_sync():
+            self.load_section(page, sync_fetch, lambda _, value: sync_status.set_text(value))
+        refresh_sync()
+        self.button(page, 'Refresh sync status', refresh_sync)
+        self.button(page, 'Enable automatic time sync', lambda: lambda: backend.run('timedatectl', 'set-ntp', 'true', timeout=120))
+        self.note(page, 'Time synchronization starts automatically when a time server is reachable. After enabling it, refresh the status. If APT says a signature is not valid yet, wait for synchronization before updating packages.')
+
+
+    def bluetooth(self, page):
+        from bluetooth_settings import Bluetooth
+        self.bluetooth_page = Bluetooth(self, page)
+
+    def network(self, page):
+        def fetch():
+            return (backend.run('nmcli','-f','DEVICE,TYPE,STATE,CONNECTION','device','status'),
+                    backend.run('nmcli','radio','wifi'),
+                    backend.nm_lines('-f','UUID,NAME','connection','show'))
+        self.load_section(page, fetch, self.network_controls)
+
+    def network_controls(self, page, data):
+        device_status, radio_state, profiles = data
+        status = self.note(page, device_status)
+        wifi = self.toggle(page, 'Wi-Fi enabled', radio_state == 'enabled')
+        def radio():
+            state = 'on' if wifi.get_active() else 'off'
+            return lambda: backend.run('nmcli','radio','wifi',state)
+        self.button(page, 'Apply Wi-Fi state', radio)
+        networks = self.choice(page, 'Wi-Fi network', [])
+        password = self.row(page, 'Password (if needed)', Gtk.Entry(visibility=False, input_purpose=Gtk.InputPurpose.PASSWORD))
+        self.note(page, 'Select a network and enter its password, or leave it empty for an open or previously saved network. Enterprise networks can be configured with the existing connection editor from Applications.')
+        def refresh():
+            def job():
+                rows = backend.nm_lines('-f','BSSID,SSID,SIGNAL,SECURITY','device','wifi','list','--rescan','yes')
+                device_status = backend.run('nmcli','-f','DEVICE,TYPE,STATE,CONNECTION','device','status')
+                def fill():
+                    networks.remove_all()
+                    for bssid, ssid, signal, security in rows:
+                        if ssid: networks.append(bssid, f'{ssid} ({signal}%, {security or "open"})')
+                    networks.set_active(0); status.set_text(device_status)
+                GLib.idle_add(fill)
+                return 'Network list refreshed.'
+            return job
+        self.button(page, 'Refresh networks', refresh)
+        def connect():
+            selected = networks.get_active_id(); secret = password.get_text(); password.set_text('')
+            if not selected: raise ValueError('Refresh networks and select one first.')
+            if '\n' in secret or '\r' in secret: raise ValueError('Password must be a single line.')
+            # --ask reads the secret on stdin, never from the process command line.
+            return lambda: backend.run('nmcli','--ask','--wait','30','device','wifi','connect',selected,
+                                       input=secret+'\n', timeout=40)
+        self.button(page, 'Connect', connect)
+        saved = self.choice(page, 'Saved connection', [(uuid,name) for uuid,name in profiles])
+        def connection(action):
+            selected = saved.get_active_id()
+            if not selected: raise ValueError('No saved connection selected.')
+            return lambda: backend.run('nmcli','--wait','20','connection',action,'uuid',selected,timeout=30)
+        self.button(page, 'Activate saved connection', lambda: connection('up'))
+        self.button(page, 'Disconnect saved connection', lambda: connection('down'))
+
+
+if __name__ == '__main__':
+    if backend.os.geteuid() == 0:
+        sys.exit('Open Settings as your desktop user, not root.')
+    Settings().run(sys.argv)

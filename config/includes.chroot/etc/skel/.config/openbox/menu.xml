@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_menu xmlns="http://openbox.org/3.4/menu">
+  <menu id="root-menu" label="ErdOS">
+    <item label="Sakura"><action name="Execute"><command>sakura</command></action></item>
+    <item label="Chromium"><action name="Execute"><command>chromium</command></action></item>
+    <item label="PCManFM"><action name="Execute"><command>pcmanfm</command></action></item>
+    <item label="Twig"><action name="Execute"><command>twig</command></action></item>
+    <menu id="erdos-applications" label="Applications" execute="/usr/local/bin/erdos-applications"/>
+    <item label="Settings"><action name="Execute"><command>erdos-settings</command></action></item>
+    <separator/>
+    <item label="Logout"><action name="Exit"/></item>
+    <item label="Reboot"><action name="Execute"><command>systemctl reboot</command></action></item>
+    <item label="Power off"><action name="Execute"><command>systemctl poweroff</command></action></item>
+  </menu>
+</openbox_menu>

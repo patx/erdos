@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=ErdOS Settings
+Comment=Desktop, input, displays, sound and network settings
+Exec=erdos-settings
+Icon=preferences-system
+Terminal=false
+Categories=Settings;DesktopSettings;

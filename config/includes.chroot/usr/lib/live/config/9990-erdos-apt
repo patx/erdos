@@ -1,0 +1,4 @@
+#!/bin/sh
+# Replace live-boot/live-build repository defaults, without contacting a mirror at boot.
+set -eu
+/usr/local/lib/erdos/configure-apt

@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+# Only relabel live-build's generated entries; preserve kernel/initrd arguments.
+if [ -f boot/grub/grub.cfg ]; then
+    sed -i -e 's/Live system (amd64 fail-safe mode)/Try ErdOS (compatibility mode)/g' \
+        -e 's/Live system (amd64)/Try ErdOS/g' boot/grub/grub.cfg
+fi

@@ -1,0 +1,29 @@
+# Generated images and build state
+/work/
+/dist/
+/downloads/
+/validation/
+/release-tools/
+*.iso
+*.iso.sha256
+*.img
+*.raw
+*.qcow2
+*.vmdk
+*.vdi
+*.zip
+*.zip.sha256
+*.log
+
+# Local environments, credentials and editor files
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.py[cod]
+.DS_Store
+*~
+*.swp
+.vscode/
+.idea/

@@ -1,0 +1,9 @@
+#!/bin/sh
+# Shared live-session and installer-finish repository setup.
+# Installer calls this only after GRUB finishes using USB packages.
+set -eu
+[ "$(id -u)" -eq 0 ] || { echo 'Run as root in the installation target.' >&2; exit 1; }
+test -s /usr/share/keyrings/debian-archive-keyring.gpg
+install -Dm644 /usr/local/share/erdos/apt/erdos.sources /etc/apt/sources.list.d/erdos.sources
+printf '%s\n' '# ErdOS repositories: /etc/apt/sources.list.d/erdos.sources' > /etc/apt/sources.list
+rm -f /etc/apt/sources.list.d/debian.sources

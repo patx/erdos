@@ -1,0 +1,5 @@
+Source: https://gitman.io/patx/twig
+Clone: https://gitman.io/git/patx/twig
+Commit: a9123c2ecf1e89eaa31cbf178a434733bba6ead8
+License: MIT (see LICENSE)
+Vendored runtime files; no network fetch is required to build Twig.

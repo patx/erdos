@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "iso_sha256": "0e558028b33519f8d7d36ed131b84f3ec113b5d9dba344c6660ac2e4d657241a",
+  "measured_at": "2026-11-16T23:50:06.591434-05:00",
+  "service_state": {
+    "NetworkManager": "active",
+    "systemd-timesyncd": "active",
+    "bluetooth": "inactive"
+  },
+  "vm": {
+    "vcpus": 2,
+    "allocated_ram_bytes": 2147483648,
+    "virtual_disk_bytes": 25769803776,
+    "boot": "UEFI",
+    "network": "No adapter; offline install and measurement",
+    "bluetooth": "No adapter exposed by VM",
+    "display": "1280 800"
+  },
+  "kernel": "6.12.117+deb13-amd64",
+  "settle_seconds": 120,
+  "sample_interval_seconds": 10,
+  "desktop_ready_uptime_seconds": 151.83,
+  "ram_definition": "MemTotal - MemAvailable",
+  "ram_samples": [
+    {
+      "uptime_seconds": 271.83,
+      "mem_total_bytes": 2063323136,
+      "mem_available_bytes": 1665064960,
+      "used_bytes": 398258176
+    },
+    {
+      "uptime_seconds": 281.83,
+      "mem_total_bytes": 2063323136,
+      "mem_available_bytes": 1665064960,
+      "used_bytes": 398258176
+    },
+    {
+      "uptime_seconds": 291.83,
+      "mem_total_bytes": 2063323136,
+      "mem_available_bytes": 1665064960,
+      "used_bytes": 398258176
+    },
+    {
+      "uptime_seconds": 301.84,
+      "mem_total_bytes": 2063323136,
+      "mem_available_bytes": 1665064960,
+      "used_bytes": 398258176
+    },
+    {
+      "uptime_seconds": 311.84,
+      "mem_total_bytes": 2063323136,
+      "mem_available_bytes": 1665073152,
+      "used_bytes": 398249984
+    }
+  ],
+  "ram_median_bytes": 398258176,
+  "filesystems": [
+    {
+      "mount": "/",
+      "used_bytes": 1994240000,
+      "filesystem_bytes": 22859108352
+    },
+    {
+      "mount": "/boot/efi",
+      "used_bytes": 311296,
+      "filesystem_bytes": 1021370368
+    }
+  ],
+  "swap": [
+    {
+      "device": "/dev/vdb3",
+      "size_bytes": 1336930304,
+      "used_bytes": 0
+    }
+  ],
+  "disk_definition": "Used filesystem blocks on root and EFI; excludes swap and unallocated space",
+  "apt_indexes_present": false,
+  "disk_used_bytes": 1994551296,
+  "sampling_notes": [
+    "Fresh installation of the identified ISO, booted without ISO media",
+    "Default desktop services enabled; no application windows open",
+    "Serial console shell and Python sampler included",
+    "No packages added, removed or upgraded; no apt update after installation",
+    "Bluetooth enabled by default, but its service is hardware-conditional; no adapter in VM"
+  ]
+}

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_config xmlns="http://openbox.org/3.4/rc">
+  <focus><focusNew>yes</focusNew><followMouse>no</followMouse></focus>
+  <theme><name>Clearlooks</name><titleLayout>NLIMC</titleLayout></theme>
+  <placement><policy>Smart</policy><center>yes</center></placement>
+  <desktops><number>2</number><firstdesk>1</firstdesk><popupTime>800</popupTime><names><name>Workspace 1</name><name>Workspace 2</name></names></desktops>
+  <margins><top>0</top><bottom>0</bottom><left>0</left><right>0</right></margins>
+  <keyboard>
+    <keybind key="W-space Menu"><action name="ShowMenu"><menu>root-menu</menu></action></keybind>
+    <keybind key="W-S-o"><action name="Execute"><command>erdos-gesture workspace-overview</command></action></keybind>
+    <keybind key="W-i"><action name="Execute"><command>erdos-settings</command></action></keybind>
+    <keybind key="W-o"><action name="Execute"><command>erdos-gesture overview-show</command></action></keybind>
+    <keybind key="W-C-Left"><action name="PreviousWindow"><linear>yes</linear><interactive>no</interactive></action></keybind>
+    <keybind key="W-C-Right"><action name="NextWindow"><linear>yes</linear><interactive>no</interactive></action></keybind>
+    <keybind key="Print"><action name="Execute"><command>erdos-screenshot</command></action></keybind>
+    <keybind key="A-Print"><action name="Execute"><command>erdos-screenshot window</command></action></keybind>
+    <keybind key="S-Print"><action name="Execute"><command>erdos-screenshot region</command></action></keybind>
+    <keybind key="XF86AudioRaiseVolume"><action name="Execute"><command>wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+</command></action></keybind>
+    <keybind key="XF86AudioLowerVolume"><action name="Execute"><command>wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-</command></action></keybind>
+    <keybind key="XF86AudioMute"><action name="Execute"><command>wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle</command></action></keybind>
+    <keybind key="XF86AudioMicMute"><action name="Execute"><command>wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle</command></action></keybind>
+    <keybind key="XF86MonBrightnessUp"><action name="Execute"><command>brightnessctl -q -c backlight set 5%+</command></action></keybind>
+    <keybind key="XF86MonBrightnessDown"><action name="Execute"><command>brightnessctl -q -c backlight set 5%-</command></action></keybind>
+    <keybind key="XF86KbdBrightnessUp"><action name="Execute"><command>brightnessctl -q -d '*::kbd_backlight' set 10%+</command></action></keybind>
+    <keybind key="XF86KbdBrightnessDown"><action name="Execute"><command>brightnessctl -q -n 0 -d '*::kbd_backlight' set 10%-</command></action></keybind>
+    <keybind key="W-Return C-A-t"><action name="Execute"><command>sakura</command></action></keybind>
+    <keybind key="W-e"><action name="Execute"><command>pcmanfm</command></action></keybind>
+    <keybind key="W-t"><action name="Execute"><command>twig</command></action></keybind>
+    <keybind key="W-b"><action name="Execute"><command>chromium</command></action></keybind>
+    <keybind key="W-q"><action name="Close"/></keybind>
+    <keybind key="W-S-0x0a W-F1"><action name="GoToDesktop"><to>1</to></action></keybind>
+    <keybind key="W-C-S-0x0a"><action name="SendToDesktop"><to>1</to><follow>no</follow></action></keybind>
+    <keybind key="W-S-0x0b W-F2"><action name="GoToDesktop"><to>2</to></action></keybind>
+    <keybind key="W-C-S-0x0b"><action name="SendToDesktop"><to>2</to><follow>no</follow></action></keybind>
+    <keybind key="W-Tab"><action name="NextWindow"/></keybind>
+    <keybind key="W-S-Tab"><action name="PreviousWindow"/></keybind>
+    <keybind key="A-F4"><action name="Close"/></keybind>
+    <!-- Preserve each window’s original geometry across tiling and maximizing. -->
+    <keybind key="W-Left W-KP_4 W-KP_Left"><action name="Execute"><command>erdos-window-layout left</command></action></keybind>
+    <keybind key="W-Right W-KP_6 W-KP_Right"><action name="Execute"><command>erdos-window-layout right</command></action></keybind>
+    <keybind key="W-KP_8 W-KP_Up"><action name="Execute"><command>erdos-window-layout top</command></action></keybind>
+    <keybind key="W-KP_2 W-KP_Down"><action name="Execute"><command>erdos-window-layout bottom</command></action></keybind>
+    <keybind key="W-KP_7 W-KP_Home"><action name="Execute"><command>erdos-window-layout top-left</command></action></keybind>
+    <keybind key="W-KP_9 W-KP_Prior"><action name="Execute"><command>erdos-window-layout top-right</command></action></keybind>
+    <keybind key="W-KP_1 W-KP_End"><action name="Execute"><command>erdos-window-layout bottom-left</command></action></keybind>
+    <keybind key="W-KP_3 W-KP_Next"><action name="Execute"><command>erdos-window-layout bottom-right</command></action></keybind>
+    <keybind key="W-Up W-KP_5 W-KP_Begin W-m"><action name="Execute"><command>erdos-window-layout maximize</command></action></keybind>
+    <keybind key="W-Down"><action name="Execute"><command>erdos-window-layout restore</command></action></keybind>
+    <keybind key="W-h"><action name="Iconify"/></keybind>
+    <keybind key="W-S-0x0c W-F3"><action name="GoToDesktop"><to>3</to></action></keybind>
+    <keybind key="W-C-S-0x0c"><action name="SendToDesktop"><to>3</to><follow>no</follow></action></keybind>
+    <keybind key="W-S-0x0d W-F4"><action name="GoToDesktop"><to>4</to></action></keybind>
+    <keybind key="W-C-S-0x0d"><action name="SendToDesktop"><to>4</to><follow>no</follow></action></keybind>
+    <keybind key="W-S-0x0e W-F5"><action name="GoToDesktop"><to>5</to></action></keybind>
+    <keybind key="W-C-S-0x0e"><action name="SendToDesktop"><to>5</to><follow>no</follow></action></keybind>
+    <keybind key="W-S-0x0f W-F6"><action name="GoToDesktop"><to>6</to></action></keybind>
+    <keybind key="W-C-S-0x0f"><action name="SendToDesktop"><to>6</to><follow>no</follow></action></keybind>
+    <keybind key="W-S-0x10 W-F7"><action name="GoToDesktop"><to>7</to></action></keybind>
+    <keybind key="W-C-S-0x10"><action name="SendToDesktop"><to>7</to><follow>no</follow></action></keybind>
+    <keybind key="W-S-0x11 W-F8"><action name="GoToDesktop"><to>8</to></action></keybind>
+    <keybind key="W-C-S-0x11"><action name="SendToDesktop"><to>8</to><follow>no</follow></action></keybind>
+    <keybind key="W-S-0x12 W-F9"><action name="GoToDesktop"><to>9</to></action></keybind>
+    <keybind key="W-C-S-0x12"><action name="SendToDesktop"><to>9</to><follow>no</follow></action></keybind>
+  </keyboard>
+  <mouse>
+    <context name="Frame">
+      <mousebind button="A-Left" action="Drag"><action name="Move"/></mousebind>
+      <mousebind button="A-Right" action="Drag"><action name="Resize"/></mousebind>
+    </context>
+    <context name="Titlebar">
+      <mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind>
+      <mousebind button="Left" action="Drag"><action name="Move"/></mousebind>
+      <mousebind button="Left" action="DoubleClick"><action name="ToggleMaximize"/></mousebind>
+      <mousebind button="Right" action="Press"><action name="ShowMenu"><menu>client-menu</menu></action></mousebind>
+    </context>
+    <context name="Client"><mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind></context>
+    <context name="Close"><mousebind button="Left" action="Click"><action name="Close"/></mousebind></context>
+    <context name="Iconify"><mousebind button="Left" action="Click"><action name="Iconify"/></mousebind></context>
+    <context name="Maximize"><mousebind button="Left" action="Click"><action name="ToggleMaximize"/></mousebind></context>
+    <context name="Desktop"><mousebind button="Right" action="Press"><action name="ShowMenu"><menu>root-menu</menu></action></mousebind></context>
+  </mouse>
+  <menu><file>menu.xml</file><hideDelay>200</hideDelay></menu>
+</openbox_config>

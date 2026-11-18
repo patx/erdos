@@ -1,0 +1,8 @@
+[Default Applications]
+inode/directory=pcmanfm.desktop
+text/plain=twig.desktop
+text/x-python=twig.desktop
+text/x-c=twig.desktop
+text/x-c++=twig.desktop
+text/x-shellscript=twig.desktop
+

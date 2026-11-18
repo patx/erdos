@@ -1,0 +1,7 @@
+Source: https://github.com/felixfung/skippy-xd
+Commit: 25402b43920965f4bfacadceb5b7dacbf5f6b026
+License: GPL-2.0-or-later (see COPYING and source headers)
+Vendored source and build inputs; optional Chipmunk physics is disabled.
+Local change: src/skippy.c adds --paging-once, using the existing paging renderer
+and one-shot main loop without starting a daemon. Physics remains disabled.
+Git metadata, packaging and optional subprojects omitted.

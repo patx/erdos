@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+umask 077
+directory="$HOME/Pictures/Screenshots"
+mkdir -p "$directory"
+file="$directory/Screenshot-$(date +%Y-%m-%d_%H-%M-%S-%N).png"
+case "${1:-full}" in
+    full) scrot "$file" ;;
+    window) scrot -u "$file" ;;
+    region) scrot -s "$file" ;;
+    *) echo 'Usage: erdos-screenshot [full|window|region]' >&2; exit 2 ;;
+esac

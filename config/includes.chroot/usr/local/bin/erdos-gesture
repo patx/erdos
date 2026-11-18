@@ -1,0 +1,307 @@
+#!/usr/bin/env python3
+"""ErdOS swipe actions and an event-driven, login-scoped touchpad listener."""
+import argparse
+import configparser
+import fcntl
+import os
+from pathlib import Path
+import re
+import math
+import selectors
+import signal
+import socket
+import stat
+import subprocess
+import sys
+
+
+def runtime():
+    base = Path(os.environ.get('XDG_RUNTIME_DIR', f'/run/user/{os.getuid()}'))
+    if not base.is_dir() or base.stat().st_uid != os.getuid():
+        raise RuntimeError('Run inside your normal desktop login session.')
+    display = os.environ.get('DISPLAY')
+    if not display:
+        raise RuntimeError('An X11 desktop session is required.')
+    path = base / ('erdos-gestures-' + re.sub(r'[^A-Za-z0-9_.-]', '_', display))
+    path.mkdir(mode=0o700, exist_ok=True)
+    info = path.lstat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
+        raise RuntimeError('Gesture runtime directory must be private and owned by you.')
+    return path
+
+
+def state():
+    path = Path(os.environ.get('XDG_STATE_HOME', str(Path.home() / '.local/state'))) / 'erdos'
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+ACTIONS = ('workspace-overview', 'overview-show', 'overview-hide', 'window-previous', 'window-next',
+           'workspace-previous', 'workspace-next')
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'lib/erdos'))
+from gesture_io import Desktop, Touchpad
+
+
+def settings():
+    config = configparser.ConfigParser()
+    default = Path('/etc/erdos/gestures.conf')
+    override = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home() / '.config'))) / 'erdos/gestures.conf'
+    config.read([default, override])
+    threshold = config.getfloat('swipe', 'distance')
+    ratio = config.getfloat('swipe', 'direction_ratio')
+    if not math.isfinite(threshold) or not 20 <= threshold <= 1000:
+        raise ValueError('Gesture distance must be between 20 and 1000.')
+    if not math.isfinite(ratio) or not 1 <= ratio <= 3:
+        raise ValueError('Gesture direction_ratio must be between 1 and 3.')
+    bindings = dict(config.items('bindings'))
+    valid = {f'{count}_{direction}' for count in (3, 4) for direction in ('up', 'down', 'left', 'right')}
+    if any(key not in valid or name not in (*ACTIONS, 'none') for key, name in bindings.items()):
+        raise ValueError('Unknown gesture binding or action in gestures.conf.')
+    return threshold, ratio, {key: name for key, name in bindings.items() if name != 'none'}
+
+
+def forward(name, directory):
+    with socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) as client:
+        client.settimeout(.1)
+        try:
+            client.sendto(name.encode(), str(directory / 'actions.sock'))
+            return True
+        except (FileNotFoundError, ConnectionRefusedError):
+            return False
+
+
+def fallback(name, directory):
+    with (directory / 'actions.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        desktop = Desktop(state() / 'overview.log')
+        try:
+            desktop.action(name)
+        finally:
+            desktop.close()
+
+
+def session(directory):
+    import pyudev
+    import threading
+
+    with (directory / 'session.lock').open('a') as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            print('Gesture listener is already running.', flush=True)
+            return
+        (directory / 'session.pid').write_text(str(os.getpid()))
+        options = settings()
+        desktop = Desktop(state() / 'overview.log')
+        import settings as desktop_settings
+        desktop.configure_session(desktop_settings.preferences())
+        address = directory / 'actions.sock'
+        if address.exists():
+            if not stat.S_ISSOCK(address.lstat().st_mode):
+                raise RuntimeError('Gesture socket path is not a socket.')
+            address.unlink()
+        server = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+        server.bind(str(address))
+        server.setblocking(False)
+        context = pyudev.Context()
+        monitor = pyudev.Monitor.from_netlink(context)
+        monitor.filter_by(subsystem='input')
+        monitor.enable_receiving()
+        wake_read, wake_write = os.pipe2(os.O_NONBLOCK | os.O_CLOEXEC)
+        previous_wakeup = signal.set_wakeup_fd(wake_write)
+        stopped = False
+
+        def stop(_signum, _frame):
+            nonlocal stopped
+            stopped = True
+
+        signal.signal(signal.SIGTERM, stop)
+        signal.signal(signal.SIGINT, stop)
+        signal.signal(signal.SIGCHLD, lambda *_: None)
+        session_allowed = True
+        login_loop = None
+        if session_id := os.environ.get('XDG_SESSION_ID'):
+            try:
+                from gi.repository import Gio, GLib
+                bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
+                reply = bus.call_sync('org.freedesktop.login1', '/org/freedesktop/login1',
+                                      'org.freedesktop.login1.Manager', 'GetSession',
+                                      GLib.Variant('(s)', (session_id,)), None,
+                                      Gio.DBusCallFlags.NONE, 2000, None)
+                proxy = Gio.DBusProxy.new_sync(bus, Gio.DBusProxyFlags.NONE, None,
+                                              'org.freedesktop.login1', reply.unpack()[0],
+                                              'org.freedesktop.login1.Session', None)
+
+                def login_changed(proxy, *_args):
+                    nonlocal stopped, session_allowed
+                    active = proxy.get_cached_property('Active')
+                    locked = proxy.get_cached_property('LockedHint')
+                    status = proxy.get_cached_property('State')
+                    session_allowed = bool(active and active.unpack()) and not bool(locked and locked.unpack())
+                    desktop.session_active = session_allowed
+                    desktop.super_candidate = None
+                    desktop.pressed.clear()
+                    if status and status.unpack() == 'closing':
+                        stopped = True
+                    try:
+                        os.write(wake_write, b'L')
+                    except OSError:
+                        pass
+
+                proxy.connect('g-properties-changed', login_changed)
+                login_changed(proxy)
+                login_loop = GLib.MainLoop()
+                threading.Thread(target=login_loop.run, daemon=True).start()
+            except Exception as error:
+                session_allowed = False
+                desktop.session_active = False
+                print(f'Touchpad gestures paused: cannot monitor login state: {error}', flush=True)
+        selector = selectors.DefaultSelector()
+        selector.register(desktop.connection, selectors.EVENT_READ, 'x')
+        selector.register(server, selectors.EVENT_READ, 'action')
+        selector.register(monitor.fileno(), selectors.EVENT_READ, 'device')
+        selector.register(wake_read, selectors.EVENT_READ, 'signal')
+        touchpad = None
+        selected = ''
+
+        def run_action(name):
+            try:
+                desktop.action(name)
+            except (OSError, RuntimeError) as error:
+                print(f'Gesture action failed: {error}', flush=True)
+
+        def close_touchpad():
+            nonlocal touchpad
+            if touchpad:
+                selector.unregister(touchpad.fd)
+                touchpad.close()
+                touchpad = None
+
+        def refresh():
+            nonlocal touchpad, selected
+            if not session_allowed:
+                close_touchpad()
+                selected = ''
+                desktop.hide()
+                print('Touchpad gestures paused: login session inactive or locked.', flush=True)
+                return
+            devices = sorted(device.device_node for device in context.list_devices(subsystem='input')
+                             if device.get('ID_INPUT_TOUCHPAD') == '1' and device.device_node
+                             and Path(device.device_node).name.startswith('event')
+                             and os.access(device.device_node, os.R_OK))
+            chosen = selected if selected in devices else (devices[0] if devices else None)
+            if chosen == selected and (touchpad or chosen is None):
+                return
+            close_touchpad()
+            selected = chosen
+            if chosen:
+                try:
+                    touchpad = Touchpad(chosen, options, run_action)
+                    selector.register(touchpad.fd, selectors.EVENT_READ, 'touchpad')
+                    touchpad.dispatch()
+                    print(f'Direct libinput reader: {chosen}', flush=True)
+                except (OSError, RuntimeError) as error:
+                    close_touchpad()
+                    print(f'Touchpad unavailable; waiting for device changes: {error}', flush=True)
+            else:
+                print('Gesture listener idle: no readable touchpad. Waiting for device changes.', flush=True)
+
+        try:
+            refresh()
+            while not stopped:
+                if desktop.x.XPending(desktop.display):
+                    if not desktop.pump():
+                        break
+                    continue
+                for key, _ in selector.select():
+                    if stopped:
+                        break
+                    if key.data == 'x':
+                        if not desktop.pump():
+                            stopped = True
+                    elif key.data == 'touchpad':
+                        if touchpad:
+                            try:
+                                touchpad.dispatch()
+                            except OSError as error:
+                                close_touchpad()
+                                print(f'Touchpad unavailable; waiting for device changes: {error}', flush=True)
+                    elif key.data == 'action':
+                        for _ in range(32):
+                            try:
+                                name = server.recv(256).decode('ascii', errors='replace')
+                            except BlockingIOError:
+                                break
+                            if name == 'reload':
+                                try:
+                                    options = settings()
+                                    desktop.configure_session(desktop_settings.preferences())
+                                    close_touchpad()
+                                    selected = ''
+                                    refresh()
+                                except (ValueError, configparser.Error, OSError) as error:
+                                    print(f'Cannot reload gestures: {error}', flush=True)
+                            elif name in ACTIONS and session_allowed:
+                                run_action(name)
+                    elif key.data == 'device':
+                        while monitor.poll(timeout=0) is not None:
+                            pass
+                        refresh()
+                    else:
+                        wakeups = os.read(wake_read, 4096)
+                        if desktop.overview_child:
+                            desktop.overview_child.poll()
+                        if b'L' in wakeups and not stopped:
+                            refresh()
+        finally:
+            close_touchpad()
+            if login_loop:
+                login_loop.quit()
+            selector.close()
+            server.close()
+            address.unlink(missing_ok=True)
+            if desktop.alive:
+                try:
+                    desktop.hide()
+                except (OSError, RuntimeError):
+                    pass
+            signal.set_wakeup_fd(previous_wakeup)
+            os.close(wake_read)
+            os.close(wake_write)
+            desktop.close()
+            (directory / 'session.pid').unlink(missing_ok=True)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('action', choices=['session', 'stop', 'reload', *ACTIONS])
+    args = parser.parse_args()
+    if os.geteuid() == 0:
+        raise RuntimeError('Run gestures as your normal desktop user, not root.')
+    os.umask(0o077)
+    directory = runtime()
+    if args.action == 'session':
+        session(directory)
+    elif args.action == 'reload':
+        if not forward('reload', directory):
+            raise RuntimeError('Gesture listener is not running; log out and back in.')
+    elif args.action == 'stop':
+        if not forward('overview-hide', directory):
+            fallback('overview-hide', directory)
+        with (directory / 'session.lock').open('a') as lock:
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                os.kill(int((directory / 'session.pid').read_text()), signal.SIGTERM)
+    else:
+        if not forward(args.action, directory):
+            fallback(args.action, directory)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except (OSError, ValueError, RuntimeError, configparser.Error, subprocess.SubprocessError) as error:
+        print(f'erdos-gesture: {error}', file=sys.stderr)
+        sys.exit(1)

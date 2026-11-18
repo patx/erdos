@@ -1,0 +1,4 @@
+#!/bin/sh
+# Run after Debian's 10apt-cdrom-setup refresh, while no online sources exist.
+set -eu
+in-target /usr/local/lib/erdos/configure-apt

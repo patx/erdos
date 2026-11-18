@@ -1,0 +1,76 @@
+# Core live system
+live-boot
+live-config
+live-config-systemd
+user-setup
+# Required by debconf-apt-progress during installation and later package changes.
+debconf-i18n
+linux-image-amd64
+systemd-sysv
+# Synchronize the clock online without delaying offline installation.
+systemd-timesyncd
+libpam-systemd
+dbus-user-session
+sudo
+locales
+ca-certificates
+# Filesystem checks for installed ext4 root and FAT EFI partitions.
+e2fsprogs
+dosfstools
+# X11 and desktop; no desktop environment or display manager
+xserver-xorg-core
+keyboard-configuration
+xserver-xorg-input-libinput
+xinit
+xauth
+# Advertised display modes and resolution changes in Settings.
+x11-xserver-utils
+hsetroot
+openbox
+sakura
+pcmanfm
+gvfs
+gvfs-backends
+# Expose remote mounts as paths for non-GIO applications, including Twig.
+gvfs-fuse
+# SFTP transport and local Bonjour share discovery.
+openssh-client
+avahi-daemon
+# Twig and the dynamic Openbox menu share the existing Python/GTK runtime.
+python3
+python3-gi
+gir1.2-gtk-3.0
+gir1.2-gtksource-4
+chromium
+fonts-dejavu-core
+hicolor-icon-theme
+adwaita-icon-theme
+librsvg2-common
+xdotool
+# Direct gesture I/O reuses Xorg's libinput and xdotool's XTest libraries.
+python3-pyudev
+# Native window geometry helper uses the existing X11/RandR runtime.
+libx11-6
+libxrandr2
+# Networking and graphical authorization
+network-manager
+nm-connection-editor
+lxpolkit
+polkitd
+wpasupplicant
+# Native BlueZ controls in Settings and PipeWire Bluetooth audio.
+bluez
+libspa-0.2-bluetooth
+# Audio (PulseAudio protocol is provided by PipeWire)
+pipewire-audio
+pipewire-bin
+wireplumber
+rtkit
+pulsemixer
+# Small hardware-key backlight control and its unprivileged access rules.
+brightnessctl
+brightness-udev
+# Screenshot hotkeys; reuses the existing image libraries.
+scrot
+# Detection of existing operating systems by the installed GRUB boot menu
+os-prober
