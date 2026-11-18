@@ -20,7 +20,9 @@ when closed. Display confirmation uses a short-lived rollback helper.
 | Power | Battery charge, charging status, external power, health and cycle count when available |
 | Date & Time | Current system time, searchable time zones, preview, time-zone selection and automatic-sync status |
 
-Use each section's Apply button. Failures appear at the bottom of the window;
+Use the Apply button for the setting being changed. Network and Bluetooth
+operations have their own action buttons; Power displays information only.
+Failures appear at the bottom of the window;
 service discovery and network operations run without freezing the interface.
 Settings runs as your normal desktop user. NetworkManager and time-zone changes
 use existing authorization policies; a graphical administrator-password prompt
@@ -89,6 +91,10 @@ configuration. `XDG_CONFIG_HOME` is respected. Replacements are atomic with one
 
 ![ErdOS Settings](settings.png)
 
+This screenshot is from the November 16 base image, before the Menu tab and
+custom-shortcut controls were added in Alpha 1. The section table above describes
+the current release.
+
 ## Bluetooth and automatic time
 
 Bluetooth uses BlueZ directly through the existing GTK/Gio libraries. Turn on the
@@ -98,10 +104,8 @@ future connections without asking again; **Untrust** revokes that preference.
 **Forget** asks before removing pairing information. Scanning stops after 30
 seconds, when leaving the tab or closing Settings. Pairing prompts exist only
 while Settings is open. There is no Bluetooth tray or separate settings daemon.
-PipeWire Bluetooth audio support is included (its library was already present in
-the previous image). BlueZ, its new libdw dependency and time synchronization add
-5,815 KiB of declared package payload in this build; this is not a measurement of
-additional filesystem blocks or idle RAM. File transfer is not included.
+PipeWire Bluetooth audio support is included. Bluetooth file transfer is not
+included.
 Hardware/firmware must support the adapter; VMs usually need USB passthrough.
 
 `systemd-timesyncd` starts by default in live and installed systems and synchronizes
@@ -126,7 +130,7 @@ the tested VM; display power saving is separate from computer sleep. There is no
 screen locker in this image, including on resume. See Debian's
 [logind documentation](https://manpages.debian.org/trixie/systemd/logind.conf.5.en.html).
 
-### Custom keyboard shortcuts
+## Custom keyboard shortcuts
 
 In Keyboard, use **Add shortcut**, then double-click the Shortcut and Command
 fields. For example, `W-p` can launch `pcmanfm`. Use **Apply shortcuts** to save;
@@ -134,6 +138,8 @@ fields. For example, `W-p` can launch `pcmanfm`. Use **Apply shortcuts** to save
 shortcuts are rejected. Commands run as your user only when invoked, not while
 saving. Changes are stored in your Openbox configuration with a `.previous`
 backup; no additional service or package is needed.
+
+## Workspace swipe direction
 
 The default four-finger swipe left selects the next workspace (to the right);
 swipe right selects the previous workspace (to the left). Existing saved gesture

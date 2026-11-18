@@ -16,9 +16,9 @@ logs and local credentials out of Git. Inspect `git status --short` and
 `git add -f`. The generated source ZIP uses an allowlist and excludes local test
 fixtures and generated binaries.
 
-The existing local directory may already have Git initialized. An initial commit
-and remote publication are separate maintainer actions; inspect the work before
-performing either. The intended default branch is `main`.
+The default branch is `main` on both remotes. Keep source changes synchronized
+with GitHub (`origin`) and Gitman (`gitman`); pushing source does not create or
+upload a release asset.
 
 ## Build, test and package
 
@@ -108,3 +108,10 @@ Review desktop and mobile rendering and keyboard navigation. The CI workflow is
 read-only and source-only; it does not publish Pages, create a release or build an
 ISO. Enable GitHub private vulnerability reporting if you want to use the private
 reporting link in `SECURITY.md`.
+
+## Social preview
+
+The landing page uses `docs/assets/og-image.png` for Open Graph and Twitter cards.
+Regenerate it with `python3 scripts/render-social-card.py` on a development host
+with Pillow and DejaVu Sans installed. The renderer uses the supplied logo and
+`docs/assets/desktop-hero.png`; its dependencies are not added to the ISO.

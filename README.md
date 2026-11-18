@@ -72,7 +72,8 @@ the selected disk when confirmed. [Read the full installation guide](https://pat
 | Super + B / E / T | Chromium / PCManFM / Twig |
 | Super + I | ErdOS Settings |
 | Super + Tab / Shift + Super + Tab | Cycle windows forward / backward |
-| Super alone / Super + O / Escape | Open / dismiss the window overview |
+| Super alone / Super + O | Show all open windows |
+| Escape | Dismiss the overview |
 | Super + Shift + O | Workspace overview |
 | Super + Space / Menu | Openbox menu |
 | Ctrl + Super + Left / Right | Cycle windows directly (gesture fallback) |
@@ -83,6 +84,18 @@ the selected disk when confirmed. [Read the full installation guide](https://pat
 
 Screenshots save silently in `~/Pictures/Screenshots`. Super is usually the
 Windows key. [All shortcuts and desktop behavior](https://patx.gitman.io/erdos/guide.html#shortcuts).
+
+## Touchpad gestures
+
+| Swipe | Action |
+| --- | --- |
+| Three fingers up / down | Show / dismiss the window overview |
+| Three fingers left / right | Previous / next window |
+| Four fingers left / right | Next workspace (right) / previous workspace (left) |
+
+Change swipe actions and sensitivity in **Settings → Gestures**. Sound, Wi-Fi,
+Bluetooth, battery information and the clock are in Settings; there is no panel
+or system tray. Open Settings with **Super + I**.
 
 ## Build from source
 
@@ -147,8 +160,9 @@ not an official Debian image.
 Press **Super + I** or select **Settings** in the desktop menu for a single-window
 Python/GTK app covering Appearance, Touchpad, Keyboard, Menu, Gestures, Displays,
 Sound, Network, Bluetooth, Power and Date & Time. Add custom keyboard commands
-and edit the right-click menu directly in Settings. It reuses Python/GTK and exits when closed;
-xrandr supplies resolution changes.
+and edit the right-click menu directly in Settings. The app exits when closed;
+xrandr supplies resolution changes. Power reports battery information rather than
+configuring sleep or charging limits.
 See [Settings controls and limitations](docs/settings.md).
 
 Automatic time synchronization uses `systemd-timesyncd`. Live and installed

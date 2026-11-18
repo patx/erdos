@@ -115,10 +115,13 @@ helpers first, then run as your desktop user:
 ./scripts/update-desktop.sh
 ```
 
-It uses sudo, installs the current default apps, removes xterm, updates system
+It uses sudo, installs the updated desktop apps and services, removes xterm,
+tint2 and the NetworkManager tray applet, updates system
 input/udev defaults, backs up and replaces your Openbox/login configuration,
 and reloads the desktop. It also updates defaults for future accounts. Review
-the script before running it on a customized installation. Backups are reported
+the script before running it on a customized installation: replacing Openbox
+configuration also replaces custom shortcuts and menu edits. Existing per-user
+ErdOS preferences and gesture overrides remain in effect. Backups are reported
 under `~/openbox-config-backup-XXXXXXXX`. Log out of the console too, or reboot,
 to apply group, touchpad and login changes. Gesture access is limited to touchpad
 event nodes through logind/udev; the updater does not add users to the input group. A nonpersistent live session loses
@@ -169,7 +172,7 @@ nodes before systemd's seat rules. No keyboard access or input-group membership
 is granted. Stopping or killing the controller closes its input descriptors;
 there is no separate raw reader to leave behind.
 
-Skippy-XD still runs only while the overview is open, with physics and animations
+Skippy-XD runs only while the overview is open, with physics and animations
 disabled. No idle overview daemon, compositor or animation service is added.
 Defaults are in `/etc/xdg/skippy-xd.rc`; copy to
 `~/.config/skippy-xd/skippy-xd.rc` to customize. Logs are
@@ -177,11 +180,13 @@ Defaults are in `/etc/xdg/skippy-xd.rc`; copy to
 
 Copy `/etc/erdos/gestures.conf` to `~/.config/erdos/gestures.conf` for overrides.
 Set a binding to `none` to disable it; allowed action names are shown in the
-shipped file. Distance values from 20 to 1000 and direction ratios from 1 to 3
-are accepted. Restart with `erdos-gesture stop` then `erdos-gesture session`.
-The old libinput-gestures configuration is no longer read; translate existing
-custom bindings into the new format. Keyboard-only systems open no touchpad but
-keep the controller available for Super+O and window commands.
+`ACTIONS` list in `/usr/local/bin/erdos-gesture` (or choose them in Settings →
+Gestures). Distance values from 20 to 1000 and direction ratios from 1 to 3
+are accepted. Apply through Settings → Gestures, or run `erdos-gesture reload`
+inside the desktop session after editing the file. Log out and back in if the
+listener is not running.
+The listener reads only the system and per-user `gestures.conf` files.
+Keyboard-only systems open no touchpad but keep the controller available for Super+O and window commands.
 
 ## Offline installation and APT
 
@@ -207,3 +212,14 @@ This internal helper is for a fresh installation target, not a general updater
 for customized third-party APT configurations. No extra runtime package or
 background service is needed. Firmware/kernel support in the live image is
 preserved; installer networking support is not required for disk installation.
+
+## Alpha 1 build provenance
+
+The published `v1.0.0-alpha.1` ISO reuses the November 16 Debian package base.
+Its Settings UI/backend and gesture defaults were replaced, the compressed
+filesystem was regenerated with ownership and modes preserved, and the hybrid
+BIOS/UEFI image and internal checksums were rebuilt. No packages were added in
+that update. `build.sh` performs a clean live-build using the current source and
+repositories; it does not reproduce that exact package snapshot. See
+[validation](testing.md#november-17-menu-and-shortcut-update) for the checks and
+remaining boot/hardware-test limitations.

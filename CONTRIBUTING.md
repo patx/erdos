@@ -41,7 +41,7 @@ in a disposable VM.
 
 `docs/` is a plain HTML/CSS/JavaScript site. It has no package manager, framework,
 remote font or analytics dependency. Use relative asset paths so it works at
-`https://patx.github.io/erdos/` and from a local server:
+`https://patx.gitman.io/erdos/` and from a local server:
 
 ```sh
 python3 -m http.server 8000 --directory docs
