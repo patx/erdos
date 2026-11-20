@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <openbox_menu xmlns="http://openbox.org/3.4/menu">
   <menu id="root-menu" label="ErdOS">
-    <item label="Sakura"><action name="Execute"><command>sakura</command></action></item>
-    <item label="Chromium"><action name="Execute"><command>chromium</command></action></item>
-    <item label="PCManFM"><action name="Execute"><command>pcmanfm</command></action></item>
-    <item label="Twig"><action name="Execute"><command>twig</command></action></item>
+    <item label="Terminal"><action name="Execute"><command>erdos-launch terminal</command></action></item>
+    <item label="Web Browser"><action name="Execute"><command>erdos-launch browser</command></action></item>
+    <item label="File Manager"><action name="Execute"><command>erdos-launch files</command></action></item>
+    <item label="Text Editor"><action name="Execute"><command>erdos-launch editor</command></action></item>
     <menu id="erdos-applications" label="Applications" execute="/usr/local/bin/erdos-applications"/>
     <item label="Settings"><action name="Execute"><command>erdos-settings</command></action></item>
     <separator/>

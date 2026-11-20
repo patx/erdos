@@ -3,7 +3,7 @@
 Repository: <https://github.com/patx/erdos>. Website:
 <https://patx.gitman.io/erdos/>. These instructions prepare artifacts locally;
 the release-packaging script does not commit, tag, push, upload or publish.
-The current public release is [ErdOS 1 Alpha 1](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.1).
+The current public release is [ErdOS 1 Alpha 2](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.2).
 Both source remotes use `main`: GitHub at the URL above and Gitman at
 <https://gitman.io/git/patx/erdos>.
 
@@ -24,7 +24,7 @@ upload a release asset.
 
 Build on Debian 13 amd64 as described in [building.md](building.md), then complete
 [testing.md](testing.md). A successful build is not a boot/install test. Retain
-its logs outside Git. The first alpha version is `1.0.0-alpha.1`, with tag `v1.0.0-alpha.1`.
+its logs outside Git. The current alpha version is `1.0.0-alpha.2`, with tag `v1.0.0-alpha.2`.
 Keep it marked as a prerelease on GitHub.
 
 After testing a unique build, promote it to `dist/erdos-amd64.iso`, then run:
@@ -60,7 +60,7 @@ from the matching Debian archives with source repositories enabled.
 
 After those assets actually exist on a published release, set the chosen tag and
 `published: true` in `docs/release.json`. Its existing filenames and digest must
-still match those assets. The hero button links directly to the `v1.0.0-alpha.1` ISO; the bottom download
+still match those assets. The hero button links directly to the `v1.0.0-alpha.2` ISO; the bottom download
 section links to its release page. Update both links in `index.html` for a future
 release, together with the version text and release metadata. Future builds use current Debian packages, so reusing a date does not
 imply an identical ISO or checksum.
@@ -80,7 +80,7 @@ python3 scripts/prepare-release.py --verify-only --iso dist/erdos-amd64.iso
 ## Gitman Pages
 
 `docs/index.html` and `docs/guide.html` are standalone static pages. They use local
-CSS, JavaScript, the supplied logo and actual screenshots. There is no Jekyll,
+CSS, the supplied logo and actual screenshots. There is no Jekyll,
 Node.js, npm, frontend build step, analytics or external font dependency.
 `docs/.nojekyll` prevents Jekyll processing.
 

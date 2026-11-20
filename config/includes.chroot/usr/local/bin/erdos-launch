@@ -1,0 +1,32 @@
+#!/usr/bin/python3
+# SPDX-License-Identifier: MIT
+"""Launch the current per-user default for an ErdOS menu/shortcut role."""
+import sys
+from pathlib import Path
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'lib/erdos'))
+import default_apps
+
+
+def main():
+    if len(sys.argv) != 2 or sys.argv[1] not in default_apps.ROLES:
+        sys.exit('Usage: erdos-launch {terminal|browser|files|editor}')
+    try:
+        default_apps.launch(sys.argv[1])
+    except Exception as error:
+        print(f'ErdOS: {error}', file=sys.stderr)
+        # Load GTK only on failure, so a removed/broken default is visible.
+        import gi
+        gi.require_version('Gtk', '3.0')
+        from gi.repository import Gtk
+        ready, _ = Gtk.init_check()
+        if ready:
+            dialog = Gtk.MessageDialog(message_type=Gtk.MessageType.ERROR,
+                buttons=Gtk.ButtonsType.CLOSE, text='Could not open the default program')
+            dialog.format_secondary_text(str(error))
+            dialog.run(); dialog.destroy()
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

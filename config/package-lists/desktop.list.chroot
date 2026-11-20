@@ -36,12 +36,14 @@ gvfs-fuse
 # SFTP transport and local Bonjour share discovery.
 openssh-client
 avahi-daemon
+# Desktop-entry/MIME cache updates used by the build and app associations.
+desktop-file-utils
 # Twig and the dynamic Openbox menu share the existing Python/GTK runtime.
 python3
 python3-gi
 gir1.2-gtk-3.0
 gir1.2-gtksource-4
-chromium
+firefox
 fonts-dejavu-core
 hicolor-icon-theme
 adwaita-icon-theme

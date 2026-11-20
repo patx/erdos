@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.0.0-alpha.2 — 2026-11-19
+
+- Replace Chromium with regular Firefox from Mozilla's scoped, signed APT
+  repository. Firefox ESR, Snap and Flatpak are not used.
+- Add Default Programs to Settings. The root menu and app shortcuts follow the
+  selected terminal, browser, file manager and text editor; external browser
+  default changes are honored.
+- Clarify Wi-Fi versus internet state, refresh after connection actions, show
+  meaningful progress/errors, and clear stale confirmations. NetworkManager
+  events refresh the visible tab without periodic polling.
+- Add hsetroot image backgrounds with private copies, four layouts, solid-color
+  restoration and RandR refresh.
+- Match dark Openbox decorations, menus and indicators with GTK applications.
+  Improve dismissible Settings feedback and Retry controls.
+- Boot installed systems automatically after a one-second hidden menu timeout;
+  Esc reveals the menu. Clear old console output before local login.
+- Keep standard Skippy with physics/animations disabled. No dock, status overlay,
+  panel, compositor or new settings daemon.
+- Build from a clean Debian 13 minbase/live-build, update release screenshots and
+  documentation, and remove unused website scripts and superseded artwork.
+
 ## 1.0.0-alpha.1 — 2026-11-17
 
 First alpha release of ErdOS.

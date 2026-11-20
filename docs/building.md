@@ -115,8 +115,8 @@ helpers first, then run as your desktop user:
 ./scripts/update-desktop.sh
 ```
 
-It uses sudo, installs the updated desktop apps and services, removes xterm,
-tint2 and the NetworkManager tray applet, updates system
+It uses sudo, installs the updated desktop apps and services, replaces Chromium
+with regular Firefox, installs the matching Openbox/GTK theme defaults, and updates system
 input/udev defaults, backs up and replaces your Openbox/login configuration,
 and reloads the desktop. It also updates defaults for future accounts. Review
 the script before running it on a customized installation: replacing Openbox
@@ -213,13 +213,49 @@ for customized third-party APT configurations. No extra runtime package or
 background service is needed. Firmware/kernel support in the live image is
 preserved; installer networking support is not required for disk installation.
 
-## Alpha 1 build provenance
+## Alpha 2 build provenance
 
-The published `v1.0.0-alpha.1` ISO reuses the November 16 Debian package base.
-Its Settings UI/backend and gesture defaults were replaced, the compressed
-filesystem was regenerated with ownership and modes preserved, and the hybrid
-BIOS/UEFI image and internal checksums were rebuilt. No packages were added in
-that update. `build.sh` performs a clean live-build using the current source and
-repositories; it does not reproduce that exact package snapshot. See
-[validation](testing.md#november-17-menu-and-shortcut-update) for the checks and
-remaining boot/hardware-test limitations.
+Alpha 2 is generated from a clean Debian 13 minbase/live-build, rather than
+remastering a previous ISO. Keep its exact package manifest and source revision
+with the release. `/etc/erdos-release` identifies version 1.0.0-alpha.2.
+
+Image backgrounds reuse hsetroot/Imlib2. The existing desktop listener responds
+to RandR changes and reapplies the saved image; no wallpaper polling or daemon
+is added. Settings and the shared default-program launcher reuse Python/GIO/GTK.
+
+Installed GRUB boots entry zero after a one-second hidden timeout. Esc reveals
+the menu. tty1 clears old output before the login prompt, and routine boot status
+is suppressed. Logs remain in `journalctl -b` and `dmesg`. The USB retains its
+live/installer selection.
+
+## Regular Firefox
+
+The image installs Mozilla's **`firefox`** package, not Debian's
+`firefox-esr`. It removes Chromium from the package list. New-account web
+associations point to `firefox.desktop`; the menu and app shortcuts still honor
+subsequent per-user browser selections. Alpha 1 used Chromium; Alpha 2 uses this regular Firefox package.
+
+The minbase bootstrap includes the already-required `ca-certificates` package
+before the first Mozilla HTTPS request. This changes installation order, not
+the runtime package set.
+
+The Mozilla APT repository is configured through live-build's documented
+`config/archives/mozilla.{list,key,pref}.chroot` mechanism. The temporary build
+source names its key explicitly. The runtime key is installed at
+`/etc/apt/keyrings/packages.mozilla.org.asc`; `mozilla.sources` uses Signed-By
+to restrict it to Mozilla. Both live-session setup and installer finish setup
+write this source locally, so installation stays offline and later Firefox
+updates use normal signed APT updates. Pinning applies only to `firefox` and
+its language packs, not every package from that repository.
+
+The checked-in ASCII public key was fetched from Mozilla's official repository
+and verified against fingerprint
+`35BAA0B33E9EB396F59CA838C0BA5CE6DC6315A3`. Its SHA-256 is
+`3ecc63922b7795eb23fdc449ff9396f9114cb3cf186d6f5b53ad4cc3ebfbb11f`.
+No runtime GPG tool, Snap or Flatpak is required. The desktop updater also
+installs this scoped repository before installing regular Firefox, while
+preserving existing per-user default associations.
+
+[Mozilla's official DEB installation instructions](https://support.mozilla.org/en-US/kb/install-firefox-linux)
+and [Debian Live additional-repository documentation](https://live-team.pages.debian.net/live-manual/html/live-manual/customizing-package-installation.en.html)
+describe the package/repository and live-build mechanisms.

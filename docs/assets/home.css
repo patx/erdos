@@ -14,8 +14,6 @@
 .primary-link span { font-size: 22px; line-height: 1; }
 kbd { font-family: inherit; font-size: 12px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; min-width: 28px; padding: 8px 10px; border: 1px solid #42474b; border-bottom-width: 3px; border-radius: 5px; background: #1a1d1f; color: #eef2f5; white-space: nowrap; }
 .home .apps-section { padding-block: 64px 80px; }
-.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 32px; }
-.section-heading > p { color: var(--muted); margin-bottom: 26px; }
 .app-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 32px; padding-top: 42px; }
 .app { padding: 0 0 20px; }
 .app-icon { display: block; width: 80px; height: 80px; object-fit: contain; }
@@ -38,12 +36,6 @@ kbd { font-family: inherit; font-size: 12px; line-height: 1; display: inline-fle
 .download-section h2 a { display: block; color: inherit; text-decoration: none; }
 .download-section h2 a:hover { color: var(--blue); }
 .download-section h2 a span { font-size: .65em; }
-.download-section .primary-link { margin-block: 8px 18px; }
-.download-section #release-status { max-width: 420px; margin-inline: auto; font-size: 12px; }
-.install-link { margin-bottom: 0; font-size: 14px; }
-.download-actions { display: flex; flex-direction: column; align-items: center; width: min(100%, 420px); gap: 12px; font-size: 14px; }
-.download-actions .build-details { width: 100%; }
-.download-actions .release-facts, .download-actions #checksum-details { text-align: left; }
 .home .site-footer { display: flex; justify-content: space-between; margin-top: 0; padding-block: 30px; border-top-color: var(--line); }
 .home .site-footer p { margin: 0; }
 .home .skip-link { z-index: 50; }
@@ -59,12 +51,9 @@ kbd { font-family: inherit; font-size: 12px; line-height: 1; display: inline-fle
   .home .shell { width: calc(100% - 36px); }
   .home .site-header { padding-block: 24px; gap: 12px; align-items: center; }
   .home .site-header nav { gap: 14px; font-size: 12px; }
-  .home .site-header nav a:first-child { display: none; }
   .home h1 { font-size: clamp(43px,11.3vw,72px); letter-spacing: -.06em; }
   .primary-link { padding: 13px 20px; font-size: 14px; }
   .home .apps-section { padding-block: 80px 60px; }
-  .section-heading { display: block; }
-  .section-heading > p { font-size: 14px; }
   .app-list { grid-template-columns: 1fr 1fr; gap: 35px 24px; padding-top: 22px; }
   .app-icon, .file-icon { width: 64px; height: 64px; }
   .file-icon .app-icon { width: 40px; height: 40px; }

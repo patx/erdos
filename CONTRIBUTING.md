@@ -39,7 +39,7 @@ in a disposable VM.
 
 ## Website
 
-`docs/` is a plain HTML/CSS/JavaScript site. It has no package manager, framework,
+`docs/` is a plain HTML/CSS site. It has no package manager, framework,
 remote font or analytics dependency. Use relative asset paths so it works at
 `https://patx.gitman.io/erdos/` and from a local server:
 

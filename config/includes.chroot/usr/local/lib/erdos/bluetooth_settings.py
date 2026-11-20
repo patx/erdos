@@ -109,7 +109,7 @@ class Bluetooth:
                     if failed:
                         failed(error)
                     else:
-                        self.app.status.set_text(error.message)
+                        self.app.report(self.app.error_text(error), error=True)
         self.bus.call(self.owner, path, interface, method, parameters, None,
                       Gio.DBusCallFlags.NONE, 120000 if method == 'Pair' else 20000,
                       None, finish)
@@ -168,7 +168,7 @@ class Bluetooth:
         adapter = self.objects.get(self.adapters.get_active_id(), {}).get(ADAPTER, {})
         device = self.objects.get(self.devices.get_active_id(), {}).get(DEVICE, {})
         powered = adapter.get('Powered', False)
-        self.summary.set_text('No Bluetooth adapter detected. VMs need a passed-through Bluetooth USB adapter.' if not adapter else ('Bluetooth is on.' if powered else 'Bluetooth is off.'))
+        self.summary.set_text('No Bluetooth adapter detected. Connect an adapter to use Bluetooth.' if not adapter else ('Bluetooth is on.' if powered else 'Bluetooth is off.'))
         self.controls.set_sensitive(bool(adapter) and not self.busy)
         self.adapters.set_sensitive(not self.busy)
         self.devices.set_sensitive(not self.busy)
@@ -181,15 +181,15 @@ class Bluetooth:
         self.connect_button.set_sensitive(device.get('Paired', False))
         self.trust_button.set_label('Untrust' if device.get('Trusted') else 'Trust')
         self.trust_button.set_sensitive(device.get('Paired', False))
-        self.details.set_text(f"{device.get('Address', '')}  {'Trusted' if device.get('Trusted') else 'Not trusted'}" if device else 'No devices found. Turn on Bluetooth and scan.')
+        self.details.set_text(f"{device.get('Address', '')}  {'Trusted' if device.get('Trusted') else 'Not trusted'}" if device else ('No devices found. Turn on Bluetooth and scan.' if adapter else ''))
 
     def operation(self, path, interface, method, parameters=None, done=None):
         self.busy = True
         self.render_state()
-        self.app.status.set_text('Working…')
+        self.app.report('Working…')
         def finish(reply=None, error=None):
             self.busy = False
-            self.app.status.set_text(error.message if error else 'Done.')
+            self.app.report(self.app.error_text(error) if error else 'Bluetooth updated.', error=bool(error))
             self.render_state()
             self.refresh()
             if not error and done:
@@ -234,14 +234,14 @@ class Bluetooth:
         self.pairing = self.devices.get_active_id()
         path = self.pairing
         self.busy = True; self.render_state()
-        self.app.status.set_text('Pairing… Follow any confirmation or PIN prompt.')
+        self.app.report('Pairing… Follow any confirmation or PIN prompt.')
         def finish(reply=None, error=None):
             self.pairing = None
             self.cancel_dialog()
             self.busy = False
             self.render_state(); self.refresh()
             if error:
-                self.app.status.set_text(error.message)
+                self.app.report(self.app.error_text(error), error=True)
             else:
                 self.operation(path, DEVICE, 'Connect')
         self.call(path, DEVICE, 'Pair', done=lambda reply: finish(reply), failed=lambda error: finish(error=error))

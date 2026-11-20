@@ -3,20 +3,18 @@
 A minimal Openbox desktop built on **Debian 13 (Trixie), amd64**. Boot a live
 session or install the same desktop using Debian’s text installer.
 
-**Version 1 Alpha — `v1.0.0-alpha.1`.** Test in a VM before installing on hardware. Secure Boot
-is not supported. Disk selection, partitioning, and the final write confirmation
-remain manual.
+**Version 1 Alpha 2 — `v1.0.0-alpha.2`.** An experimental amd64 prerelease.
+Secure Boot is not supported. Disk selection, partitioning and final write
+confirmation remain manual.
 
 [Website](https://patx.gitman.io/erdos/) ·
-[Downloads](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.1) ·
+[Download Alpha 2](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.2) ·
 [User guide](https://patx.gitman.io/erdos/guide.html) · [Build instructions](docs/building.md)
 
-[ErdOS 1 Alpha 1](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.1) is available now.
-The November 17, 2026 ISO is **1,219,100,672 bytes (1.14 GiB)**. Download the ISO,
-checksums, package manifest and source archive from the release page.
-
-Source, offscreen GTK and checksum checks passed. The updated alpha still needs
-a fresh boot/install test; see [validation and known limitations](docs/testing.md).
+Alpha 2 adds regular Firefox, selectable default programs, clearer Network
+feedback, image backgrounds, matching dark applications/menus, and automatic
+boot to a clean console login. See the [changelog](CHANGELOG.md) and
+[validation results](docs/testing.md).
 
 ![ErdOS desktop with Twig, Sakura and the Openbox menu](docs/assets/desktop-hero.png)
 
@@ -25,7 +23,7 @@ a fresh boot/install test; see [validation and known limitations](docs/testing.m
 - A panel-free Openbox desktop with a single-window **Settings** app, battery
   information, time-zone controls, safe resolution changes, custom keyboard
   shortcuts and a right-click menu editor.
-- **Sakura**, **Chromium**, **PCManFM**, and **Twig**. PCManFM includes USB mounting,
+- **Sakura**, **Firefox** (regular Mozilla release), **PCManFM**, and **Twig**. PCManFM includes USB mounting,
   SMB and SFTP support; new graphical apps appear in the Applications submenu.
 - Three/four-finger swipe gestures and an on-demand Skippy-XD window overview,
   built with physics disabled. [Swipe layout](https://patx.gitman.io/erdos/guide.html#gestures).
@@ -34,7 +32,9 @@ a fresh boot/install test; see [validation and known limitations](docs/testing.m
 - Automatic external-monitor extension to the right, with the laptop primary.
   Workspaces span all screens.
 - NetworkManager and PipeWire, plus firmware for common hardware.
-- Console login starts Openbox; Logout returns to the login prompt.
+- Console login starts Openbox; Logout returns to a cleared login prompt.
+  The installed system boots automatically; press Esc during its
+  one-second hidden boot timeout to open recovery or other OS entries.
 
 There is no display manager, compositor, Snap, GNOME session, Qt desktop stack,
 Node.js, or Codex installation. Most package documentation and non-English UI
@@ -43,7 +43,7 @@ notices are retained.
 
 ## Try or install
 
-1. Download the ISO and its checksum from [Releases](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.1).
+1. Download the ISO and its checksum from [Releases](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.2).
 2. In the download directory, run `sha256sum -c erdos-amd64.iso.sha256`.
 3. Attach the ISO to a VM, or write it to a USB device with an image writer.
    Writing an image erases that USB device. Disable Secure Boot.
@@ -68,8 +68,8 @@ the selected disk when confirmed. [Read the full installation guide](https://pat
 
 | Shortcut | Action |
 | --- | --- |
-| Super + Enter / Ctrl + Alt + T | Sakura |
-| Super + B / E / T | Chromium / PCManFM / Twig |
+| Super + Enter / Ctrl + Alt + T | Default terminal (Sakura initially) |
+| Super + B / E / T | Default browser / file manager / text editor |
 | Super + I | ErdOS Settings |
 | Super + Tab / Shift + Super + Tab | Cycle windows forward / backward |
 | Super alone / Super + O | Show all open windows |
@@ -96,6 +96,17 @@ Windows key. [All shortcuts and desktop behavior](https://patx.gitman.io/erdos/g
 Change swipe actions and sensitivity in **Settings → Gestures**. Sound, Wi-Fi,
 Bluetooth, battery information and the clock are in Settings; there is no panel
 or system tray. Open Settings with **Super + I**.
+
+## Default programs and appearance
+
+The right-click menu uses **Terminal**, **Web Browser**, **File Manager** and
+**Text Editor**. These items and their app shortcuts follow the user's defaults.
+Choose them in **Settings → Default Programs**; the Applications submenu lists
+actual app names. Browser, folder and plain-text choices share desktop associations.
+
+Choose an image or solid color in **Settings → Appearance**. Images are copied
+privately and restored at login. Fill, Fit, Center and Tile reuse hsetroot;
+there is no wallpaper daemon. [Settings controls](docs/settings.md).
 
 ## Build from source
 
@@ -135,12 +146,10 @@ private test credentials, or build logs.
 
 ## Status and contributing
 
-The November 16 base image passed UEFI live boot and a fresh UEFI installation
-with two virtual disks. The disk picker and default-No write confirmation stayed
-interactive; the unselected disk remained untouched. Installed-system checks
-passed sudo authentication, online APT repositories, retained scrot, and full,
-window and region screenshots. Physical touchpads, backlights, docks, Windows/macOS
-dual boot, encrypted storage and unusual hardware need further testing.
+The release is tested in disposable VMs; exact results and footprint measurements
+are recorded in [testing](docs/testing.md). Physical touchpads, battery/backlight
+behavior, docks, Windows/macOS dual boot, encrypted storage and unusual hardware
+still need broader testing.
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before sending changes, and use
 [GitHub Issues](https://github.com/patx/erdos/issues) for reproducible bugs.

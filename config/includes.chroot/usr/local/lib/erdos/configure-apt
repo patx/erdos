@@ -4,6 +4,8 @@
 set -eu
 [ "$(id -u)" -eq 0 ] || { echo 'Run as root in the installation target.' >&2; exit 1; }
 test -s /usr/share/keyrings/debian-archive-keyring.gpg
+test -s /etc/apt/keyrings/packages.mozilla.org.asc
 install -Dm644 /usr/local/share/erdos/apt/erdos.sources /etc/apt/sources.list.d/erdos.sources
-printf '%s\n' '# ErdOS repositories: /etc/apt/sources.list.d/erdos.sources' > /etc/apt/sources.list
+install -Dm644 /usr/local/share/erdos/apt/mozilla.sources /etc/apt/sources.list.d/mozilla.sources
+printf '%s\n' '# ErdOS repositories: see /etc/apt/sources.list.d/' > /etc/apt/sources.list
 rm -f /etc/apt/sources.list.d/debian.sources

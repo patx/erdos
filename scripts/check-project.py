@@ -60,7 +60,8 @@ def main():
     files = list(public_files(ROOT))
     if (ROOT / '.git').exists():
         listed = subprocess.check_output(['git', '-c', f'safe.directory={ROOT}', '-C', str(ROOT), 'ls-files', '--cached', '--others', '--exclude-standard', '-z'])
-        candidates = {name.decode() for name in listed.split(b'\0') if name}
+        # Tracked deletions are no longer part of the working-tree source archive.
+        candidates = {name.decode() for name in listed.split(b'\0') if name and (ROOT / name.decode()).exists()}
         expected = {str(path.relative_to(ROOT)) for path in files}
         if candidates != expected:
             raise ValueError(f'Git/source archive boundary differs: unexpected={sorted(candidates - expected)}, missing={sorted(expected - candidates)}')

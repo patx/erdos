@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "iso_sha256": "0e558028b33519f8d7d36ed131b84f3ec113b5d9dba344c6660ac2e4d657241a",
-  "measured_at": "2026-11-16T23:50:06.591434-05:00",
+  "iso_sha256": "57172a9d911af6c4aa9d1225218d4c066e5edf212f69d51b39629ad05d4a2263",
+  "measured_at": "2026-11-19T22:52:03.242357-05:00",
   "service_state": {
     "NetworkManager": "active",
     "systemd-timesyncd": "active",
@@ -19,45 +19,45 @@
   "kernel": "6.12.117+deb13-amd64",
   "settle_seconds": 120,
   "sample_interval_seconds": 10,
-  "desktop_ready_uptime_seconds": 151.83,
+  "desktop_ready_uptime_seconds": 310.51,
   "ram_definition": "MemTotal - MemAvailable",
   "ram_samples": [
     {
-      "uptime_seconds": 271.83,
+      "uptime_seconds": 430.52,
       "mem_total_bytes": 2063323136,
-      "mem_available_bytes": 1665064960,
-      "used_bytes": 398258176
+      "mem_available_bytes": 1664237568,
+      "used_bytes": 399085568
     },
     {
-      "uptime_seconds": 281.83,
+      "uptime_seconds": 440.52,
       "mem_total_bytes": 2063323136,
-      "mem_available_bytes": 1665064960,
-      "used_bytes": 398258176
+      "mem_available_bytes": 1664245760,
+      "used_bytes": 399077376
     },
     {
-      "uptime_seconds": 291.83,
+      "uptime_seconds": 450.52,
       "mem_total_bytes": 2063323136,
-      "mem_available_bytes": 1665064960,
-      "used_bytes": 398258176
+      "mem_available_bytes": 1664245760,
+      "used_bytes": 399077376
     },
     {
-      "uptime_seconds": 301.84,
+      "uptime_seconds": 460.52,
       "mem_total_bytes": 2063323136,
-      "mem_available_bytes": 1665064960,
-      "used_bytes": 398258176
+      "mem_available_bytes": 1664245760,
+      "used_bytes": 399077376
     },
     {
-      "uptime_seconds": 311.84,
+      "uptime_seconds": 470.52,
       "mem_total_bytes": 2063323136,
-      "mem_available_bytes": 1665073152,
-      "used_bytes": 398249984
+      "mem_available_bytes": 1664245760,
+      "used_bytes": 399077376
     }
   ],
-  "ram_median_bytes": 398258176,
+  "ram_median_bytes": 399077376,
   "filesystems": [
     {
       "mount": "/",
-      "used_bytes": 1994240000,
+      "used_bytes": 1936224256,
       "filesystem_bytes": 22859108352
     },
     {
@@ -75,11 +75,11 @@
   ],
   "disk_definition": "Used filesystem blocks on root and EFI; excludes swap and unallocated space",
   "apt_indexes_present": false,
-  "disk_used_bytes": 1994551296,
+  "disk_used_bytes": 1936535552,
   "sampling_notes": [
     "Fresh installation of the identified ISO, booted without ISO media",
     "Default desktop services enabled; no application windows open",
-    "Serial console shell and Python sampler included",
+    "Serial console shell, Python sampler and read-only 9p fixture mount included",
     "No packages added, removed or upgraded; no apt update after installation",
     "Bluetooth enabled by default, but its service is hardware-conditional; no adapter in VM"
   ]

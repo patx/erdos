@@ -1,0 +1,14 @@
+Firefox artwork notice
+
+The Firefox logo in docs/assets/apps/firefox.png is the unmodified
+usr/lib/firefox/browser/chrome/icons/default/default128.png from Mozilla's
+firefox 160.0.1~build1 amd64 DEB package at https://packages.mozilla.org/apt.
+It identifies the Firefox browser distributed with ErdOS.
+
+Firefox and its logo are trademarks of the Mozilla Foundation. Mozilla's
+artwork and trademarks are not covered by ErdOS's MIT license.
+https://www.mozilla.org/foundation/trademarks/policy/
+
+Firefox's software notices and third-party licenses are available through
+about:license in the unmodified browser. Source releases are available at
+https://archive.mozilla.org/pub/firefox/releases/160.0.1/source/

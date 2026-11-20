@@ -60,7 +60,7 @@ lb config \
   --apt-recommends false \
   --apt-indices false \
   --apt-source-archives false \
-  --debootstrap-options "--variant=minbase" \
+  --debootstrap-options "--variant=minbase --include=ca-certificates" \
   --security true \
   --updates true \
   --memtest none \

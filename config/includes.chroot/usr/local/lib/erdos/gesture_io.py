@@ -99,6 +99,7 @@ class Desktop:
         self.atoms = {}
         self.log_path = log_path
         self.overview_child = None
+        self.randr_event = None
         self.manage_workspaces = False
         self.session_active = True
         self.super_enabled = False
@@ -121,10 +122,13 @@ class Desktop:
         except BlockingIOError:
             pass
         workspaces_changed = False
+        displays_changed = False
         while self.x.XPending(self.display):
             event = Event()
             self.x.XNextEvent(self.display, C.byref(event))
-            if event.type == 34:  # MappingNotify
+            if self.randr_event is not None and event.type in (self.randr_event, self.randr_event + 1):
+                displays_changed = True
+            elif event.type == 34:  # MappingNotify
                 self.x.XRefreshKeyboardMapping(C.byref(event))
                 if self.manage_workspaces:
                     self.super_codes = {self.keycode('Super_L'), self.keycode('Super_R')}
@@ -142,6 +146,14 @@ class Desktop:
                     workspaces_changed = True
         if workspaces_changed:
             self.sync_workspaces()
+        if displays_changed:
+            try:
+                import settings
+                prefs = settings.preferences()
+                if prefs.get('background_image'):
+                    settings.apply_background(prefs)
+            except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+                print(f'Cannot refresh background: {error}', flush=True)
         return True
 
     def close(self):
@@ -172,6 +184,12 @@ class Desktop:
         self.super_candidate = None
         if not self.manage_workspaces:
             self.manage_workspaces = True
+            self.randr = C.CDLL('libXrandr.so.2')
+            event_base, error_base = I(), I()
+            query = bind(self.randr, 'XRRQueryExtension', I, V, C.POINTER(I), C.POINTER(I))
+            if query(self.display, C.byref(event_base), C.byref(error_base)):
+                self.randr_event = event_base.value
+                bind(self.randr, 'XRRSelectInput', None, V, U, I)(self.display, self.root, 1 | 2 | 4)
             self.x.XSelectInput(self.display, self.root, 1 << 22)
             self.super_codes = {self.keycode('Super_L'), self.keycode('Super_R')}
             self.xi = C.CDLL('libXi.so.6')

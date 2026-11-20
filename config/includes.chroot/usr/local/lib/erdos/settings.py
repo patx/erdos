@@ -6,13 +6,14 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
 
 CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home() / '.config')))
 PREFERENCES = CONFIG / 'erdos/settings.json'
-DEFAULTS = dict(background='#202326', natural=True, tapping=True, clickfinger=True,
+DEFAULTS = dict(terminal_app='system', background='#202326', background_image=False, background_layout='fill', natural=True, tapping=True, clickfinger=True,
                 speed=0.0, automatic_displays=True, dynamic_workspaces=True, workspace_count=2, super_overview=True)
 NS = 'http://openbox.org/3.4/rc'
 ET.register_namespace('', NS)
@@ -63,9 +64,79 @@ def touchpad(prefs):
     return result.stderr.strip()
 
 
-def appearance(theme, font, dark, color):
+WALLPAPER_MODES = {'fill': '-cover', 'fit': '-full', 'center': '-center', 'tile': '-tile'}
+
+
+def wallpaper_path():
+    return CONFIG / 'erdos/background-image'
+
+
+def validate_background(path):
+    # Use hsetroot's existing decoder; validate before touching the desktop.
+    import ctypes as C
+    imlib = C.CDLL('libImlib2.so.1')
+    imlib.imlib_load_image.argtypes = [C.c_char_p]
+    imlib.imlib_load_image.restype = C.c_void_p
+    imlib.imlib_context_set_image.argtypes = [C.c_void_p]
+    imlib.imlib_context_set_image.restype = None
+    imlib.imlib_free_image_and_decache.argtypes = []
+    imlib.imlib_free_image_and_decache.restype = None
+    decoded = imlib.imlib_load_image(os.fsencode(path))
+    if not decoded:
+        raise ValueError('This file cannot be read as a supported image. Try PNG or JPEG.')
+    imlib.imlib_context_set_image(decoded)
+    imlib.imlib_free_image_and_decache()
+
+
+def apply_background(prefs=None):
+    prefs = preferences() if prefs is None else prefs
+    color = prefs.get('background', DEFAULTS['background'])
+    if not re.fullmatch(r'#[0-9a-fA-F]{6}', color):
+        color = DEFAULTS['background']
+    path = wallpaper_path()
+    if prefs.get('background_image') and path.is_file():
+        try:
+            validate_background(path)
+            run('hsetroot', '-solid', color,
+                WALLPAPER_MODES.get(prefs.get('background_layout'), '-cover'), str(path))
+            return
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError):
+            pass  # Missing/failed wallpaper must never prevent desktop login.
+    run('hsetroot', '-solid', color)
+
+
+def set_background(color, image=False, layout='fill', source=None):
     if not re.fullmatch(r'#[0-9a-fA-F]{6}', color):
         raise ValueError('Choose a valid desktop color.')
+    if layout not in WALLPAPER_MODES:
+        raise ValueError('Choose a valid image layout.')
+    path = wallpaper_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    candidate = None
+    try:
+        if image:
+            selected = Path(source).expanduser() if source else path
+            if not selected.is_file():
+                raise ValueError('Choose a readable image file first.')
+            fd, name = tempfile.mkstemp(prefix='.background-', dir=path.parent)
+            candidate = Path(name)
+            with os.fdopen(fd, 'wb') as target, selected.open('rb') as original:
+                shutil.copyfileobj(original, target)
+            validate_background(candidate)
+            run('hsetroot', '-solid', color, WALLPAPER_MODES[layout], str(candidate))
+            os.replace(candidate, path)
+        else:
+            run('hsetroot', '-solid', color)
+        save_preferences(background=color, background_image=bool(image), background_layout=layout)
+        if not image:
+            path.unlink(missing_ok=True)  # Only our private copy; never the user's original.
+    finally:
+        if candidate:
+            candidate.unlink(missing_ok=True)
+
+
+def appearance(theme, font, dark, color, image=False, layout='fill', source=None):
+    set_background(color, image, layout, source)
     path = CONFIG / 'gtk-3.0/settings.ini'
     parser = configparser.ConfigParser(interpolation=None)
     parser.read(path)
@@ -74,8 +145,6 @@ def appearance(theme, font, dark, color):
     parser['Settings'].update({'gtk-theme-name': theme, 'gtk-font-name': font,
                               'gtk-application-prefer-dark-theme': str(dark).lower()})
     stream = io.StringIO(); parser.write(stream); write(path, stream.getvalue())
-    save_preferences(background=color)
-    run('hsetroot', '-solid', color)
 
 
 def keyboard():
@@ -170,11 +239,12 @@ def apply_session():
         prefs = preferences()
     except (OSError, ValueError):
         prefs = DEFAULTS.copy()
-    actions = [lambda: run('hsetroot', '-solid', prefs['background']), lambda: touchpad(prefs)]
+    actions = [lambda: touchpad(prefs)]
     if prefs['automatic_displays']:
         actions.append(lambda: run('erdos-displays', '--apply'))
     from display_settings import restore_saved
     actions.append(restore_saved)
+    actions.append(lambda: apply_background(prefs))
     for action in actions:
         try:
             action()

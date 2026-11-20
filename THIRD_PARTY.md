@@ -8,8 +8,8 @@ relicense the following upstream material or the packages placed in an ISO.
 | `vendor/twig/` runtime, desktop entry, icons and manual | [Twig](https://gitman.io/patx/twig), commit `a9123c2ecf1e89eaa31cbf178a434733bba6ead8` | MIT; retain `vendor/twig/LICENSE` and `UPSTREAM` |
 | Templates and adaptations in `config/bootloaders/` | Debian live-build, source package `1:20250505+deb13u1` | GPL-3.0-or-later; see `LICENSES/live-build-copyright` and `LICENSES/GPL-3.0-or-later.txt` |
 | `vendor/skippy-xd/` | [Skippy-XD](https://github.com/felixfung/skippy-xd), commit `25402b43920965f4bfacadceb5b7dacbf5f6b026` | GPL-2.0-or-later; original source headers, `COPYING` and `UPSTREAM` retained; physics disabled; local one-shot paging patch documented in `UPSTREAM` |
-| Website app icons in `docs/assets/apps/` | Icons from Debian Chromium/Sakura/Adwaita packages and vendored Twig | See [icon credits](docs/assets/apps/credits.html), `LICENSES/chromium-copyright`, `LICENSES/sakura-artwork-copyright`, `LICENSES/adwaita-icon-theme-copyright` and `vendor/twig/LICENSE`; unmodified artwork |
-| Programs, libraries, fonts, firmware and bootloader binaries in a built ISO | Debian’s main and non-free-firmware archives | Each package’s own license; these are not covered by ErdOS’s MIT license |
+| Website app icons in `docs/assets/apps/` | Firefox artwork from Mozilla; Sakura/Adwaita icons from Debian and vendored Twig | See [icon credits](docs/assets/apps/credits.html), `LICENSES/firefox-artwork-notice`, `LICENSES/sakura-artwork-copyright`, `LICENSES/adwaita-icon-theme-copyright` and `vendor/twig/LICENSE`; unmodified artwork |
+| Programs, libraries, fonts, firmware and bootloader binaries in a built ISO | Debian’s main and non-free-firmware archives; regular Firefox from Mozilla’s official APT repository | Each package’s own license; these are not covered by ErdOS’s MIT license |
 
 Vendored runtime licenses and provenance are installed into their directories
 under `/usr/local/share/doc/`. Skippy-XD’s build record also identifies its exact
@@ -28,3 +28,9 @@ an archive of all corresponding source. See [release preparation](docs/releasing
 
 Debian and upstream project names identify the software on which ErdOS is based;
 this project does not claim their endorsement.
+
+Alpha 2 replaces Chromium with unmodified regular Firefox from
+Mozilla, installed as its official signed DEB package. The Mozilla repository's
+public signing key is included for package verification, with its fingerprint
+recorded in [build instructions](docs/building.md#regular-firefox).
+Mozilla/Firefox names and marks identify that upstream software. Earlier Chromium artwork remains in the Alpha 1 Git tag and source archive.

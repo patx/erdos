@@ -51,7 +51,11 @@ class Settings(Gtk.Application):
         self.status.set_margin_start(16); self.status.set_margin_end(16)
         self.status.set_margin_top(10); self.status.set_margin_bottom(10)
         outer.pack_start(body, True, True, 0)
-        outer.pack_start(self.status, False, False, 0)
+        self.feedback = Gtk.InfoBar(show_close_button=True)
+        self.feedback.get_content_area().add(self.status)
+        self.feedback.connect('response', lambda *_: self.feedback.hide())
+        self.feedback.set_no_show_all(True)
+        outer.pack_start(self.feedback, False, False, 0)
         self.resolution_bar = Gtk.Box(spacing=12)
         self.resolution_bar.set_border_width(12)
         self.resolution_label = Gtk.Label(xalign=0, wrap=True)
@@ -65,7 +69,7 @@ class Settings(Gtk.Application):
         self.trial_process = None
         self.trial_timer = None
         self.window.add(outer)
-        for name in ('Appearance', 'Touchpad', 'Keyboard', 'Menu', 'Gestures', 'Displays', 'Sound', 'Network', 'Bluetooth', 'Power', 'Date & Time'):
+        for name in ('Appearance', 'Default Programs', 'Touchpad', 'Keyboard', 'Menu', 'Gestures', 'Displays', 'Sound', 'Network', 'Bluetooth', 'Power', 'Date & Time'):
             page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
             page.set_border_width(24)
             title = Gtk.Label(xalign=0); title.set_markup(f'<big><b>{GLib.markup_escape_text(name)}</b></big>')
@@ -73,9 +77,9 @@ class Settings(Gtk.Application):
             scroll = Gtk.ScrolledWindow(); scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
             scroll.add(page); self.stack.add_titled(scroll, name, name)
             try:
-                getattr(self, name.lower().replace(' & ', '_'))(page)
+                getattr(self, name.lower().replace(' & ', '_').replace(' ', '_'))(page)
             except Exception as error:
-                self.note(page, f'Could not load this section: {error}')
+                self.note(page, f'Could not load this section: {self.error_text(error)}')
         self.window.show_all()
         self.resolution_bar.hide()
 
@@ -117,23 +121,46 @@ class Settings(Gtk.Application):
         page.pack_start(button, False, False, 0)
         return button
 
-    def perform(self, action):
+    def report(self, message, error=False):
+        self.status.set_text(message)
+        self.feedback.set_message_type(Gtk.MessageType.ERROR if error else Gtk.MessageType.INFO)
+        self.status.show()
+        self.feedback.get_content_area().show()
+        self.feedback.show()
+
+    @staticmethod
+    def error_text(error):
+        if isinstance(error, subprocess.TimeoutExpired):
+            return 'The operation timed out. Check the device or connection and try again.'
+        if isinstance(error, FileNotFoundError):
+            return f'Required program or file is missing: {error.filename or error}'
+        message = getattr(error, 'message', str(error)).strip()
+        # BlueZ and other D-Bus services prefix otherwise useful error messages.
+        if 'GDBus.Error:' in message:
+            message = message.split('GDBus.Error:', 1)[1].split(':', 1)[-1].strip()
+        return message or 'The operation could not be completed. Try again.'
+
+    def perform(self, action, pending='Applying…'):
         # Gather widget values on GTK's main thread, run commands off-thread.
         try:
             job = action()
         except Exception as error:
-            self.status.set_text(str(error)); return
+            self.report(self.error_text(error), error=True); return
         self.stack.set_sensitive(False)
-        self.status.set_text('Applying…')
+        self.report(pending)
         def worker():
             try:
                 result = job() if callable(job) else job
-                message = result if isinstance(result, str) and result else 'Done.'
+                message = result if isinstance(result, str) and result else 'Changes applied.'
+                failed = False
             except Exception as error:
-                message = str(error)
-            GLib.idle_add(finish, message)
-        def finish(message):
-            self.stack.set_sensitive(True); self.status.set_text(message)
+                message = self.error_text(error)
+                failed = True
+            GLib.idle_add(finish, message, failed)
+        def finish(message, failed):
+            if self.window is None:
+                return
+            self.stack.set_sensitive(True); self.report(message, error=failed)
         threading.Thread(target=worker, daemon=True).start()
 
     def appearance(self, page):
@@ -147,14 +174,75 @@ class Settings(Gtk.Application):
         theme = self.choice(page, 'Application theme', [(t,t) for t in sorted(themes)], current)
         font = self.row(page, 'Font', Gtk.FontButton(font=values.get('gtk-font-name', 'DejaVu Sans 10')))
         dark = self.toggle(page, 'Prefer dark applications', values.get('gtk-application-prefer-dark-theme') == 'true')
-        rgba = Gdk.RGBA(); rgba.parse(backend.preferences()['background'])
+        prefs = backend.preferences()
+        rgba = Gdk.RGBA(); rgba.parse(prefs['background'])
         color = self.row(page, 'Desktop color', Gtk.ColorButton(rgba=rgba))
+        mode = self.choice(page, 'Background', [('solid', 'Solid color'), ('image', 'Image')],
+                           'image' if prefs['background_image'] else 'solid')
+        chooser = Gtk.FileChooserButton(title='Choose a background image', action=Gtk.FileChooserAction.OPEN)
+        image_filter = Gtk.FileFilter(); image_filter.set_name('Images'); image_filter.add_pixbuf_formats()
+        chooser.add_filter(image_filter)
+        self.row(page, 'Choose image', chooser)
+        image_status = self.note(page, 'Saved image selected.' if prefs['background_image'] else 'No image selected.')
+        layout = self.choice(page, 'Image layout', [('fill','Fill (crop to fit)'), ('fit','Fit (keep whole image)'),
+                             ('center','Center'), ('tile','Tile')], prefs['background_layout'])
+        remove = Gtk.Button(label='Remove image', halign=Gtk.Align.START)
+        page.pack_start(remove, False, False, 0)
+        def refresh(*_):
+            enabled = mode.get_active_id() == 'image'
+            chooser.set_sensitive(enabled); layout.set_sensitive(enabled)
+            remove.set_sensitive(enabled)
+        def selected(*_):
+            if chooser.get_filename():
+                mode.set_active_id('image')
+                image_status.set_text(Path(chooser.get_filename()).name)
+        chooser.connect('file-set', selected)
+        def clear(*_):
+            chooser.unselect_all(); mode.set_active_id('solid')
+            image_status.set_text('Image will be removed when you apply.')
+        remove.connect('clicked', clear)
+        mode.connect('changed', refresh); refresh()
+        self.note(page, 'Apply to save a private copy of the image and restore it at login. Remove image returns to your desktop color when applied; the original file is never deleted. Fill crops without stretching; Fit uses your desktop color around the image.')
         self.note(page, 'Themes and fonts apply to newly opened applications. Existing applications may need to be reopened.')
         def apply():
             c = color.get_rgba(); hexcolor = '#%02x%02x%02x' % tuple(round(v*255) for v in (c.red,c.green,c.blue))
-            args = theme.get_active_id(), font.get_font_name(), dark.get_active(), hexcolor
-            return lambda: backend.appearance(*args)
+            args = (theme.get_active_id(), font.get_font_name(), dark.get_active(), hexcolor,
+                    mode.get_active_id() == 'image', layout.get_active_id(), chooser.get_filename())
+            def job():
+                backend.appearance(*args)
+                def saved():
+                    chooser.unselect_all()
+                    image_status.set_text('Saved image selected.' if args[4] else 'No image selected.')
+                GLib.idle_add(saved)
+            return job
         self.button(page, 'Apply appearance', apply)
+
+    def default_programs(self, page):
+        import default_apps
+        self.note(page, 'These choices control the desktop menu and app shortcuts, plus web links, folders and plain-text files.')
+        fields = {}
+        for role, (label, *_rest) in default_apps.ROLES.items():
+            fields[role] = self.row(page, label, Gtk.ComboBoxText())
+        def refresh():
+            for role, widget in fields.items():
+                rows, selected = default_apps.choices(role)
+                widget.remove_all()
+                for key, name in rows:
+                    widget.append(key, name)
+                widget.set_active_id(selected or '')
+                if not rows:
+                    widget.append('', 'No application installed')
+                    widget.set_active(0)
+                widget.set_sensitive(bool(rows))
+        refresh()
+        button = Gtk.Button(label='Refresh application list', halign=Gtk.Align.START)
+        button.connect('clicked', lambda *_: refresh())
+        page.pack_start(button, False, False, 0)
+        def apply():
+            selections = {role: widget.get_active_id() for role, widget in fields.items() if widget.get_sensitive()}
+            return lambda: default_apps.set_defaults(selections)
+        self.button(page, 'Apply default programs', apply)
+        self.note(page, 'Install an alternative first, then refresh this list. Terminal selection is per user; System terminal follows the computer’s terminal setting. Other file types keep their own associations. These choices apply immediately; no logout is needed.')
 
     def touchpad(self, page):
         prefs = backend.preferences()
@@ -360,7 +448,7 @@ class Settings(Gtk.Application):
         if self.trial_process is not None:
             return
         self.stack.set_sensitive(False)
-        self.status.set_text('Testing resolution…')
+        self.report('Testing resolution…')
         try:
             self.trial_process = subprocess.Popen(
                 [sys.executable, '-B', str(Path(display_settings.__file__))],
@@ -428,7 +516,7 @@ class Settings(Gtk.Application):
         self.trial_process = None
         self.resolution_bar.hide()
         self.stack.set_sensitive(True)
-        self.status.set_text(message)
+        self.report(message)
 
     def load_section(self, page, fetch, populate):
         loading = self.note(page, 'Loading…')
@@ -437,18 +525,24 @@ class Settings(Gtk.Application):
                 return
             loading.destroy()
             if error:
-                self.note(page, f'Unavailable: {error}. Close and reopen Settings to retry.')
+                notice = self.note(page, f'Could not load this section: {error}')
+                retry = Gtk.Button(label='Retry', halign=Gtk.Align.START)
+                def again(*_):
+                    notice.destroy(); retry.destroy()
+                    self.load_section(page, fetch, populate)
+                retry.connect('clicked', again)
+                page.pack_start(retry, False, False, 0)
             else:
                 try:
                     populate(page, data)
                 except Exception as failure:
-                    self.note(page, f'Could not load this section: {failure}')
+                    self.note(page, f'Could not load this section: {self.error_text(failure)}')
             page.show_all()
         def worker():
             try:
                 data = fetch()
             except Exception as error:
-                GLib.idle_add(finish, None, str(error))
+                GLib.idle_add(finish, None, self.error_text(error))
             else:
                 GLib.idle_add(finish, data, None)
         threading.Thread(target=worker, daemon=True).start()
@@ -468,6 +562,9 @@ class Settings(Gtk.Application):
     def sound_controls(self, page, data):
         self.note(page, 'Changes apply to the selected device. New applications use the default device; existing streams may stay on their current device.')
         devices, levels = data
+        if not devices:
+            self.note(page, 'No audio devices detected. Connect an audio device, then reopen Settings.')
+            return
         for kind, title, target in [('Audio/Sink','Output','@DEFAULT_AUDIO_SINK@'), ('Audio/Source','Microphone','@DEFAULT_AUDIO_SOURCE@')]:
             choices = [(target, 'Current default')] + [(i,n) for i,n,k in devices if k == kind]
             choice = self.choice(page, title + ' device', choices, target)
@@ -580,51 +677,8 @@ class Settings(Gtk.Application):
         self.bluetooth_page = Bluetooth(self, page)
 
     def network(self, page):
-        def fetch():
-            return (backend.run('nmcli','-f','DEVICE,TYPE,STATE,CONNECTION','device','status'),
-                    backend.run('nmcli','radio','wifi'),
-                    backend.nm_lines('-f','UUID,NAME','connection','show'))
-        self.load_section(page, fetch, self.network_controls)
-
-    def network_controls(self, page, data):
-        device_status, radio_state, profiles = data
-        status = self.note(page, device_status)
-        wifi = self.toggle(page, 'Wi-Fi enabled', radio_state == 'enabled')
-        def radio():
-            state = 'on' if wifi.get_active() else 'off'
-            return lambda: backend.run('nmcli','radio','wifi',state)
-        self.button(page, 'Apply Wi-Fi state', radio)
-        networks = self.choice(page, 'Wi-Fi network', [])
-        password = self.row(page, 'Password (if needed)', Gtk.Entry(visibility=False, input_purpose=Gtk.InputPurpose.PASSWORD))
-        self.note(page, 'Select a network and enter its password, or leave it empty for an open or previously saved network. Enterprise networks can be configured with the existing connection editor from Applications.')
-        def refresh():
-            def job():
-                rows = backend.nm_lines('-f','BSSID,SSID,SIGNAL,SECURITY','device','wifi','list','--rescan','yes')
-                device_status = backend.run('nmcli','-f','DEVICE,TYPE,STATE,CONNECTION','device','status')
-                def fill():
-                    networks.remove_all()
-                    for bssid, ssid, signal, security in rows:
-                        if ssid: networks.append(bssid, f'{ssid} ({signal}%, {security or "open"})')
-                    networks.set_active(0); status.set_text(device_status)
-                GLib.idle_add(fill)
-                return 'Network list refreshed.'
-            return job
-        self.button(page, 'Refresh networks', refresh)
-        def connect():
-            selected = networks.get_active_id(); secret = password.get_text(); password.set_text('')
-            if not selected: raise ValueError('Refresh networks and select one first.')
-            if '\n' in secret or '\r' in secret: raise ValueError('Password must be a single line.')
-            # --ask reads the secret on stdin, never from the process command line.
-            return lambda: backend.run('nmcli','--ask','--wait','30','device','wifi','connect',selected,
-                                       input=secret+'\n', timeout=40)
-        self.button(page, 'Connect', connect)
-        saved = self.choice(page, 'Saved connection', [(uuid,name) for uuid,name in profiles])
-        def connection(action):
-            selected = saved.get_active_id()
-            if not selected: raise ValueError('No saved connection selected.')
-            return lambda: backend.run('nmcli','--wait','20','connection',action,'uuid',selected,timeout=30)
-        self.button(page, 'Activate saved connection', lambda: connection('up'))
-        self.button(page, 'Disconnect saved connection', lambda: connection('down'))
+        from network_settings import Network
+        self.network_page = Network(self, page)
 
 
 if __name__ == '__main__':

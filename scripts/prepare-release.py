@@ -16,7 +16,7 @@ import zipfile
 from project_files import public_files
 
 ROOT = Path(__file__).resolve().parent.parent
-CORE = {'systemd-timesyncd', 'bluez', 'libspa-0.2-bluetooth', 'ca-certificates', 'debian-archive-keyring', 'sudo', 'scrot', 'sakura', 'chromium', 'pcmanfm', 'python3-pyudev', 'libinput10', 'libxtst6', 'python3', 'python3-gi', 'gir1.2-gtk-3.0', 'libxi6', 'procps', 'x11-xserver-utils'}
+CORE = {'desktop-file-utils', 'network-manager', 'hsetroot', 'libimlib2t64', 'systemd-timesyncd', 'bluez', 'libspa-0.2-bluetooth', 'ca-certificates', 'debian-archive-keyring', 'sudo', 'scrot', 'sakura', 'firefox', 'pcmanfm', 'python3-pyudev', 'libinput10', 'libxtst6', 'python3', 'python3-gi', 'gir1.2-gtk-3.0', 'libxi6', 'procps', 'x11-xserver-utils'}
 
 
 def run(*args):
@@ -70,6 +70,8 @@ def verify_image(iso):
         extract(iso, '/live/filesystem.packages', temporary / 'packages')
         packages = (temporary / 'packages').read_bytes()
         installed = {line.split()[0].split(':')[0] for line in packages.decode().splitlines() if line.strip()}
+        if {'chromium', 'firefox-esr'} & installed:
+            raise ValueError('ISO still contains Chromium or Firefox ESR; the current build uses regular Firefox')
         if missing := CORE - installed:
             raise ValueError(f'ISO package manifest is missing required packages: {sorted(missing)}')
         removals = run('xorriso', '-indev', str(iso), '-find', '/live', '-name', 'filesystem.packages-remove')

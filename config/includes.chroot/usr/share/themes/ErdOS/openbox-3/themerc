@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: MIT
+# Flat dark decoration, matching the included Adwaita dark applications.
+border.width: 1
+padding.width: 6
+padding.height: 5
+window.handle.width: 0
+window.client.padding.width: 0
+window.client.padding.height: 0
+window.label.text.justify: left
+*.font: shadow=n
+window.active.title.bg: flat solid
+window.active.title.bg.color: #353535
+window.inactive.title.bg: flat solid
+window.inactive.title.bg.color: #292929
+window.*.label.bg: parentrelative
+window.active.label.text.color: #eeeeec
+window.inactive.label.text.color: #a0a0a0
+window.*.button.*.bg: parentrelative
+window.active.button.*.image.color: #eeeeec
+window.inactive.button.*.image.color: #a0a0a0
+window.*.button.disabled.image.color: #666666
+window.*.button.*.hover.bg: flat solid
+window.*.button.*.hover.bg.color: #505050
+window.*.button.*.pressed.bg: flat solid
+window.*.button.*.pressed.bg.color: #3584e4
+window.active.border.color: #606060
+window.inactive.border.color: #383838
+window.active.client.color: #353535
+window.inactive.client.color: #292929
+menu.border.color: #606060
+menu.overlap.x: 0
+menu.overlap.y: 0
+menu.title.bg: flat solid
+menu.title.bg.color: #353535
+menu.title.text.color: #eeeeec
+menu.title.text.justify: left
+menu.items.bg: flat solid
+menu.items.bg.color: #2d2d2d
+menu.items.text.color: #eeeeec
+menu.items.disabled.text.color: #888888
+menu.items.justify: left
+menu.items.active.bg: flat solid
+menu.items.active.bg.color: #3584e4
+menu.items.active.text.color: #ffffff
+menu.separator.color: #606060
+menu.separator.width: 1
+menu.separator.padding.width: 6
+menu.separator.padding.height: 5
+osd.bg: flat solid
+osd.bg.color: #353535
+osd.border.color: #606060
+osd.label.bg: parentrelative
+osd.label.text.color: #eeeeec
+osd.hilight.bg: flat solid
+osd.hilight.bg.color: #3584e4
+osd.unhilight.bg: flat solid
+osd.unhilight.bg.color: #606060

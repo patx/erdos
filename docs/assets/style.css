@@ -41,21 +41,6 @@ summary { cursor: pointer; }
 .site-header nav, .site-footer nav { display: flex; flex-wrap: wrap; gap: 12px 20px; font-size: .875rem; }
 .site-header nav a { color: var(--muted); }
 main > section { margin-bottom: 42px; }
-.intro > p:first-of-type { max-width: 620px; }
-.download-link { font-weight: 600; }
-.build-details { font-size: .875rem; }
-.build-details summary { color: var(--muted); }
-.build-details p:last-child { margin-bottom: 0; }
-.release-facts { margin: 18px 0; }
-.release-facts > div { display: grid; grid-template-columns: 80px minmax(0,1fr); gap: 16px; margin-block: 6px; }
-.release-facts dt { color: var(--muted); }
-.release-facts dd { margin: 0; }
-.checksum-heading { display: flex; align-items: center; gap: 16px; margin-block: 18px 8px; }
-.checksum { display: block; overflow-wrap: anywhere; margin-bottom: 12px; }
-#copy-status:empty { display: none; }
-.desktop-preview { margin-bottom: 22px; }
-.desktop-preview img { display: block; width: 100%; }
-.desktop-preview figcaption { margin-top: 8px; }
 .site-footer { margin-top: 48px; padding-block: 24px 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
 .site-footer p { margin-bottom: 8px; }
 .site-footer a { color: var(--muted); }
