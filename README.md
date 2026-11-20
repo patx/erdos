@@ -127,6 +127,8 @@ stage the files without root, compiling helpers, or generating an ISO.
 See [building and customization](docs/building.md), [validation](docs/testing.md),
 and [release preparation and Pages setup](docs/releasing.md). Existing ErdOS
 installations can use the optional [desktop updater](docs/building.md#update-an-existing-erdos-installation).
+For a remote Alpha 2 build and draft upload, see the
+[GitHub Actions instructions](docs/releasing.md#build-alpha-2-on-github).
 
 ## Project layout
 

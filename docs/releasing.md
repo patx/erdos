@@ -43,6 +43,49 @@ a future build must not be mistaken for publishing it.
 The source ZIP requires compiling helpers before using the optional updater;
 generated executables are not silently bundled into a source archive.
 
+### Build Alpha 2 on GitHub
+
+The manual run of `.github/workflows/check.yml` also builds the pinned Alpha 2
+tag, `v1.0.0-alpha.2` (`97ea861cc1e657f8189131f80dd673304a76cdd1`). Push and
+pull-request runs remain source checks only. While the release is pending, the
+workflow changes are on `build-alpha2-remote`, keeping the current public site
+unchanged. Run the existing **Source checks** workflow with that branch selected:
+
+```sh
+gh workflow run check.yml --repo patx/erdos --ref build-alpha2-remote
+```
+
+GitHub Actions must be enabled and the account's Actions billing lock cleared
+before a runner can start. The workflow uses the ephemeral repository token;
+no personal token or added repository secret is required. A disposable Ubuntu
+runner makes space by removing unused SDKs, then runs live-build in the pinned
+official Debian 13 container. Build dependencies stay outside the ISO.
+
+The job uploads directly from GitHub to an **unpublished draft prerelease**;
+it does not transfer the ISO from the maintainer's laptop. It verifies the
+server's SHA-256 and size for each asset and refuses to replace a published
+release. In addition to the six normal assets, `erdos-build.json` records the
+actual source revision, workflow run, container image and new ISO identity.
+`SHA256SUMS` also covers this build record. Build logs remain in the Actions run.
+
+A clean rebuild is not byte-identical to the earlier local ISO. The workflow
+does not boot or install it. Download the draft image, run fresh VM validation
+and measurements, update the website's release metadata and results, and
+refresh the source archive/checksums before publication. Do not attach the old
+local checksum or claim that its VM measurements tested the remote image.
+Publish only after those checks; then synchronize `main` on both remotes.
+
+The upload tool can check a destination without modifying it:
+
+```sh
+python3 scripts/upload-draft-release.py --directory . --repository patx/erdos \
+  --tag v1.0.0-alpha.2 --check-only
+```
+
+It requires GitHub CLI authentication. Upload mode additionally requires the
+prepared assets, remote build record and build-specific `--notes` file. It
+always leaves the release in draft form.
+
 Review and upload these assets to a **draft prerelease** on GitHub:
 
 - `dist/erdos-amd64.iso`
@@ -104,9 +147,10 @@ hosts the ISO.
 ## Checks before publication
 
 Run `python3 scripts/check-project.py` and the Debian helper compilation check.
-Review desktop and mobile rendering and keyboard navigation. The CI workflow is
-read-only and source-only; it does not publish Pages, create a release or build an
-ISO. Enable GitHub private vulnerability reporting if you want to use the private
+Review desktop and mobile rendering and keyboard navigation. Push and pull-request
+CI runs are read-only source checks. A manual run also builds Alpha 2 and uploads
+verified draft assets as described above; it never publishes the release or Pages.
+Enable GitHub private vulnerability reporting if you want to use the private
 reporting link in `SECURITY.md`.
 
 ## Social preview
