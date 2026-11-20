@@ -43,56 +43,41 @@ a future build must not be mistaken for publishing it.
 The source ZIP requires compiling helpers before using the optional updater;
 generated executables are not silently bundled into a source archive.
 
-### Build Alpha 2 on GitHub
-
-The manual run of `.github/workflows/check.yml` also builds the pinned Alpha 2
-tag, `v1.0.0-alpha.2` (`97ea861cc1e657f8189131f80dd673304a76cdd1`). Push and
-pull-request runs remain source checks only. While the release is pending, the
-workflow changes are on `build-alpha2-remote`, keeping the current public site
-unchanged. Run the existing **Source checks** workflow with that branch selected:
-
-```sh
-gh workflow run check.yml --repo patx/erdos --ref build-alpha2-remote
-```
-
-GitHub Actions must be enabled and the account's Actions billing lock cleared
-before a runner can start. The workflow uses the ephemeral repository token;
-no personal token or added repository secret is required. A disposable Ubuntu
-runner makes space by removing unused SDKs, then runs live-build in the pinned
-official Debian 13 container. Build dependencies stay outside the ISO.
-
-The job uploads directly from GitHub to an **unpublished draft prerelease**;
-it does not transfer the ISO from the maintainer's laptop. It verifies the
-server's SHA-256 and size for each asset and refuses to replace a published
-release. In addition to the six normal assets, `erdos-build.json` records the
-actual source revision, workflow run, container image and new ISO identity.
-`SHA256SUMS` also covers this build record. Build logs remain in the Actions run.
-
-A clean rebuild is not byte-identical to the earlier local ISO. The workflow
-does not boot or install it. Download the draft image, run fresh VM validation
-and measurements, update the website's release metadata and results, and
-refresh the source archive/checksums before publication. Do not attach the old
-local checksum or claim that its VM measurements tested the remote image.
-Publish only after those checks; then synchronize `main` on both remotes.
-
-The upload tool can check a destination without modifying it:
-
-```sh
-python3 scripts/upload-draft-release.py --directory . --repository patx/erdos \
-  --tag v1.0.0-alpha.2 --check-only
-```
-
-It requires GitHub CLI authentication. Upload mode additionally requires the
-prepared assets, remote build record and build-specific `--notes` file. It
-always leaves the release in draft form.
-
-Review and upload these assets to a **draft prerelease** on GitHub:
+Review and upload these assets to the versioned **Cloudflare R2** download directory:
 
 - `dist/erdos-amd64.iso`
 - `dist/erdos-amd64.iso.sha256`
 - `dist/erdos-amd64.packages`
 - `dist/erdos-build-project.zip` and its `.sha256` sidecar
 - `dist/SHA256SUMS`
+
+## Cloudflare R2 downloads
+
+The Standard-storage bucket is `erdos-releases`, served through
+<https://downloads.erd.sh/> with a minimum TLS version of 1.2. The Alpha 2 objects
+are under `v1.0.0-alpha.2/`; the ISO URL is
+<https://downloads.erd.sh/v1.0.0-alpha.2/erdos-amd64.iso>.
+The website remains on Gitman Pages, and source code stays on both Git remotes.
+
+Use an S3-compatible multipart uploader for large files; Cloudflare documents
+[rclone setup](https://developers.cloudflare.com/r2/examples/rclone/) and
+[multipart uploads](https://developers.cloudflare.com/r2/objects/upload-objects/).
+Scope its credentials to this bucket and keep them outside the repository.
+Multipart transfer lets failed parts retry without restarting the whole ISO.
+Upload all six prepared files into the same version directory. Keep released
+version directories immutable; use a new version prefix for a replacement.
+
+Download the completed ISO back and verify its SHA-256 against the local tested
+image. Check the public ISO, checksum and source-archive URLs before changing
+site links. No upload gateway or additional service is needed for downloads:
+the custom domain serves objects directly from R2. Temporary upload access used
+by maintainers must be removed after transfer and verification.
+
+Create or update a **draft prerelease** on GitHub with the direct R2 ISO and
+checksum links. The five small companion files may also be attached there; the
+large ISO does not need to be a GitHub asset. Verify the final release notes and
+publish as a prerelease only after the exact hosted image has passed validation.
+No GitHub Actions build is required to host an already tested local image.
 
 Include the source revision, build/test environment, ISO checksum, known
 limitations, public live credentials, and disk-installation behavior in the
@@ -101,9 +86,9 @@ packages; Debian package manifests alone are not corresponding-source archives.
 Source versions can be identified using Debian package metadata and downloaded
 from the matching Debian archives with source repositories enabled.
 
-After those assets actually exist on a published release, set the chosen tag and
+After the R2 files are verified and the GitHub prerelease is published, set the chosen tag and
 `published: true` in `docs/release.json`. Its existing filenames and digest must
-still match those assets. The hero button links directly to the `v1.0.0-alpha.2` ISO; the bottom download
+still match those assets. Set `download_base_url` to the matching version directory. The hero button links directly to the R2 `v1.0.0-alpha.2` ISO; the bottom download
 section links to its release page. Update both links in `index.html` for a future
 release, together with the version text and release metadata. Future builds use current Debian packages, so reusing a date does not
 imply an identical ISO or checksum.
@@ -129,8 +114,8 @@ Node.js, npm, frontend build step, analytics or external font dependency.
 
 The repository is mirrored on GitHub and Gitman. Publish the contents of `docs/`
 with Gitman Pages at <https://patx.gitman.io/erdos/>. Keep relative page and asset
-links so the same source works under `/erdos/`. ISO downloads remain on GitHub
-Releases.
+links so the same source works under `/erdos/`. ISO downloads use Cloudflare R2
+at <https://downloads.erd.sh/>; release notes remain on GitHub Releases.
 
 Preview locally:
 
@@ -141,16 +126,15 @@ python3 -m http.server 8000 --directory docs
 Open <http://localhost:8000/>. Relative paths also work under the project prefix
 `/erdos/`. The user guide and download links work without JavaScript.
 Build details and checksums are available on the GitHub release page. Keep
-release metadata accurate when uploading a new image. Gitman Pages hosts the site; GitHub Releases
-hosts the ISO.
+release metadata accurate when uploading a new image. Gitman Pages hosts the site;
+Cloudflare R2 hosts the ISO and matching download artifacts.
 
 ## Checks before publication
 
 Run `python3 scripts/check-project.py` and the Debian helper compilation check.
-Review desktop and mobile rendering and keyboard navigation. Push and pull-request
-CI runs are read-only source checks. A manual run also builds Alpha 2 and uploads
-verified draft assets as described above; it never publishes the release or Pages.
-Enable GitHub private vulnerability reporting if you want to use the private
+Review desktop and mobile rendering and keyboard navigation. The CI workflow is
+read-only and source-only; it does not publish Pages, create a release or build an
+ISO. Enable GitHub private vulnerability reporting if you want to use the private
 reporting link in `SECURITY.md`.
 
 ## Social preview

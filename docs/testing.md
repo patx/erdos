@@ -67,6 +67,10 @@ shell, sampler and read-only fixture mount were included.
 
 [Raw measurements and exact tested ISO](footprint.json).
 
+## Hosted download verification
+
+The same tested image is hosted on [Cloudflare R2](https://downloads.erd.sh/v1.0.0-alpha.2/erdos-amd64.iso). After multipart upload, the entire stored ISO was downloaded back and its SHA-256 matched the value above. Hosting changed; the ISO was not rebuilt.
+
 ## Remaining limits
 
 Alpha 2 is experimental. This release check does not certify Secure Boot,

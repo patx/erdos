@@ -8,7 +8,7 @@ Secure Boot is not supported. Disk selection, partitioning and final write
 confirmation remain manual.
 
 [Website](https://patx.gitman.io/erdos/) ·
-[Download Alpha 2](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.2) ·
+[Download Alpha 2 ISO](https://downloads.erd.sh/v1.0.0-alpha.2/erdos-amd64.iso) · [SHA-256](https://downloads.erd.sh/v1.0.0-alpha.2/erdos-amd64.iso.sha256) ·
 [User guide](https://patx.gitman.io/erdos/guide.html) · [Build instructions](docs/building.md)
 
 Alpha 2 adds regular Firefox, selectable default programs, clearer Network
@@ -16,7 +16,7 @@ feedback, image backgrounds, matching dark applications/menus, and automatic
 boot to a clean console login. See the [changelog](CHANGELOG.md) and
 [validation results](docs/testing.md).
 
-![ErdOS desktop with Twig, Sakura and the Openbox menu](docs/assets/desktop-hero.png)
+![ErdOS desktop with Twig, Settings and the Openbox menu](docs/assets/desktop-hero.png)
 
 ## What you get
 
@@ -43,7 +43,7 @@ notices are retained.
 
 ## Try or install
 
-1. Download the ISO and its checksum from [Releases](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.2).
+1. Download the [ISO](https://downloads.erd.sh/v1.0.0-alpha.2/erdos-amd64.iso) and [checksum](https://downloads.erd.sh/v1.0.0-alpha.2/erdos-amd64.iso.sha256) from Cloudflare R2. [Release notes](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.2) are on GitHub.
 2. In the download directory, run `sha256sum -c erdos-amd64.iso.sha256`.
 3. Attach the ISO to a VM, or write it to a USB device with an image writer.
    Writing an image erases that USB device. Disable Secure Boot.
@@ -127,8 +127,6 @@ stage the files without root, compiling helpers, or generating an ISO.
 See [building and customization](docs/building.md), [validation](docs/testing.md),
 and [release preparation and Pages setup](docs/releasing.md). Existing ErdOS
 installations can use the optional [desktop updater](docs/building.md#update-an-existing-erdos-installation).
-For a remote Alpha 2 build and draft upload, see the
-[GitHub Actions instructions](docs/releasing.md#build-alpha-2-on-github).
 
 ## Project layout
 
