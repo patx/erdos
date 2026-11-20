@@ -58,6 +58,10 @@ The Standard-storage bucket is `erdos-releases`, served through
 are under `v1.0.0-alpha.2/`; the ISO URL is
 <https://downloads.erd.sh/v1.0.0-alpha.2/erdos-amd64.iso>.
 The website remains on Gitman Pages, and source code stays on both Git remotes.
+The zone rule `erdos_alpha2_public_downloads` skips Security Level and Browser
+Integrity Check only for GET/HEAD requests to the six exact Alpha 2 download
+paths. Add each future version’s file paths to that rule before publishing its
+links; keep other hosts, paths and methods outside the exception.
 
 Use an S3-compatible multipart uploader for large files; Cloudflare documents
 [rclone setup](https://developers.cloudflare.com/r2/examples/rclone/) and
