@@ -1,7 +1,7 @@
 # ErdOS Settings
 
 Open **Settings** from the desktop right-click menu, Applications, or **Super + I**.
-Twelve sections share one GTK window. The app reuses Python 3, GTK 3, X11,
+The development version has thirteen sections in one GTK window. The app reuses Python 3, GTK 3, X11,
 NetworkManager, BlueZ and PipeWire. Resolution controls use `xrandr` from Debian's
 `x11-xserver-utils` package. There is no resident Settings daemon; the app exits
 when closed. Display confirmation uses a short-lived rollback helper.
@@ -13,6 +13,7 @@ when closed. Display confirmation uses a short-lived rollback helper.
 | Touchpad | Natural scrolling, tap to click, two-finger right-click, pointer speed |
 | Keyboard | Dynamic/fixed workspaces, Super-only overview, Openbox shortcuts and custom application commands |
 | Menu | Add, edit, delete and reorder right-click menu entries and separators |
+| Startup Applications | Edit Openbox login commands, check shell syntax and save a backup |
 | Gestures | Swipe distance and actions, including window/workspace overviews |
 | Displays | Per-output resolution, timed confirmation, automatic extension, laptop brightness |
 | Sound | Default output/input device, volume and mute using PipeWire |
@@ -100,7 +101,9 @@ count is lower. Settings changes take effect in the existing listener.
 
 - **Super alone** (on release) or **Super + O**: all-window overview.
 - **Super + Shift + O**: Skippy workspace overview.
-- **Super + Space**, **Menu**, or desktop right-click: Openbox menu.
+- **Three-finger tap/click**, **Super + Space**, **Menu**, desktop right-click or
+  **Super + right-click**: Openbox menu. Configure the new pointer triggers in
+  **Settings → Menu → Apply menu triggers**.
 - **Shift + Super + 1–9** or **Super + F1–F9**: select an existing workspace.
 - **Ctrl + Shift + Super + 1–9**: send a window to an existing workspace.
 
@@ -194,7 +197,7 @@ existing DejaVu Sans font and Adwaita icons. Appearance can still change GTK
 themes, fonts and the dark preference; this does not replace a user's Openbox
 theme selection. No theme engine, compositor or resident settings service is added.
 
-[View the installed Alpha 2 Settings window](settings-alpha2.png).
+[View the installed Alpha 2 Settings window](settings.png).
 
 ## Default programs
 
@@ -246,3 +249,38 @@ While this tab is visible, NetworkManager D-Bus events trigger a short debounced
 refresh. Old connection confirmations disappear when the connection state changes.
 There is no periodic network polling or extra daemon; the listener is removed
 when Settings closes. **Refresh status** is available as a manual fallback.
+
+## Startup Applications
+
+Edit `~/.config/openbox/autostart` directly in this tab. Existing installations
+without a personal file begin with the shipped startup configuration. Keep the
+ErdOS commands that apply settings, start gestures, authentication and removable
+media support. Add application commands on separate lines with `&`, for example
+`sakura &`, to avoid blocking subsequent startup commands.
+
+Save checks shell syntax without executing commands and creates an
+`autostart.previous` backup when replacing an existing file. Changes take effect
+at the next desktop login. Reload reads the file again and asks before discarding
+unsaved edits. External edits require a reload before saving. Unsaved edits are
+not applied; save before closing Settings.
+
+Both four-finger up and down show Skippy's workspace overview in the development build.
+They are individually configurable in Gestures. Existing explicit user overrides
+are preserved. Overview physics remain disabled.
+
+## Menu triggers
+
+In **Menu**, enable or disable **Three-finger tap/click opens menu** and
+**Super + right-click opens menu anywhere** independently, then choose
+**Apply menu triggers**. Both are enabled by default for new users. Desktop
+right-click and Super + Space remain available.
+
+The touchpad option replaces its middle-click with the Openbox menu; disable it
+to restore middle-click. It requires libinput tapping or clickfinger support.
+Mouse middle-click remains unchanged. Internally, touchpad middle-click maps to
+Button10, reserved for this menu action while enabled. Apply again after
+connecting another touchpad, as with the other touchpad settings.
+
+Power continues to use Debian's logind defaults. No charge-limit service,
+automatic-sleep listener or extra authorization package is added. The Power tab
+continues to display battery information.

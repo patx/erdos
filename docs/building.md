@@ -15,7 +15,8 @@ sudo ./build.sh
 ```
 
 Build logs and the configuration snapshot remain in `work/build-XXXXXXXX/`.
-Successful output is `dist/erdos-build-XXXXXXXX.iso` and its `.sha256` sidecar.
+Successful output is `dist/erdos-amd64.iso` and its `.sha256` sidecar.
+A verified successful build replaces the previous local image.
 Each run starts fresh. Source staging alone works without root:
 
 ```sh

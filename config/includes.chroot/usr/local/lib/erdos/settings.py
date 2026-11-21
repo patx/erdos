@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Small, per-user settings backend. No service, shell commands or root access."""
+"""Small, per-user settings backend. No resident service or root access."""
 import configparser
 import io
 import json
@@ -14,7 +14,7 @@ import xml.etree.ElementTree as ET
 CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home() / '.config')))
 PREFERENCES = CONFIG / 'erdos/settings.json'
 DEFAULTS = dict(terminal_app='system', background='#202326', background_image=False, background_layout='fill', natural=True, tapping=True, clickfinger=True,
-                speed=0.0, automatic_displays=True, dynamic_workspaces=True, workspace_count=2, super_overview=True)
+                speed=0.0, automatic_displays=True, dynamic_workspaces=True, workspace_count=2, super_overview=True, menu_touchpad=True, menu_mouse=True)
 NS = 'http://openbox.org/3.4/rc'
 ET.register_namespace('', NS)
 
@@ -57,7 +57,7 @@ def save_preferences(**values):
 
 def touchpad(prefs):
     result = subprocess.run(['erdos-touchpad', *[str(int(prefs[k])) for k in
-                            ('natural', 'tapping', 'clickfinger')], str(prefs['speed'])],
+                            ('natural', 'tapping', 'clickfinger')], str(prefs['speed']), str(int(prefs['menu_touchpad']))],
                             text=True, capture_output=True, timeout=5)
     if result.returncode not in (0, 3):
         raise RuntimeError(result.stderr.strip() or 'Could not apply touchpad settings.')
@@ -205,6 +205,55 @@ def save_keyboard(keys, custom=None):
         ET.SubElement(action, f'{{{NS}}}command').text = command.strip()
     write(CONFIG / 'openbox/rc.xml', ET.tostring(tree.getroot(), encoding='unicode') + '\n')
     run('openbox', '--reconfigure')
+
+
+def menu_triggers(touchpad_menu, mouse_menu):
+    path = CONFIG / 'openbox/rc.xml'
+    tree = ET.parse(path)
+    mouse = tree.getroot().find(f'{{{NS}}}mouse')
+    if mouse is None:
+        raise ValueError('Openbox configuration has no mouse section.')
+    # Only replace bindings owned by this feature; keep window actions intact.
+    for context in mouse.findall(f'{{{NS}}}context'):
+        for binding in list(context):
+            if binding.get('erdos-menu') == 'yes':
+                context.remove(binding)
+    for name in ('Frame', 'Desktop'):
+        context = next((node for node in mouse if node.get('name') == name), None)
+        if context is None:
+            context = ET.SubElement(mouse, f'{{{NS}}}context', {'name': name})
+        for button, enabled in (('Button10', touchpad_menu), ('W-Right', mouse_menu)):
+            if enabled:
+                binding = ET.SubElement(context, f'{{{NS}}}mousebind',
+                    {'button': button, 'action': 'Press', 'erdos-menu': 'yes'})
+                action = ET.SubElement(binding, f'{{{NS}}}action', {'name': 'ShowMenu'})
+                ET.SubElement(action, f'{{{NS}}}menu').text = 'root-menu'
+    write(path, ET.tostring(tree.getroot(), encoding='unicode') + '\n')
+    run('openbox', '--reconfigure')
+    prefs = save_preferences(menu_touchpad=bool(touchpad_menu), menu_mouse=bool(mouse_menu))
+    return touchpad(prefs) or 'Menu triggers applied.'
+
+
+def startup_file():
+    path = CONFIG / 'openbox/autostart'
+    if path.exists():
+        return path.read_text()
+    for fallback in (Path('/etc/skel/.config/openbox/autostart'), Path('/etc/xdg/openbox/autostart')):
+        if fallback.is_file():
+            return fallback.read_text()
+    return '#!/bin/sh\n'
+
+
+def save_startup(original, content):
+    if startup_file() != original:
+        raise ValueError('Startup configuration changed outside Settings. Reload before saving.')
+    if '\0' in content:
+        raise ValueError('Startup commands cannot contain NUL characters.')
+    content = content if content.endswith('\n') else content + '\n'
+    # Parse only: saving must never execute startup commands.
+    run('sh', '-n', input=content)
+    write(CONFIG / 'openbox/autostart', content)
+    return 'Startup commands saved. They will run at your next desktop login.'
 
 
 def gestures():

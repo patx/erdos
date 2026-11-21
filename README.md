@@ -3,7 +3,8 @@
 A minimal Openbox desktop built on **Debian 13 (Trixie), amd64**. Boot a live
 session or install the same desktop using Debian’s text installer.
 
-**Version 1 Alpha 2 — `v1.0.0-alpha.2`.** An experimental amd64 prerelease.
+**Current development version.** This checkout is ahead of the published
+[Alpha 2 release](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.2).
 Secure Boot is not supported. Disk selection, partitioning and final write
 confirmation remain manual.
 
@@ -11,10 +12,9 @@ confirmation remain manual.
 [Download Alpha 2 ISO](https://downloads.erd.sh/v1.0.0-alpha.2/erdos-amd64.iso) · [SHA-256](https://downloads.erd.sh/v1.0.0-alpha.2/erdos-amd64.iso.sha256) ·
 [User guide](https://patx.gitman.io/erdos/guide.html) · [Build instructions](docs/building.md)
 
-Alpha 2 adds regular Firefox, selectable default programs, clearer Network
-feedback, image backgrounds, matching dark applications/menus, and automatic
-boot to a clean console login. See the [changelog](CHANGELOG.md) and
-[validation results](docs/testing.md).
+Development adds startup application editing and configurable menu triggers and
+four-finger vertical gestures. See [development changes](CHANGELOG.md) and
+[validation results](docs/testing.md). Older versions live in Git history.
 
 ![ErdOS desktop with Twig, Settings and the Openbox menu](docs/assets/desktop-hero.png)
 
@@ -87,11 +87,20 @@ Windows key. [All shortcuts and desktop behavior](https://patx.gitman.io/erdos/g
 
 ## Touchpad gestures
 
-| Swipe | Action |
+| Gesture | Action |
 | --- | --- |
+| Three-finger tap / click | Open the Openbox menu, including over applications |
 | Three fingers up / down | Show / dismiss the window overview |
 | Three fingers left / right | Previous / next window |
+| Four fingers up / down | Show workspace overview |
 | Four fingers left / right | Next workspace (right) / previous workspace (left) |
+
+The development build includes **Settings → Startup Applications**, a direct editor for
+Openbox startup commands with syntax checking and a previous-version backup.
+Changes run at the next login, not when saved. **Settings → Menu** also gains
+independent toggles for three-finger tap/click and Super + right-click menu
+access. The touchpad option replaces its middle-click; mouse middle-click is
+preserved. Power behavior continues to use Debian defaults.
 
 Change swipe actions and sensitivity in **Settings → Gestures**. Sound, Wi-Fi,
 Bluetooth, battery information and the clock are in Settings; there is no panel

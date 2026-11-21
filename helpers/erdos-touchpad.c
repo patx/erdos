@@ -2,6 +2,7 @@
  * Set libinput properties through the X server; no root or input-device access. */
 #include <X11/Xlib.h>
 #include <X11/extensions/XInput2.h>
+#include <X11/extensions/XInput.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,7 +17,8 @@ static int property(Display *d,int id,const char *name,Atom type,int format,void
     XIChangeProperty(d,id,p,type,format,PropModeReplace,value,count);return 1;
 }
 int main(int argc,char **argv) {
-    if(argc!=5)return 2;
+    if(argc!=6)return 2;
+    if(strcmp(argv[5],"0") && strcmp(argv[5],"1"))return 2;
     for(int i=1;i<4;i++)if(strcmp(argv[i],"0") && strcmp(argv[i],"1"))return 2;
     char *end;float speed=strtof(argv[4],&end);
     if(*end || !(speed>=-1 && speed<=1))return 2;
@@ -29,6 +31,22 @@ int main(int argc,char **argv) {
         /* Tapping is a touchpad-only property; leave mice untouched. */
         if(!property(d,devices[i].deviceid,"libinput Tapping Enabled",integer,8,&tap,1))continue;
         found++;
+        /* Map touchpad middle-click to an otherwise unused Openbox button.
+         * Mice retain their middle button. Disabling reverses our mapping. */
+        XDevice *device=XOpenDevice(d,devices[i].deviceid);
+        if(device) {
+            unsigned char map[256];
+            int count=XGetDeviceButtonMapping(d,device,map,256);
+            int enabled=atoi(argv[5]);
+            if(count>=2 && ((enabled && map[1]==2) || (!enabled && map[1]==10))) {
+                for(int j=0;j<count;j++) {
+                    if(map[j]==2)map[j]=10;
+                    else if(map[j]==10)map[j]=2;
+                }
+                if(XSetDeviceButtonMapping(d,device,map,count)!=MappingSuccess)failed=1;
+            }
+            XCloseDevice(d,device);
+        } else failed=1;
         unsigned char natural=atoi(argv[1]),click[2]={!atoi(argv[3]),atoi(argv[3])};
         property(d,devices[i].deviceid,"libinput Natural Scrolling Enabled",integer,8,&natural,1);
         property(d,devices[i].deviceid,"libinput Click Method Enabled",integer,8,click,2);

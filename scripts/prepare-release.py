@@ -139,7 +139,8 @@ def main():
     canonical = output / 'erdos-amd64.iso'
     if iso != canonical.resolve():
         shutil.copyfile(iso, canonical)
-    metadata.update(published=False, tag=None, date=date)
+    metadata.update(published=False, tag=None, date=date, status='Development build', version='dev')
+    metadata.pop('download_base_url', None)
     metadata['iso'] = {'filename': canonical.name, 'bytes': canonical.stat().st_size, 'sha256': checksum}
     metadata['source_filename'] = 'erdos-build-project.zip'
     metadata['packages_filename'] = 'erdos-amd64.packages'

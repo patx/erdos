@@ -1,18 +1,17 @@
 {
   "schema": 1,
   "repository": "patx/erdos",
-  "published": true,
-  "tag": "v1.0.0-alpha.2",
-  "date": "2026-11-19",
-  "status": "Version 1 Alpha 2",
+  "published": false,
+  "tag": null,
+  "date": "2026-11-20",
+  "status": "Development build",
   "iso": {
     "filename": "erdos-amd64.iso",
     "bytes": 1184202752,
-    "sha256": "57172a9d911af6c4aa9d1225218d4c066e5edf212f69d51b39629ad05d4a2263"
+    "sha256": "7fed387f4632abe580ab9cf07c334b9e04ff3599f7e4c94c6c525c7794251416"
   },
   "packages_filename": "erdos-amd64.packages",
   "source_filename": "erdos-build-project.zip",
   "checksums_filename": "SHA256SUMS",
-  "version": "1.0.0-alpha.2",
-  "download_base_url": "https://downloads.erd.sh/v1.0.0-alpha.2"
+  "version": "dev"
 }

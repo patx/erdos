@@ -24,10 +24,11 @@ upload a release asset.
 
 Build on Debian 13 amd64 as described in [building.md](building.md), then complete
 [testing.md](testing.md). A successful build is not a boot/install test. Retain
-its logs outside Git. The current alpha version is `1.0.0-alpha.2`, with tag `v1.0.0-alpha.2`.
-Keep it marked as a prerelease on GitHub.
+its logs outside Git. The checkout tracks current development; choose a new
+version and tag when preparing a release. Do not replace the published Alpha 2
+assets with an untested development build.
 
-After testing a unique build, promote it to `dist/erdos-amd64.iso`, then run:
+The build writes the single current image to `dist/erdos-amd64.iso`. After testing, run:
 
 ```sh
 python3 scripts/prepare-release.py --iso dist/erdos-amd64.iso

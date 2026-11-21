@@ -78,7 +78,9 @@ lb build 2>&1 | tee build.log
 # binary/ tree. A utility present live must also survive disk installation.
 python3 "$project_dir/scripts/prepare-release.py" --verify-only --iso "$build_dir/live-image-amd64.hybrid.iso"
 mkdir -p "$project_dir/dist"
-image="$project_dir/dist/erdos-${build_dir##*/}.iso"
-cp live-image-amd64.hybrid.iso "$image"
+image="$project_dir/dist/erdos-amd64.iso"
+# Keep one current local image; replace only after a successful verification.
+cp live-image-amd64.hybrid.iso "$image.tmp"
+mv -f "$image.tmp" "$image"
 (cd "$project_dir/dist" && sha256sum "${image##*/}" > "${image##*/}.sha256")
 printf 'ISO: %s\nChecksum: %s.sha256\n' "$image" "$image"

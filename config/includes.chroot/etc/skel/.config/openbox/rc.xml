@@ -83,6 +83,10 @@
     <context name="Iconify"><mousebind button="Left" action="Click"><action name="Iconify"/></mousebind></context>
     <context name="Maximize"><mousebind button="Left" action="Click"><action name="ToggleMaximize"/></mousebind></context>
     <context name="Desktop"><mousebind button="Right" action="Press"><action name="ShowMenu"><menu>root-menu</menu></action></mousebind></context>
+    <context name="Frame Desktop">
+      <mousebind button="Button10" action="Press" erdos-menu="yes"><action name="ShowMenu"><menu>root-menu</menu></action></mousebind>
+      <mousebind button="W-Right" action="Press" erdos-menu="yes"><action name="ShowMenu"><menu>root-menu</menu></action></mousebind>
+    </context>
   </mouse>
   <menu><file>menu.xml</file><hideDelay>200</hideDelay></menu>
 </openbox_config>

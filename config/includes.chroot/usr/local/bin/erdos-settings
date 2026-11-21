@@ -69,7 +69,7 @@ class Settings(Gtk.Application):
         self.trial_process = None
         self.trial_timer = None
         self.window.add(outer)
-        for name in ('Appearance', 'Default Programs', 'Touchpad', 'Keyboard', 'Menu', 'Gestures', 'Displays', 'Sound', 'Network', 'Bluetooth', 'Power', 'Date & Time'):
+        for name in ('Appearance', 'Default Programs', 'Touchpad', 'Keyboard', 'Menu', 'Startup Applications', 'Gestures', 'Displays', 'Sound', 'Network', 'Bluetooth', 'Power', 'Date & Time'):
             page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
             page.set_border_width(24)
             title = Gtk.Label(xalign=0); title.set_markup(f'<big><b>{GLib.markup_escape_text(name)}</b></big>')
@@ -331,6 +331,11 @@ class Settings(Gtk.Application):
         self.button(page, 'Apply shortcuts', apply)
 
     def menu(self, page):
+        prefs = backend.preferences()
+        touchpad = self.toggle(page, 'Three-finger tap/click opens menu', prefs['menu_touchpad'])
+        mouse = self.toggle(page, 'Super + right-click opens menu anywhere', prefs['menu_mouse'])
+        self.note(page, 'Three-finger menu replaces touchpad middle-click. It requires tap-to-click or clickfinger support. Mouse middle-click stays unchanged. Desktop right-click and Super + Space remain available.')
+        self.button(page, 'Apply menu triggers', lambda: (lambda a=touchpad.get_active(), b=mouse.get_active(): backend.menu_triggers(a, b)))
         source, entries = backend.menu_entries()
         self.note(page, 'Edit the desktop right-click menu. Double-click a name or command. Applications stays automatic; submenu contents and built-in actions are preserved. Changes take effect when you apply.')
         model = Gtk.ListStore(str, str, str, str)
@@ -381,6 +386,48 @@ class Settings(Gtk.Application):
         self.button(page, 'Apply menu', apply)
         self.note(page, 'Super + I still opens Settings if you remove its menu entry. A .previous backup is saved beside menu.xml. Commands run only when you select an item.')
 
+    def startup_applications(self, page):
+        self.note(page, 'Commands run once when you log into Openbox. Add one application per line, ending with & so it runs in the background. Keep the existing ErdOS startup commands for desktop features.')
+        self.note(page, str(backend.CONFIG / 'openbox/autostart'))
+        editor = Gtk.TextView(monospace=True)
+        editor.set_wrap_mode(Gtk.WrapMode.NONE)
+        editor.set_left_margin(8); editor.set_right_margin(8)
+        buffer = editor.get_buffer()
+        source = backend.startup_file()
+        buffer.set_text(source)
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_min_content_height(280)
+        scroll.add(editor)
+        page.pack_start(scroll, True, True, 0)
+        dirty = Gtk.Label(xalign=0)
+        page.pack_start(dirty, False, False, 0)
+        buffer.connect('modified-changed', lambda *_: dirty.set_text('Unsaved changes' if buffer.get_modified() else ''))
+        buffer.set_modified(False)
+        def save():
+            nonlocal source
+            content = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), False)
+            # Syntax checking is quick and never executes the commands.
+            message = backend.save_startup(source, content)
+            source = backend.startup_file()
+            buffer.set_modified(False)
+            return message
+        self.button(page, 'Save startup commands', save)
+        def reload():
+            nonlocal source
+            if buffer.get_modified():
+                dialog = Gtk.MessageDialog(transient_for=self.window, modal=True,
+                    message_type=Gtk.MessageType.QUESTION, buttons=Gtk.ButtonsType.OK_CANCEL,
+                    text='Discard unsaved startup changes?')
+                answer = dialog.run(); dialog.destroy()
+                if answer != Gtk.ResponseType.OK:
+                    return 'Reload cancelled; your edits are preserved.'
+            source = backend.startup_file()
+            buffer.set_text(source); buffer.set_modified(False)
+            return 'Startup commands reloaded.'
+        self.button(page, 'Reload from disk', reload)
+        self.note(page, 'Saving checks shell syntax and keeps the previous file as autostart.previous. It does not start applications now. Example: sakura &')
+
     def gestures(self, page):
         parser = backend.gestures()
         self.note(page, 'One action per swipe. Lower distance triggers sooner; very short distances can trigger accidentally. Overview physics stay disabled.')
@@ -389,9 +436,9 @@ class Settings(Gtk.Application):
                    ('window-previous','Previous window'), ('window-next','Next window'),
                    ('workspace-previous','Previous workspace'), ('workspace-next','Next workspace')]
         choices = {}
-        for key in ('3_up','3_down','3_left','3_right','4_left','4_right'):
+        for key in ('3_up','3_down','3_left','3_right','4_up','4_down','4_left','4_right'):
             count, direction = key.split('_')
-            choices[key] = self.choice(page, f'{count} fingers {direction}', actions, parser.get('bindings',key))
+            choices[key] = self.choice(page, f'{count} fingers {direction}', actions, parser.get('bindings',key, fallback='workspace-overview' if key in ('4_up', '4_down') else 'none'))
         def apply():
             value = distance.get_value_as_int(); bindings = {k:w.get_active_id() for k,w in choices.items()}
             return lambda: backend.save_gestures(value, bindings)
