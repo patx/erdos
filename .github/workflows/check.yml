@@ -21,14 +21,14 @@ jobs:
       - name: Install check and compiler prerequisites
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends ca-certificates git python3 gcc libc6-dev pkg-config libx11-dev libxrandr-dev meson ninja-build libxcomposite-dev libxdamage-dev libxext-dev libxfixes-dev libxft-dev libxrender-dev libxi-dev libxinerama-dev libgif-dev libjpeg-dev libpng-dev
+          apt-get install -y --no-install-recommends ca-certificates git python3 gcc libc6-dev pkg-config meson ninja-build libwayland-dev wayland-protocols libinput-dev libseat-dev libdrm-dev libgbm-dev libegl-dev libgles-dev libpixman-1-dev libdisplay-info-dev libliftoff-dev libudev-dev libxkbcommon-dev libcairo2-dev libpango1.0-dev libxml2-dev libglib2.0-dev libsfdo-dev libxcb-ewmh-dev libxcb-icccm4-dev libxcb-dri3-dev libxcb-present-dev libxcb-render-util0-dev libxcb-xinput-dev libxcb-composite0-dev libxcb-res0-dev libxcb-errors-dev libpng-dev librsvg2-dev hwdata xwayland
       - name: Check out source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
       - name: Check source, docs and installer policy
         run: python3 scripts/check-project.py
-      - name: Compile the native helpers and physics-free overview
+      - name: Compile the minimal pinned Wayland compositor
         run: ./scripts/build-helpers.sh /tmp/erdos-helpers
       - name: Stage the live-image configuration
         run: ./build.sh --prepare

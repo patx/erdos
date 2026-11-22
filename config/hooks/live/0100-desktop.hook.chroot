@@ -5,7 +5,7 @@ systemctl set-default multi-user.target
 # Socket activation plus WirePlumber policy management for the login user.
 systemctl --global enable pipewire.socket pipewire-pulse.socket wireplumber.service
 # Catch unexpected desktop or installer dependencies before producing an ISO.
-for package in firefox-esr chromium chromium-common chromium-sandbox tint2 network-manager-applet xterm snapd gnome-shell gnome-session gdm3 lightdm sddm xdm calamares libqt6core6t64 libqt5core5t64; do
+for package in openbox xserver-xorg-core xinit scrot hsetroot firefox-esr chromium chromium-common chromium-sandbox tint2 network-manager-applet xterm snapd gnome-shell gnome-session gdm3 lightdm sddm xdm calamares libqt6core6t64 libqt5core5t64; do
     if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q '^install ok installed$'; then
         echo "Unexpected package in minimal image: $package" >&2
         exit 1
@@ -13,3 +13,10 @@ for package in firefox-esr chromium chromium-common chromium-sandbox tint2 netwo
 done
 update-alternatives --set x-terminal-emulator /usr/bin/sakura
 update-desktop-database /usr/local/share/applications
+
+# Custom compositor is staged after package installation; all dynamic libraries
+# must be available in the image and survive the installer.
+if ldd /usr/local/bin/labwc | grep -q 'not found'; then
+    ldd /usr/local/bin/labwc >&2
+    exit 1
+fi

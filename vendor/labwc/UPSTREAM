@@ -1,0 +1,6 @@
+Project: labwc
+Repository: https://github.com/labwc/labwc
+Version: 0.9.7
+Commit: f0dbad27fcf6e388cad1aa32448a1d548da68990
+License: GPL-2.0-only
+ErdOS changes: Native threshold-based 3/4-finger swipe actions, persistent thumbnail-switcher invocation, Super-only activation, event-driven spare-workspace policy, touchpad-only middle-click menu remapping, focused-window screenshot geometry, and one-shot display hotplug dispatch. Implemented in src/erdos.c and small call sites; no animations, polling daemon or unrestricted command IPC is added.

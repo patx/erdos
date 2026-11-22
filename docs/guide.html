@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Try and install ErdOS, learn its keyboard shortcuts, and troubleshoot the Debian Openbox desktop.">
+  <meta name="description" content="Try and install ErdOS, learn its keyboard shortcuts, and troubleshoot the Debian labwc/Wayland desktop.">
   <meta name="theme-color" content="#000000">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'self'">
   <title>User guide — ErdOS</title>
@@ -17,11 +17,11 @@
     <nav class="guide-nav" aria-label="On this page"><div><a href="#try">Try the live desktop</a><a href="#verify">Verify a download</a><a href="#install">Install to disk</a><a href="#desktop">Desktop and apps</a><a href="#footprint">Disk and RAM usage</a><a href="#settings">Settings</a><a href="#defaults">Default programs</a><a href="#background">Backgrounds</a><a href="#menu">Customize menu</a><a href="#shortcuts">Keyboard shortcuts</a><a href="#gestures">Touchpad gestures</a><a href="#monitors">Multiple monitors</a><a href="#troubleshooting">Troubleshooting</a></div></nav>
     <article class="guide-content">
       <h1>User guide</h1>
-      <p class="intro">This guide follows the current development version of the Debian 13 Openbox setup. <a href="https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.2">ErdOS 1 Alpha 2</a> is an experimental amd64 release; start in a VM and keep backups before installing on real disks.</p>
+      <p class="intro">This guide covers ErdOS 1 Alpha 3 with labwc/Wayland. This is an experimental prerelease: start in a VM and keep backups before installing on real disks.</p>
       <section id="try"><h2>Try the live desktop</h2>
-        <ol><li>Download the <a href="https://downloads.erd.sh/v1.0.0-alpha.2/erdos-amd64.iso">ISO</a> and <a href="https://downloads.erd.sh/v1.0.0-alpha.2/erdos-amd64.iso.sha256">checksum</a> from Cloudflare R2. See <a href="https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.2">GitHub Releases</a> for release notes and <a href="#verify">verify the download</a>.</li><li>Attach the ISO to a VM, or use an image writer to write it to a USB device. Writing an image erases that USB device; copying the ISO file onto a formatted drive is not the same operation. Debian documents <a href="https://www.debian.org/releases/trixie/amd64/ch04s03.en.html">USB installation media</a>.</li><li>Use a 64-bit Intel/AMD system and disable Secure Boot. Choose <strong>Try ErdOS</strong> in the boot menu.</li><li>At the console, log in as <code>user</code> with password <code>live</code>. Openbox starts automatically on tty1.</li></ol>
+        <ol><li>Download the <a href="https://downloads.erd.sh/v1.0.0-alpha.3/erdos-amd64.iso">Alpha 3 amd64 ISO</a> and its <a href="https://downloads.erd.sh/v1.0.0-alpha.3/erdos-amd64.iso.sha256">SHA-256 checksum</a>, or <a href="building.md">build from source</a>. See <a href="https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.3">release notes</a> and <a href="#verify">verify the download</a>.</li><li>Attach the ISO to a VM, or use an image writer to write it to a USB device. Writing an image erases that USB device; copying the ISO file onto a formatted drive is not the same operation. Debian documents <a href="https://www.debian.org/releases/trixie/amd64/ch04s03.en.html">USB installation media</a>.</li><li>Use a 64-bit Intel/AMD system and disable Secure Boot. Choose <strong>Try ErdOS</strong> in the boot menu.</li><li>At the console, log in as <code>user</code> with password <code>live</code>. labwc starts automatically on tty1.</li></ol>
         <p>The public live account has sudo access. There is no SSH server, graphical login manager or configured persistence. Live-session changes disappear on reboot. Other virtual consoles stay in text mode.</p>
-        <p>Choose <strong>Logout</strong> in the right-click menu to end the graphical session and return to a fresh login prompt. Log in again to start Openbox.</p>
+        <p>Choose <strong>Logout</strong> in the right-click menu to end the graphical session and return to a fresh login prompt. Log in again to start labwc.</p>
       </section>
       <section id="verify"><h2>Verify a download</h2>
         <p>Put the ISO and <code>erdos-amd64.iso.sha256</code> from the same release in one directory, then run:</p>
@@ -42,54 +42,35 @@
         <p>Do not choose whole-disk partitioning for an alongside installation. GRUB can detect another OS, but encrypted systems, Windows/macOS and unusual firmware may require additional boot configuration; those setups have not been tested by this project.</p>
         <figure><img src="install-confirmation.png" width="1280" height="800" alt="Final confirmation listing the partitions to format, with No selected" loading="lazy"><figcaption>The final write prompt defaults to No and lists exactly what will be changed.</figcaption></figure>
         <h3>First boot</h3>
-        <p>Remove the ISO/USB when installation finishes, boot the installed system and log in with the account you created. Openbox starts on tty1. Connect to Wi-Fi using Settings → Network. Test administrative access with <code>sudo -v</code>, entering your normal account password, then run <code>sudo apt update</code>.</p>
+        <p>Remove the ISO/USB when installation finishes, boot the installed system and log in with the account you created. labwc starts on tty1. Connect to Wi-Fi using Settings → Network. Test administrative access with <code>sudo -v</code>, entering your normal account password, then run <code>sudo apt update</code>.</p>
         <p>APT is already configured for Debian Trixie, updates, security and non-free firmware. No manual mirror setup or source-file editing is needed. Live and installed sessions share signed HTTPS repositories. Automatic clock synchronization starts when a time server is reachable. The installer writes repository settings locally; the first <code>apt update</code> downloads their indexes after you connect.</p>
       <p>An installed system boots automatically after a one-second hidden menu timeout. Press Esc during startup to open the boot menu for recovery or another OS. Local login clears old console output; Logout returns to the login prompt.</p>
       </section>
       <section id="desktop"><h2>Desktop and applications</h2>
         <p>Right-click the desktop for <strong>Terminal</strong>, <strong>Web Browser</strong>, <strong>File Manager</strong> and <strong>Text Editor</strong>. These use your selected defaults; initially Sakura, regular Firefox, PCManFM and Twig. The Applications submenu reads installed desktop entries when opened, so added or removed graphical applications appear without a polling daemon or APT hook. Command-line tools need a desktop entry to show there.</p>
-        <p>The desktop has no panel or tray. Open the Openbox menu with a three-finger tap/click, Super+Space, the Menu key, desktop right-click or Super + right-click over an application. Use Super alone or Super+O for windows, and Super+Shift+O for workspaces. Settings provides sound, network, battery and time controls. Openbox briefly shows its own popup when switching workspaces.</p>
-        <ul><li><strong>Audio:</strong> open Settings → Sound to choose output/input devices, adjust volume or mute. Supported volume and mute keys also work.</li><li><strong>Networking:</strong> open Settings → Network to enable Wi-Fi, refresh networks, connect or manage saved connections. Advanced profiles are available through Network Connections in Applications.</li><li><strong>Bluetooth:</strong> open Settings → Bluetooth to scan, pair and connect devices.</li><li><strong>Battery:</strong> open Settings → Power for charge, charging status and hardware-reported health.</li><li><strong>Clock:</strong> open Settings → Date &amp; Time for the current time, time zone and automatic synchronization status.</li><li><strong>Files:</strong> PCManFM handles USB mounting and network shares. Open <code>smb://server/share</code> for SMB; automatic Windows WS-Discovery browsing is not guaranteed. SFTP uses the SSH client.</li><li><strong>Text:</strong> Twig opens plain text and common source files by default. Mounted shares are exposed through GVfs FUSE for editor access.</li><li><strong>Touchpad:</strong> natural scrolling, two-finger scrolling and two-finger right-click are enabled on supported devices.</li></ul>
+        <p>The desktop has no panel or tray. Open the labwc menu with a three-finger tap/click, Super+Space, the Menu key, desktop right-click or Super + right-click over an application. Use Super alone or Super+O for windows, and Super+Shift+O for the Workspaces menu. Settings provides sound, network, battery and time controls. labwc briefly shows its own popup when switching workspaces.</p>
+        <ul><li><strong>Audio:</strong> open Settings → Sound to choose output/input devices, adjust volume or mute. Supported volume and mute keys also work.</li><li><strong>Networking:</strong> open Settings → Network to enable Wi-Fi, refresh networks, connect or manage saved connections. Advanced profiles are available through Advanced Network Configuration in Applications.</li><li><strong>Bluetooth:</strong> open Settings → Bluetooth to scan, pair and connect devices.</li><li><strong>Battery:</strong> open Settings → Power for charge, charging status and hardware-reported health.</li><li><strong>Clock:</strong> open Settings → Date &amp; Time for the current time, time zone and automatic synchronization status.</li><li><strong>Files:</strong> PCManFM handles USB mounting and network shares. Open <code>smb://server/share</code> for SMB; automatic Windows WS-Discovery browsing is not guaranteed. SFTP uses the SSH client.</li><li><strong>Text:</strong> Twig opens plain text and common source files by default. Mounted shares are exposed through GVfs FUSE for editor access.</li><li><strong>Touchpad:</strong> natural scrolling, two-finger scrolling and two-finger right-click are enabled on supported devices.</li></ul>
         <p>Network passwords are requested when needed; there is no bundled desktop keyring. Most manuals, package documentation and non-English translations are trimmed. Package copyright notices remain.</p>
-        <p>The bottom of the right-click menu contains Logout, Reboot and Power off. Logout ends both X and the tty1 login session.</p>
+        <p>The bottom of the right-click menu contains Logout, Reboot and Power off. Logout ends labwc and the tty1 login session, returning to the console login prompt.</p>
       </section>
-      <section id="footprint"><h2>Disk and memory usage</h2>
-        <p>The November 19, 2026 image used approximately <strong>1.80 GiB installed</strong> and <strong>380.6 MiB of RAM at idle</strong> in this VM measurement. These are observed usage figures, not minimum hardware requirements.</p>
-        <p>A fresh UEFI installation on a 24 GiB virtual disk, with two virtual CPUs, 2 GiB of RAM, and a 1280 × 800 display. The ISO was removed before booting the installed system. No packages were added, removed or upgraded, and no APT indexes were downloaded.</p>
-        <p>Disk usage counts used filesystem blocks on the ext4 root and FAT EFI filesystems, including their metadata. It excludes unused space and the separate 1.25 GiB swap partition created by guided partitioning. 1,936,224,256 bytes were used on root and 311,296 bytes on EFI: 1,936,535,552 bytes total.</p>
-        <p>RAM is <code>MemTotal − MemAvailable</code> from <code>/proc/meminfo</code>, which accounts for reclaimable memory. The figure is the median of five samples taken ten seconds apart after letting the normal desktop settle for two minutes. The panel-free desktop, file-manager daemon, gesture/workspace listener, audio, NetworkManager and time-sync service ran normally; no application windows were open. The serial console shell, Python sampler and read-only test-fixture mount are included in the RAM measurement. Swap use was 0 bytes. The VM had no network or Bluetooth adapter; Bluetooth is enabled by default but its service stays inactive without hardware.</p>
-        <p>Hardware, drivers, updates and opened applications change these numbers. GiB and MiB use powers of 1024. Allow additional space for packages and your files; the installation guide recommends leaving at least 20 GB available.</p>
-        <p><a href="footprint.json">November 19 build: raw measurements and tested ISO checksum</a></p>
+      <section id="footprint"><h2>Disk and RAM usage</h2>
+        <p>Fresh offline installations of the previous X11 development image and final Wayland candidate, tested in the same VM configuration:</p>
+        <table><thead><tr><th>Build</th><th>Installed disk</th><th>Idle RAM</th></tr></thead><tbody><tr><td>Previous X11 dev</td><td>1.814 GiB</td><td>361.8 MiB</td></tr><tr><td>Wayland candidate (Alpha 3)</td><td>1.750 GiB</td><td>355.4 MiB</td></tr></tbody></table>
+        <p>UEFI, 2 vCPUs, 2 GiB RAM, 24 GiB install disk and 1280×800 software-rendered display. No network adapter, package updates or app windows before measurement. Disk counts root and EFI used blocks, excluding swap. RAM is MemTotal minus MemAvailable: five samples 10 seconds apart after a two-minute settle. Hardware and graphics drivers change these results.</p>
+        <p>Measured on the final Wayland candidate and the preserved X11 development baseline. Alpha 3 changes only the candidate’s release label. <a href="footprint.json">Raw samples, ISO checksums and method</a> · <a href="testing.md">Validation and limitations</a>.</p>
       </section>
       <section id="settings"><h2>Settings</h2>
-        <p>Press <strong>Super + I</strong> or choose <strong>Settings</strong> in the desktop right-click menu. Appearance, Default Programs, Touchpad, Keyboard, Menu, Gestures, Displays, Sound, Network, Bluetooth, Power and Date &amp; Time share one window. Use the Apply button for the setting you change; connection and pairing actions use their own buttons. Power is an information page.</p>
-        <p>Change themes, fonts, desktop color; edit shortcuts, add custom application commands and change swipe actions; adjust touchpad behavior, automatic monitor extension, brightness, audio and Wi-Fi. The app reuses Python and GTK already in ErdOS and closes completely when you close its window.</p>
-        <p>In Alpha 2, Apply results appear in a dismissible message; failures are distinguished from successful changes, and sections that cannot load offer Retry. New users get matching dark applications, window borders and menus without extra theme packages.</p>
-        <p>Displays lists advertised resolutions with a 15-second Keep/Revert confirmation. Confirmed modes are restored at login for the same outputs. Power shows battery information; Date &amp; Time lets you view the clock, change the system time zone and check automatic time synchronization. Bluetooth supports scanning, pairing, connection and trusted devices. Advanced network profiles use the existing Network Connections app. <a href="settings.md">Controls, persistence and limitations</a>. <a href="settings.png">View Alpha 2 Settings</a>.</p>
-        <div class="table-wrap"><table><thead><tr><th scope="col">Settings section</th><th scope="col">Controls</th></tr></thead><tbody>
-          <tr><td>Appearance</td><td>GTK theme, font, dark preference and desktop color; image backgrounds in Alpha 2</td></tr>
-          <tr><td>Default Programs</td><td>Terminal, browser, file manager and text editor</td></tr>
-          <tr><td>Touchpad</td><td>Scrolling direction, tap to click, two-finger right-click and pointer speed</td></tr>
-          <tr><td>Keyboard</td><td>Workspaces, Super-only overview, existing shortcuts and custom commands</td></tr>
-          <tr><td>Menu</td><td>Add, edit, delete and reorder right-click menu entries. Development build: toggle three-finger tap/click and Super + right-click menu access.</td></tr>
-          <tr><td>Startup Applications</td><td>Edit Openbox startup commands; Save checks syntax and keeps a backup. Changes run at the next login. Keep existing ErdOS commands and end added application lines with &amp;.</td></tr>
-          <tr><td>Gestures</td><td>Swipe distance and actions</td></tr>
-          <tr><td>Displays</td><td>Resolution, automatic monitor extension and laptop brightness</td></tr>
-          <tr><td>Sound</td><td>Output/input devices, volume and mute</td></tr>
-          <tr><td>Network</td><td>Current Wi-Fi/internet state, radio on/off, scan, connect and disconnect (improved)</td></tr>
-          <tr><td>Bluetooth</td><td>Adapter power, scan, pair, connect, trust and forget</td></tr>
-          <tr><td>Power</td><td>Battery and external-power information; no sleep-policy controls</td></tr>
-          <tr><td>Date &amp; Time</td><td>Current time, time zone and automatic synchronization</td></tr>
-        </tbody></table></div>
+        <p>Press <strong>Super + I</strong> or choose Settings in the menu. Appearance, Default Programs, Touchpad, Keyboard, Menu, Startup Applications, Gestures, Displays, Sound, Network, Bluetooth, Power and Date &amp; Time share one GTK window.</p>
+        <p>Use Apply for the controls you change. Network and Bluetooth have their own action buttons. Feedback distinguishes errors from success. The app exits when closed; no Settings daemon remains. <a href="settings.md">All controls and persistence details</a>.</p>
+        <p>Power displays battery information and keeps Debian defaults. Date &amp; Time shows the clock, time zones and synchronization status. Displays has resolution confirmation and rollback. Startup Applications edits <code>~/.config/labwc/autostart</code>, checks shell syntax and keeps a previous-version backup. Changes run at the next login.</p>
       </section>
       <section id="defaults"><h2>Default programs</h2>
         <p>Use <strong>Settings → Default Programs</strong>. Install an alternative, refresh the application list, choose it and click Apply default programs. The root menu and Super+Enter, Super+B, Super+E and Super+T use these choices immediately. Applications still lists actual app names.</p>
-        <p>Browser, folder and plain-text choices share the normal desktop associations, so a default browser chosen elsewhere is honored too. Terminal selection is per user, with the system terminal as fallback. Other file types retain their own associations. <a href="settings.md#default-programs">Details</a>. Alpha 2 includes these defaults, the Network feedback improvements and regular Firefox.</p>
+        <p>Browser, folder and plain-text choices share the normal desktop associations, so a default browser chosen elsewhere is honored too. Terminal selection is per user, with the system terminal as fallback. Other file types retain their own associations. <a href="settings.md#default-programs">Details</a>. These defaults apply to Alpha 3.</p>
       </section>
-      <section id="background"><h2>Background images</h2>
-        <p>Choose an image or a solid color in Settings → Appearance.</p>
-        <p>In Settings → Appearance, choose Background → Image, select a file and choose Fill, Fit, Center or Tile. Apply appearance saves the selection. Fill crops without stretching; Fit keeps the whole image and uses Desktop color around it.</p>
-        <p>Remove image switches back to Solid color when applied and deletes only the private wallpaper copy, leaving the original file untouched. Images are copied into your user configuration, restored at login and refreshed after display changes. Missing or unreadable saved images fall back to the solid color. This uses the existing hsetroot package, with no additional daemon.</p>
+      <section id="background"><h2>Backgrounds</h2>
+        <p>In Settings → Appearance, select a solid color or an image with Fill, Fit, Center or Tile. Apply validates and copies the image into your own configuration. Moving the original file does not break it.</p>
+        <p>Remove image and Apply restores the solid color and deletes only the private copy. Swaybg is the single background process. There are no decorative effects, shadows, blur, panels or docks.</p>
       </section>
       <section id="menu"><h2>Customize the right-click menu</h2>
         <p>Open Settings → Menu. Double-click a name or command to edit it. Use Add item, Add separator, Delete, Move up and Move down, then Apply menu. Changes take effect immediately and persist for your user.</p>
@@ -97,7 +78,7 @@
         <p>In Settings → Keyboard, Add shortcut creates a custom key combination and command. Double-click either field, then Apply shortcuts. Remove selected deletes a custom binding when applied. Conflicts with other shortcuts are rejected. Use W for Super, C for Ctrl, A for Alt and S for Shift; for example, <code>W-p</code> with command <code>pcmanfm</code>.</p>
       </section>
       <section id="shortcuts"><h2>Keyboard shortcuts</h2>
-        <p>Super is usually the Windows key. The number-row workspace bindings use physical X11 keycodes. Keypad tiling supports either NumLock state.</p>
+        <p>Super is usually the Windows key. Workspace bindings use key names and support the usual Shift + number-row combinations. Keypad tiling supports either NumLock state.</p>
         <div class="table-wrap"><table><thead><tr><th scope="col">Shortcut</th><th scope="col">Action</th></tr></thead><tbody>
           <tr><td>Super + Enter / Ctrl + Alt + T</td><td>Open the default terminal (Sakura initially)</td></tr>
           <tr><td>Super + B</td><td>Open the default web browser (Firefox initially)</td></tr>
@@ -106,9 +87,9 @@
           <tr><td>Super + T</td><td>Open the default text editor (Twig initially)</td></tr>
           <tr><td>Super + Q / Alt + F4</td><td>Close focused window</td></tr>
           <tr><td>Super + H</td><td>Minimize</td></tr>
-          <tr><td>Super alone / Super + O / Escape</td><td>Open / dismiss the window overview</td></tr>
-          <tr><td>Super + Shift + O</td><td>Workspace overview</td></tr>
-          <tr><td>Super + Space / Menu</td><td>Openbox menu</td></tr>
+          <tr><td>Super alone / Super + O / Escape</td><td>Open / dismiss the thumbnail switcher</td></tr>
+          <tr><td>Super + Shift + O</td><td>Workspaces menu</td></tr>
+          <tr><td>Super + Space / Menu</td><td>labwc menu</td></tr>
           <tr><td>Ctrl + Super + Left / Right</td><td>Cycle windows directly (gesture fallback)</td></tr>
           <tr><td>Super + Tab / Shift + Super + Tab</td><td>Cycle windows forward / backward</td></tr>
           <tr><td>Shift + Super + top-row 1–9</td><td>Switch an existing workspace</td></tr>
@@ -122,7 +103,7 @@
           <tr><td>Super + numpad 5</td><td>Maximize</td></tr>
           <tr><td>Alt + left-drag / right-drag</td><td>Move / resize a window</td></tr>
           <tr><td>Print Screen</td><td>Save full desktop screenshot</td></tr>
-          <tr><td>Alt + Print Screen</td><td>Save active-window screenshot</td></tr>
+          <tr><td>Alt + Print Screen</td><td>Save focused-window content screenshot</td></tr>
           <tr><td>Shift + Print Screen</td><td>Select an area for a screenshot</td></tr>
         </tbody></table></div>
         <p>Screenshots save silently to <code>~/Pictures/Screenshots</code>. Repeated tiling and maximization retain a window’s original geometry until restored; restore also keeps the window visible if its former monitor has been unplugged.</p>
@@ -131,29 +112,25 @@
         <p>Fn/media-key mode is usually controlled by keyboard firmware. In a VM, the host or viewer can intercept keys before ErdOS receives them. Test the viewer’s send-key or keyboard-grab options before changing guest bindings.</p>
       </section>
       <section id="gestures"><h2>Touchpad gestures</h2>
-        <p>On a compatible touchpad, ErdOS supports the gestures below. Three-finger tap/click opens the Openbox menu without moving your fingers. A clear swipe triggers once after crossing a deliberate movement threshold, before you lift your fingers. Small movements and ambiguous diagonal swipes are ignored. Windows do not follow your fingers through an animation.</p>
+        <p>The compositor handles deliberate swipes directly, once per gesture after the configured movement threshold. Small and ambiguous movements are ignored. There is no separate raw-input listener or gesture daemon.</p>
         <div class="table-wrap"><table><thead><tr><th scope="col">Gesture</th><th scope="col">Action</th></tr></thead><tbody>
-          <tr><td>3-finger tap / click</td><td>Open the Openbox menu, including over applications</td></tr>
-          <tr><td>3 fingers up</td><td>Show the open-window overview</td></tr>
-          <tr><td>3 fingers down</td><td>Close the overview</td></tr>
+          <tr><td>3-finger tap / click</td><td>Open the desktop menu, including over applications</td></tr>
+          <tr><td>3 fingers up / down</td><td>Open / close the native thumbnail switcher</td></tr>
           <tr><td>3 fingers left / right</td><td>Previous / next window on the current workspace</td></tr>
-          <tr><td>4 fingers up / down</td><td>Show the workspace overview</td></tr>
           <tr><td>4 fingers left / right</td><td>Next / previous workspace, wrapping at the ends</td></tr>
+          <tr><td>4 fingers up / down</td><td>Disabled by default; configurable in Settings</td></tr>
         </tbody></table></div>
-        <p>Dynamic workspaces keep one empty workspace after the last occupied or current one. Switching to that spare creates another. Empty gaps retain their numbers; unused trailing workspaces are removed. The overview includes windows from all workspaces. Select a window with the pointer or arrow keys and Enter; Escape or three fingers down dismisses it. Repeating swipe-up leaves an already open overview visible. Swipe-down does nothing to an ordinary application when the overview is closed.</p>
-        <p>Skippy-XD starts only when needed, with physics and animations disabled. Unmapped or minimized windows may use an icon/title placeholder rather than a live thumbnail. Super+O opens the overview without a touchpad; Ctrl+Super+Left/Right provides the same direct window cycle used by swipes.</p>
-        <p>Development build: three-finger tap/click and Super + right-click open the Openbox menu over application windows. Toggle each in <strong>Settings → Menu</strong>, then choose <strong>Apply menu triggers</strong>. Three-finger tap requires tap-to-click; pressing with three fingers requires clickfinger support. The touchpad option replaces middle-click; disabling it restores middle-click. Mouse middle-click, desktop right-click and Super + Space remain unchanged.</p>
-        <p>Only touchpad input nodes get active-user access. Keyboard device-node access and input-group membership are not added. The Super-only shortcut observes X11 key events and does not log typed text. The reader pauses for inactive/locked login sessions and exits with X. VMs often expose only a mouse; physical three/four-finger detection depends on the touchpad and how the VM passes it through.</p>
-        <p>Customize bindings and sensitivity in <code>~/.config/erdos/gestures.conf</code>, using <code>/etc/erdos/gestures.conf</code> as a starting point. Set an action to <code>none</code> to disable a binding. The old libinput-gestures configuration is no longer used. An action already triggered cannot be undone by changing direction or cancelling the swipe; lift your fingers before the next swipe. Restart with <code>erdos-gesture stop</code> then <code>erdos-gesture session</code>. Diagnostics are in <code>~/.local/state/erdos/gestures.log</code> and <code>overview.log</code>.</p>
+        <p>The thumbnail grid remains open after release. Click a thumbnail, or use arrows and Enter. Escape or three fingers down cancels. It includes windows across workspaces; minimized windows can use placeholders. Super alone or Super + O opens the same grid. Skippy and the graphical workspace overview are removed.</p>
+        <figure><img src="assets/labwc-thumbnails.png" width="1280" height="800" alt="Native labwc thumbnails for Twig, Sakura and ErdOS Settings" loading="lazy"><figcaption>The native thumbnail switcher in an installed Wayland session.</figcaption></figure>
+        <p>Workspaces remain dynamic with one empty spare after the last occupied/current workspace. Empty gaps retain their numbers; only unused trailing spaces disappear. Use the Workspaces submenu or Super + Shift + O to see workspaces and their windows.</p>
+        <p>Change swipes in Settings → Gestures. In Settings → Menu, independently toggle three-finger tap/click and Super + right-click. The touchpad option replaces middle-click; disabling it restores middle-click. Mouse middle-click, desktop right-click and Super + Space remain available. Hardware must support tapping/clickfinger as applicable.</p>
       </section>
       <section id="monitors"><h2>Multiple monitors</h2>
-        <p>At login or a connection change, ErdOS extends external displays to the right and keeps the laptop screen primary. Each output uses a suitable advertised mode. With no internal panel, the helper keeps a connected primary or chooses the first connected screen.</p>
-        <p>Drag windows across displays; tiling follows the monitor containing the window. Workspaces span all screens, so switching workspaces switches them together.</p>
-        <p>Automatic layout listens to RandR events, rather than polling. It leaves manual changes alone until the next connection change or login. Settings → Displays lets you select advertised resolutions, with automatic rollback unless confirmed within 15 seconds. Confirmed modes return at login for the same output set; reconnecting a monitor resets the automatic layout to preferred modes. Advanced users can stop the helper with <code>erdos-displays --stop</code> or reapply defaults with <code>erdos-displays --apply</code>. </p>
-        <p>Physical docks, multi-GPU and mixed-DPI setups still need hardware testing.</p>
+        <p>Automatic layout keeps the laptop display at the left and extends external monitors to its right. Drag windows between them; all displays share the same workspaces. A one-shot helper runs on hotplug rather than polling.</p>
+        <p>Settings → Displays reads supported modes through Wayland output management. Test a resolution and Keep it within 15 seconds, or the previous layout returns. Closing Settings or the confirmation helper also reverts an unconfirmed change. Confirmed modes are restored for the same connected outputs. Disabling automatic layout preserves the current arrangement.</p>
       </section>
       <section id="troubleshooting"><h2>Troubleshooting</h2>
-        <details><summary>Print Screen does nothing</summary><p>First check <code>~/Pictures/Screenshots</code>: saving is silent. Run <code>command -v scrot</code> and <code>erdos-screenshot</code> in Sakura. An older ISO removed scrot during installation; repair it with <code>sudo apt update</code> followed by <code>sudo apt install scrot</code>. The current image retains it. If the command works but the key does not, check the host/VM key handling.</p></details>
+        <details><summary>Print Screen does nothing</summary><p>Saving is silent: check <code>~/Pictures/Screenshots</code>. Run <code>command -v grim</code> and <code>erdos-screenshot</code> in Sakura. Selected-area capture also needs <code>slurp</code>. A focused-window capture is invoked by labwc with its window geometry. If direct capture works but the key does not, check the VM viewer or keyboard Fn mode.</p></details>
         <details><summary>Sudo says my account is not in the sudoers file</summary><p>Current installations grant the first account sudo. On an older installation where a separate root password was set, note your login name using <code>whoami</code>, run <code>su -</code>, and enter that root password. As root, run <code>apt-get install sudo</code> and <code>adduser YOUR_LOGIN_NAME sudo</code>. Replace the placeholder with your actual login name. Log out completely and back in before testing <code>sudo -v</code>.</p></details>
         <details><summary>Wi-Fi or another device is missing</summary><p>ErdOS includes firmware for common hardware, not every device. Identify the hardware and use Debian packages for additional firmware or drivers. An Ethernet connection or supported USB network adapter may help get online. Firmware absent from the ISO cannot be made available merely by hiding installer questions.</p></details>
         <details><summary>Settings shows no battery</summary><p>The Power tab reports no battery when the kernel exposes none, including most VMs and desktop computers. Physical battery and backlight support depends on the kernel and device firmware.</p></details>

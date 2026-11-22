@@ -1,34 +1,75 @@
-# Development validation
+# Alpha 3 validation
 
-This checkout and its local ISO are the current development version, ahead of
-published Alpha 2. The published release remains available on the download site;
-it is not replaced by a local build.
+Alpha 3 uses labwc/Wayland. Alpha 2 remains available as the older Openbox/X11
+release. The release image identity is recorded in [release.json](release.json).
 
-## Source and interaction checks
+## Completed source and compositor checks
 
-- Source syntax, local links, installer policy and public-file boundary checked.
-- Native helpers compile on Debian 13, including touchpad-only button remapping.
-- In an isolated real Openbox session, Super + right-click opens the root menu
-  over application windows. Both new menu triggers toggle independently, while
-  desktop right-click and Super + Space continue to work.
-- An isolated XInput fixture confirms touchpad middle-click remaps and restores
-  without changing a separate mouse's button mapping. Physical touchpad testing
-  is still required.
-- The Menu tab renders both controls. Startup saves reject invalid shell syntax
-  and conflicting external edits, keep a previous-version backup and do not
-  execute commands while saving.
-- Custom power controls were dropped. The image retains Debian's power defaults
-  and adds no power-management packages, timers or services.
+- Source syntax, local links, installer safety and public-file boundary pass.
+- Pinned labwc 0.9.7 and static wlroots 0.19.2 build on Debian 13, stripped and
+  size-optimized. Vulkan/examples/translations are disabled. The compiled
+  compositor is approximately 6.5 MiB; this is not a complete-system measurement.
+- A non-root, headless Wayland session starts without compositor configuration
+  errors and displays native GTK windows with thumbnail previews.
+- Super + O and Super alone open a persistent thumbnail grid; Escape dismisses.
+  Root and Workspaces menus are captured and visually reviewed.
+- Native snapping/maximizing then restoring returns the original client size.
+- The standard workspace protocol confirms an initial two workspaces, creation
+  of a spare when switching to the empty workspace and trimming on returning.
+  Keyboard send/select actions retain occupied workspaces and create a spare.
+- Input/gesture handling is native to the compositor. The old raw-device reader,
+  access rule, Openbox, Skippy and X11-specific desktop helpers are removed.
 
-## Current image checks
+## Image verification
 
-The November 20, 2026 development build passed final ISO verification against
-the current desktop configuration, embedded installer policy, required installed
-packages, vendored Twig and Skippy's recorded source/binary provenance with
-physics disabled. All 669 embedded file checksums passed. The exact
-local image size and SHA-256 are recorded in [release.json](release.json).
+The final-image verifier checks embedded configuration, offline installer policy,
+required package retention, pinned Twig, compositor source/binary hashes and an
+8 MiB ceiling on live-filesystem APT metadata/cache (downloaded DEBs are rejected).
+The cache guard was verified against an oversized incremental build cache;
+the clean final image passes it.
+The image hook checks that all dynamic compositor libraries resolve and rejects
+replaced desktop packages and full desktop environments. Build/checksum and VM
+results for the current ISO are recorded below.
 
-The current development image still needs a fresh boot/install and physical
-hardware test. Earlier release test results are preserved in tagged Git history;
-they do not certify this development build. Footprint figures on the website are
-from the published Alpha 2 measurement, not a new development measurement.
+- All 669 internal SHA-256 entries pass on the Wayland candidate and release image.
+- Alpha 3 changes only `/etc/erdos-release` in the measured candidate’s filesystem;
+  its boot and offline-installer media are retained. The release-labeled image
+  passes the configuration verifier and a full UEFI live boot.
+- Full UEFI live-media boot reaches a clean console prompt; logging in starts labwc.
+- Live shortcuts launch Sakura, regular Firefox, PCManFM and Twig. Super alone
+  opens thumbnails showing all four; Escape dismisses.
+- Print Screen writes a private PNG in `~/Pictures/Screenshots` using grim.
+- A real Wayland output-mode change automatically restores after the 15-second
+  confirmation timeout, including its original refresh rate.
+- A fresh offline install completes with manual disk selection and final erase
+  confirmation. The final image boots from its installed UEFI disk without
+  installer media; console login starts the Wayland session.
+
+## Limits
+
+Headless tests are not physical touchpad/GPU tests. The MacBook and ASUS L203MA
+still need checks of three/four-finger swipes, touchpad menu/middle-click, Wi-Fi,
+Bluetooth, brightness, suspend/resume and monitor hotplug on the new image.
+Shared-workspace behavior and output controls also need multi-monitor hardware
+coverage. Alongside-OS partitioning and Secure Boot are not certified.
+
+## Footprint comparison
+
+| Build | Installed disk | Idle RAM |
+| --- | --- | --- |
+| Previous X11 dev | 1.814 GiB | 361.8 MiB |
+| Wayland candidate (Alpha 3) | 1.750 GiB | 355.4 MiB |
+
+Both are fresh offline installations with identical VM settings and default
+services. The desktop is active, with no application windows opened before
+measurement. Two console shells, the serial getty and the Python sampler are
+included identically. RAM uses five samples after 120 seconds; disk excludes
+swap. Both report no cached APT package indexes and no swap use.
+
+[Raw results](footprint.json) identify each exact ISO, VM hardware, per-sample
+memory values, used root/EFI blocks and service state. The X11 ISO is preserved
+as `dist/erdos-x11-dev.iso`. Physical GPU/driver measurements can differ from
+this software-rendered VM.
+
+There is no screen locker bundled. Debian power policy remains unchanged;
+no charging or idle-sleep daemon was added.

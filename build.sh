@@ -25,7 +25,7 @@ build_dir=$(mktemp -d "$project_dir/work/build-XXXXXXXX")
 cp -a "$project_dir/config" "$build_dir/config"
 bash "$project_dir/scripts/stage-bootloaders.sh" "$build_dir/config"
 bash "$project_dir/scripts/stage-twig.sh" "$build_dir/config/includes.chroot"
-bash "$project_dir/scripts/stage-gestures.sh" "$build_dir/config/includes.chroot"
+bash "$project_dir/scripts/stage-compositor.sh" "$build_dir/config/includes.chroot"
 printf 'Build directory: %s\n' "$build_dir"
 if [[ $mode == --prepare ]]; then
   echo 'Customization files staged only; live-build was not invoked.'
@@ -34,13 +34,11 @@ fi
 # Build-only dependencies stay on the host, outside the live filesystem.
 bash "$project_dir/scripts/build-helpers.sh" "$build_dir/config/includes.chroot/usr/local/bin"
 mkdir -p "$build_dir/config/includes.chroot/usr/local/bin" "$project_dir/release-tools"
-for helper in erdos-window-layout erdos-displays erdos-touchpad skippy-xd; do
-  cp "$build_dir/config/includes.chroot/usr/local/bin/$helper" "$project_dir/release-tools/$helper"
-done
-install -Dm644 "$build_dir/config/includes.chroot/usr/local/bin/skippy-xd.build.json" \
-  "$build_dir/config/includes.chroot/usr/local/share/doc/skippy-xd/build.json"
-cp "$build_dir/config/includes.chroot/usr/local/bin/skippy-xd.build.json" "$project_dir/release-tools/skippy-xd.build.json"
-rm "$build_dir/config/includes.chroot/usr/local/bin/skippy-xd.build.json"
+cp "$build_dir/config/includes.chroot/usr/local/bin/labwc" "$project_dir/release-tools/labwc"
+install -Dm644 "$build_dir/config/includes.chroot/usr/local/bin/labwc.build.json" \
+  "$build_dir/config/includes.chroot/usr/local/share/doc/labwc/build.json"
+cp "$build_dir/config/includes.chroot/usr/local/bin/labwc.build.json" "$project_dir/release-tools/labwc.build.json"
+rm "$build_dir/config/includes.chroot/usr/local/bin/labwc.build.json"
 cd "$build_dir"
 trap 'echo "Build failed; inspect $build_dir/configure.log, $build_dir/installer-download.log, $build_dir/build.log, and the retained build directory." >&2' ERR
 lb config \
@@ -79,7 +77,7 @@ lb build 2>&1 | tee build.log
 python3 "$project_dir/scripts/prepare-release.py" --verify-only --iso "$build_dir/live-image-amd64.hybrid.iso"
 mkdir -p "$project_dir/dist"
 image="$project_dir/dist/erdos-amd64.iso"
-# Keep one current local image; replace only after a successful verification.
+# Replace only the canonical image after verification; retain named comparison ISOs.
 cp live-image-amd64.hybrid.iso "$image.tmp"
 mv -f "$image.tmp" "$image"
 (cd "$project_dir/dist" && sha256sum "${image##*/}" > "${image##*/}.sha256")

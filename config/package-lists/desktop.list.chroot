@@ -17,16 +17,34 @@ ca-certificates
 # Filesystem checks for installed ext4 root and FAT EFI partitions.
 e2fsprogs
 dosfstools
-# X11 and desktop; no desktop environment or display manager
-xserver-xorg-core
+# Wayland desktop; pinned labwc/static wlroots is built on the host.
+# XWayland remains for third-party X11 application compatibility.
+xwayland
+libseat1
+libsfdo0
+libxcb-composite0
+libxcb-ewmh2
+libxcb-icccm4
+libxcb-render0
+libxcb-res0
+libxcb-xfixes0
+libxcb-errors0
+libdisplay-info2
+libliftoff0
+libinput10
+libegl1
+libegl-mesa0
+libgl1-mesa-dri
+libgles2
+libgbm1
+swaybg
+grim
+slurp
+wlr-randr
+# GTK file dialogs and PipeWire screen sharing without a desktop shell.
+xdg-desktop-portal-gtk
+xdg-desktop-portal-wlr
 keyboard-configuration
-xserver-xorg-input-libinput
-xinit
-xauth
-# Advertised display modes and resolution changes in Settings.
-x11-xserver-utils
-hsetroot
-openbox
 sakura
 pcmanfm
 gvfs
@@ -38,7 +56,7 @@ openssh-client
 avahi-daemon
 # Desktop-entry/MIME cache updates used by the build and app associations.
 desktop-file-utils
-# Twig and the dynamic Openbox menu share the existing Python/GTK runtime.
+# Twig and the dynamic desktop menu share the existing Python/GTK runtime.
 python3
 python3-gi
 gir1.2-gtk-3.0
@@ -48,12 +66,6 @@ fonts-dejavu-core
 hicolor-icon-theme
 adwaita-icon-theme
 librsvg2-common
-xdotool
-# Direct gesture I/O reuses Xorg's libinput and xdotool's XTest libraries.
-python3-pyudev
-# Native window geometry helper uses the existing X11/RandR runtime.
-libx11-6
-libxrandr2
 # Networking and graphical authorization
 network-manager
 nm-connection-editor
@@ -72,7 +84,5 @@ pulsemixer
 # Small hardware-key backlight control and its unprivileged access rules.
 brightnessctl
 brightness-udev
-# Screenshot hotkeys; reuses the existing image libraries.
-scrot
 # Detection of existing operating systems by the installed GRUB boot menu
 os-prober

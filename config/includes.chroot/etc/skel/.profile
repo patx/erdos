@@ -2,6 +2,6 @@
 if [ -n "${BASH_VERSION:-}" ] && [ -f "$HOME/.bashrc" ]; then
     . "$HOME/.bashrc"
 fi
-if [ -z "${DISPLAY:-}" ] && [ "$(tty)" = /dev/tty1 ] && [ "$(id -u)" -ne 0 ]; then
-    exec startx
+if [ -z "${WAYLAND_DISPLAY:-}" ] && [ -z "${DISPLAY:-}" ] && [ "$(tty)" = /dev/tty1 ] && [ "$(id -u)" -ne 0 ]; then
+    exec labwc
 fi

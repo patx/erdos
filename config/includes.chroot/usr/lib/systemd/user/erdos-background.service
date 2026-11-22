@@ -1,0 +1,5 @@
+[Unit]
+Description=ErdOS Wayland background
+
+[Service]
+ExecStart=/usr/local/bin/erdos-background

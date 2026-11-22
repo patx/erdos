@@ -1,86 +1,172 @@
 {
-  "schema": 1,
-  "iso_sha256": "57172a9d911af6c4aa9d1225218d4c066e5edf212f69d51b39629ad05d4a2263",
-  "measured_at": "2026-11-19T22:52:03.242357-05:00",
-  "service_state": {
-    "NetworkManager": "active",
-    "systemd-timesyncd": "active",
-    "bluetooth": "inactive"
-  },
+  "schema": 2,
+  "measured_at": "2026-11-21T20:19:22.027607-05:00",
   "vm": {
     "vcpus": 2,
     "allocated_ram_bytes": 2147483648,
     "virtual_disk_bytes": 25769803776,
+    "spare_disk_bytes": 12884901888,
     "boot": "UEFI",
-    "network": "No adapter; offline install and measurement",
-    "bluetooth": "No adapter exposed by VM",
-    "display": "1280 800"
+    "network": "No adapter; offline installation and measurement",
+    "bluetooth": "No adapter",
+    "display": "1280x800",
+    "graphics": "virtio-vga, no 3D acceleration",
+    "cpu": "host (KVM)",
+    "qemu": "10.0.13"
   },
-  "kernel": "6.12.117+deb13-amd64",
-  "settle_seconds": 120,
-  "sample_interval_seconds": 10,
-  "desktop_ready_uptime_seconds": 310.51,
-  "ram_definition": "MemTotal - MemAvailable",
-  "ram_samples": [
-    {
-      "uptime_seconds": 430.52,
-      "mem_total_bytes": 2063323136,
-      "mem_available_bytes": 1664237568,
-      "used_bytes": 399085568
+  "builds": {
+    "x11": {
+      "kernel": "6.12.117+deb13-amd64",
+      "uefi": true,
+      "settle_seconds": 120,
+      "sample_interval_seconds": 10,
+      "ram_definition": "MemTotal - MemAvailable",
+      "ram_samples": [
+        {
+          "uptime_seconds": 540.35,
+          "mem_total_bytes": 2063314944,
+          "mem_available_bytes": 1683914752,
+          "used_bytes": 379400192
+        },
+        {
+          "uptime_seconds": 550.35,
+          "mem_total_bytes": 2063314944,
+          "mem_available_bytes": 1683914752,
+          "used_bytes": 379400192
+        },
+        {
+          "uptime_seconds": 560.35,
+          "mem_total_bytes": 2063314944,
+          "mem_available_bytes": 1683922944,
+          "used_bytes": 379392000
+        },
+        {
+          "uptime_seconds": 570.35,
+          "mem_total_bytes": 2063314944,
+          "mem_available_bytes": 1683922944,
+          "used_bytes": 379392000
+        },
+        {
+          "uptime_seconds": 580.35,
+          "mem_total_bytes": 2063314944,
+          "mem_available_bytes": 1683922944,
+          "used_bytes": 379392000
+        }
+      ],
+      "ram_median_bytes": 379392000,
+      "filesystems": [
+        {
+          "mount": "/",
+          "used_bytes": 1946955776,
+          "filesystem_bytes": 22859108352
+        },
+        {
+          "mount": "/boot/efi",
+          "used_bytes": 311296,
+          "filesystem_bytes": 1021370368
+        }
+      ],
+      "disk_used_bytes": 1947267072,
+      "disk_definition": "Used filesystem blocks on root and EFI; excludes swap and unallocated space",
+      "swap_proc_kib": "Filename\t\t\t\tType\t\tSize\t\tUsed\t\tPriority\n/dev/vda3                               partition\t1305596\t\t0\t\t-2",
+      "service_state": {
+        "NetworkManager": "active",
+        "systemd-timesyncd": "active",
+        "bluetooth": "inactive"
+      },
+      "processes": "COMMAND           RSS\nXorg            99900\npcmanfm         74680\nlxpolkit        69352\npython3         36760\nNetworkManager  19188\nopenbox         18688\npython3         17092\nsystemd-journal 16476\nwireplumber     16032\nudisksd         14084\nsystemd         13700\nsystemd         12140\ngvfs-udisks2-vo 11144\npipewire        10916\nsystemd-udevd    9964\npolkitd          9036\nsystemd-logind   8960\ngvfs-afc-volume  8928\npipewire-pulse   8264\nsystemd-timesyn  8200\ngvfsd            8056\ngvfsd-fuse       7176\ngvfs-gphoto2-vo  7016\nwpa_supplicant   6808\ngvfs-mtp-volume  6724\ngvfs-goa-volume  6520\npipewire         5196\ndbus-daemon      5000\nlogin            4664\ndbus-daemon      4384\nlogin            4344\nlogin            4216\nbash             4064\nbash             3980\nps               3892\navahi-daemon     3716\n(sd-pam)         3696\nmpris-proxy      3672\nrtkit-daemon     3192\nerdos-displays   2536\nxinit            2464\nstartx           1792\navahi-daemon     1500\nkthreadd            0\npool_workqueue_     0\nkworker/R-kvfre     0\nkworker/R-rcu_g     0\nkworker/R-sync_     0\nkworker/R-slub_     0\nkworker/R-netns     0\nkworker/0:1-eve     0\nkworker/0:0H-kb     0\nkworker/R-mm_pe     0\nrcu_tasks_kthre     0\nrcu_tasks_rude_     0\nrcu_tasks_trace     0\nksoftirqd/0         0\nrcu_preempt         0\nrcu_exp_par_gp_     0\nrcu_exp_gp_kthr     0\nmigration/0         0\nidle_inject/0       0\ncpuhp/0             0\ncpuhp/1             0\nidle_inject/1       0\nmigration/1         0\nksoftirqd/1         0\nkworker/1:0H-ev     0\nkdevtmpfs           0\nkworker/R-inet_     0\nkauditd             0\nkhungtaskd          0\nkworker/u8:2-fl     0\noom_reaper          0\nkworker/R-write     0\nkcompactd0          0\nksmd                0\nkhugepaged          0\nkworker/R-kinte     0\nkworker/R-kbloc     0\nkworker/R-blkcg     0\nirq/9-acpi          0\nkworker/1:1-eve     0\nkworker/R-tpm_d     0\nkworker/R-edac-     0\nkworker/R-devfr     0\nkworker/R-quota     0\nkworker/1:1H-kb     0\nkswapd0             0\nkworker/R-kthro     0\nkworker/R-acpi_     0\nkworker/R-mld       0\nkworker/R-ipv6_     0\nkworker/R-kstrp     0\nkworker/u9:0        0\nkworker/0:1H-kb     0\nkworker/0:2-eve     0\nwatchdogd           0\nkworker/R-ata_s     0\nscsi_eh_0           0\nkworker/R-scsi_     0\nscsi_eh_1           0\nkworker/R-scsi_     0\nscsi_eh_2           0\nkworker/R-scsi_     0\nscsi_eh_3           0\nkworker/R-scsi_     0\nscsi_eh_4           0\nkworker/R-scsi_     0\nscsi_eh_5           0\nkworker/R-scsi_     0\nkworker/u8:5-ev     0\nkworker/u8:9-fl     0\nkworker/u8:11-f     0\njbd2/vda2-8         0\nkworker/R-ext4-     0\nkworker/1:3-eve     0\npsimon              0\nkworker/R-crypt     0\npsimon              0\nkworker/1:0-eve     0",
+      "apt_indexes_present": false,
+      "sampler_started_uptime_seconds": 420.35,
+      "desktop": "Openbox + Xorg + Skippy",
+      "iso_filename": "erdos-x11-dev.iso",
+      "iso_bytes": 1184202752,
+      "iso_sha256": "7fed387f4632abe580ab9cf07c334b9e04ff3599f7e4c94c6c525c7794251416"
     },
-    {
-      "uptime_seconds": 440.52,
-      "mem_total_bytes": 2063323136,
-      "mem_available_bytes": 1664245760,
-      "used_bytes": 399077376
-    },
-    {
-      "uptime_seconds": 450.52,
-      "mem_total_bytes": 2063323136,
-      "mem_available_bytes": 1664245760,
-      "used_bytes": 399077376
-    },
-    {
-      "uptime_seconds": 460.52,
-      "mem_total_bytes": 2063323136,
-      "mem_available_bytes": 1664245760,
-      "used_bytes": 399077376
-    },
-    {
-      "uptime_seconds": 470.52,
-      "mem_total_bytes": 2063323136,
-      "mem_available_bytes": 1664245760,
-      "used_bytes": 399077376
+    "wayland": {
+      "kernel": "6.12.117+deb13-amd64",
+      "uefi": true,
+      "settle_seconds": 120,
+      "sample_interval_seconds": 10,
+      "ram_definition": "MemTotal - MemAvailable",
+      "ram_samples": [
+        {
+          "uptime_seconds": 210.51,
+          "mem_total_bytes": 2063323136,
+          "mem_available_bytes": 1690644480,
+          "used_bytes": 372678656
+        },
+        {
+          "uptime_seconds": 220.51,
+          "mem_total_bytes": 2063323136,
+          "mem_available_bytes": 1690644480,
+          "used_bytes": 372678656
+        },
+        {
+          "uptime_seconds": 230.52,
+          "mem_total_bytes": 2063323136,
+          "mem_available_bytes": 1690644480,
+          "used_bytes": 372678656
+        },
+        {
+          "uptime_seconds": 240.52,
+          "mem_total_bytes": 2063323136,
+          "mem_available_bytes": 1690644480,
+          "used_bytes": 372678656
+        },
+        {
+          "uptime_seconds": 250.52,
+          "mem_total_bytes": 2063323136,
+          "mem_available_bytes": 1690644480,
+          "used_bytes": 372678656
+        }
+      ],
+      "ram_median_bytes": 372678656,
+      "filesystems": [
+        {
+          "mount": "/",
+          "used_bytes": 1878294528,
+          "filesystem_bytes": 22859108352
+        },
+        {
+          "mount": "/boot/efi",
+          "used_bytes": 311296,
+          "filesystem_bytes": 1021370368
+        }
+      ],
+      "disk_used_bytes": 1878605824,
+      "disk_definition": "Used filesystem blocks on root and EFI; excludes swap and unallocated space",
+      "swap_proc_kib": "Filename\t\t\t\tType\t\tSize\t\tUsed\t\tPriority\n/dev/vda3                               partition\t1305596\t\t0\t\t-2",
+      "service_state": {
+        "NetworkManager": "active",
+        "systemd-timesyncd": "active",
+        "bluetooth": "inactive"
+      },
+      "processes": "COMMAND           RSS\nlabwc           126348\npcmanfm         21984\nlxpolkit        20840\nNetworkManager  19152\npython3         17100\nsystemd-journal 16400\nwireplumber     16012\nudisksd         14112\nsystemd         13580\nsystemd         12212\ngvfs-udisks2-vo 11248\npipewire        11080\nsystemd-udevd   10092\npolkitd          9260\nsystemd-logind   8960\ngvfs-afc-volume  8888\nsystemd-timesyn  8200\npipewire-pulse   8120\ngvfsd            7972\ngvfsd-fuse       7104\ngvfs-gphoto2-vo  7016\nwpa_supplicant   6812\ngvfs-mtp-volume  6676\ngvfs-goa-volume  6392\nswaybg           6368\npipewire         5192\ndbus-daemon      4884\nlogin            4532\ndbus-daemon      4512\nlogin            4368\nlogin            4216\nbash             4072\nbash             3948\nps               3856\navahi-daemon     3720\n(sd-pam)         3696\nmpris-proxy      3552\nrtkit-daemon     3168\navahi-daemon     1316\nkthreadd            0\npool_workqueue_     0\nkworker/R-kvfre     0\nkworker/R-rcu_g     0\nkworker/R-sync_     0\nkworker/R-slub_     0\nkworker/R-netns     0\nkworker/0:0-eve     0\nkworker/0:1-cgr     0\nkworker/0:0H-kb     0\nkworker/u8:0-ev     0\nkworker/R-mm_pe     0\nrcu_tasks_kthre     0\nrcu_tasks_rude_     0\nrcu_tasks_trace     0\nksoftirqd/0         0\nrcu_preempt         0\nrcu_exp_par_gp_     0\nrcu_exp_gp_kthr     0\nmigration/0         0\nidle_inject/0       0\ncpuhp/0             0\ncpuhp/1             0\nidle_inject/1       0\nmigration/1         0\nksoftirqd/1         0\nkworker/1:0-eve     0\nkworker/1:0H-ev     0\nkworker/u8:1-ev     0\nkdevtmpfs           0\nkworker/R-inet_     0\nkauditd             0\nkhungtaskd          0\noom_reaper          0\nkworker/u8:2-fl     0\nkworker/R-write     0\nkcompactd0          0\nksmd                0\nkhugepaged          0\nkworker/R-kinte     0\nkworker/R-kbloc     0\nkworker/R-blkcg     0\nirq/9-acpi          0\nkworker/1:1-eve     0\nkworker/R-tpm_d     0\nkworker/R-edac-     0\nkworker/R-devfr     0\nkworker/R-quota     0\nkworker/1:1H-kb     0\nkswapd0             0\nkworker/R-kthro     0\nkworker/R-acpi_     0\nkworker/R-mld       0\nkworker/0:1H-kb     0\nkworker/R-ipv6_     0\nkworker/R-kstrp     0\nkworker/u9:0        0\nkworker/u8:3-fl     0\nkworker/u8:4-ev     0\nkworker/0:2-cgr     0\nwatchdogd           0\nkworker/R-ata_s     0\nscsi_eh_0           0\nkworker/R-scsi_     0\nscsi_eh_1           0\nkworker/R-scsi_     0\nscsi_eh_2           0\nkworker/R-scsi_     0\nscsi_eh_3           0\nkworker/R-scsi_     0\nscsi_eh_4           0\nkworker/R-scsi_     0\nscsi_eh_5           0\nkworker/R-scsi_     0\nkworker/u8:5-ev     0\nkworker/u8:6-sc     0\nkworker/u8:7-ev     0\nkworker/u8:8-sc     0\nkworker/u8:9-fl     0\nkworker/u8:10-e     0\nkworker/u8:11-e     0\nkworker/u8:12       0\nkworker/1:2-eve     0\nkworker/0:2H-kb     0\njbd2/vda2-8         0\nkworker/R-ext4-     0\nkworker/0:3-eve     0\nkworker/0:4-cgr     0\nkworker/0:5         0\npsimon              0\nkworker/R-crypt     0\nkworker/1:3-ine     0\npsimon              0",
+      "apt_indexes_present": false,
+      "sampler_started_uptime_seconds": 90.51,
+      "desktop": "labwc 0.9.7 + static wlroots 0.19.2",
+      "iso_filename": "erdos-amd64.iso",
+      "iso_bytes": 1161789440,
+      "iso_sha256": "1742907e1c9f72e3cf72fa7bf85753f6217e5edd8006c38144a2259bf89a9a3b"
     }
+  },
+  "delta_bytes": {
+    "iso_bytes": -22413312,
+    "disk_used_bytes": -68661248,
+    "ram_median_bytes": -6713344
+  },
+  "notes": [
+    "Fresh offline installations of both identified development ISOs; booted without installer media.",
+    "No packages added, removed or upgraded; no apt update; no application windows opened before measurement.",
+    "Default desktop services, a second virtual-console shell, serial-console shell/getty and Python sampler included identically in both.",
+    "120-second settle followed by five samples 10 seconds apart; median reported.",
+    "Disk is root plus EFI used filesystem blocks, excluding swap; swap report from /proc/swaps is in KiB.",
+    "Virtual display uses software rendering; physical GPU, driver, RAM capacity and hardware services can change idle RAM.",
+    "X11 development image is preserved; this baseline is not the older published Alpha 2 image."
   ],
-  "ram_median_bytes": 399077376,
-  "filesystems": [
-    {
-      "mount": "/",
-      "used_bytes": 1936224256,
-      "filesystem_bytes": 22859108352
-    },
-    {
-      "mount": "/boot/efi",
-      "used_bytes": 311296,
-      "filesystem_bytes": 1021370368
-    }
-  ],
-  "swap": [
-    {
-      "device": "/dev/vdb3",
-      "size_bytes": 1336930304,
-      "used_bytes": 0
-    }
-  ],
-  "disk_definition": "Used filesystem blocks on root and EFI; excludes swap and unallocated space",
-  "apt_indexes_present": false,
-  "disk_used_bytes": 1936535552,
-  "sampling_notes": [
-    "Fresh installation of the identified ISO, booted without ISO media",
-    "Default desktop services enabled; no application windows open",
-    "Serial console shell, Python sampler and read-only 9p fixture mount included",
-    "No packages added, removed or upgraded; no apt update after installation",
-    "Bluetooth enabled by default, but its service is hardware-conditional; no adapter in VM"
-  ]
+  "release": {
+    "version": "1.0.0-alpha.3",
+    "iso_sha256": "eb636f2ae52c04c89595a2ab2bd978e6f4355eff7b94f1fc053021ac26f4bd81",
+    "note": "Alpha 3 is the measured Wayland candidate with only /etc/erdos-release relabeled; raw candidate measurements and image identity are retained."
+  }
 }

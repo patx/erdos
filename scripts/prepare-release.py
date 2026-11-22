@@ -16,7 +16,7 @@ import zipfile
 from project_files import public_files
 
 ROOT = Path(__file__).resolve().parent.parent
-CORE = {'desktop-file-utils', 'network-manager', 'hsetroot', 'libimlib2t64', 'systemd-timesyncd', 'bluez', 'libspa-0.2-bluetooth', 'ca-certificates', 'debian-archive-keyring', 'sudo', 'scrot', 'sakura', 'firefox', 'pcmanfm', 'python3-pyudev', 'libinput10', 'libxtst6', 'python3', 'python3-gi', 'gir1.2-gtk-3.0', 'libxi6', 'procps', 'x11-xserver-utils'}
+CORE = {'desktop-file-utils', 'network-manager', 'systemd-timesyncd', 'bluez', 'libspa-0.2-bluetooth', 'ca-certificates', 'debian-archive-keyring', 'sudo', 'sakura', 'firefox', 'pcmanfm', 'libinput10', 'libseat1', 'swaybg', 'grim', 'slurp', 'wlr-randr', 'xwayland', 'python3', 'python3-gi', 'gir1.2-gtk-3.0', 'procps'}
 
 
 def run(*args):
@@ -70,8 +70,8 @@ def verify_image(iso):
         extract(iso, '/live/filesystem.packages', temporary / 'packages')
         packages = (temporary / 'packages').read_bytes()
         installed = {line.split()[0].split(':')[0] for line in packages.decode().splitlines() if line.strip()}
-        if {'chromium', 'firefox-esr'} & installed:
-            raise ValueError('ISO still contains Chromium or Firefox ESR; the current build uses regular Firefox')
+        if {'chromium', 'firefox-esr', 'openbox', 'xserver-xorg-core', 'scrot', 'hsetroot'} & installed:
+            raise ValueError('ISO contains a replaced browser or legacy X11 desktop component')
         if missing := CORE - installed:
             raise ValueError(f'ISO package manifest is missing required packages: {sorted(missing)}')
         removals = run('xorriso', '-indev', str(iso), '-find', '/live', '-name', 'filesystem.packages-remove')
@@ -92,6 +92,18 @@ def verify_image(iso):
         if not match:
             raise ValueError('Cannot locate the ISO live filesystem')
         offset = str(int(match[1]) * 2048)
+        # Keep live-media APT metadata, but reject downloaded build indexes and DEBs.
+        apt_files = subprocess.check_output(['unsquashfs', '-ll', '-o', offset, str(iso),
+            'var/lib/apt/lists', 'var/cache/apt'], text=True, stderr=subprocess.PIPE)
+        apt_bytes = 0
+        for line in apt_files.splitlines():
+            fields = line.split(None, 5)
+            if len(fields) == 6 and fields[0].startswith('-'):
+                apt_bytes += int(fields[2])
+                if fields[5].endswith('.deb'):
+                    raise ValueError('ISO contains downloaded APT package archives')
+        if apt_bytes > 8 * 1024 * 1024:
+            raise ValueError(f'ISO carries excessive APT build cache: {apt_bytes} bytes')
         includes = ROOT / 'config/includes.chroot'
         for source in sorted(includes.rglob('*')):
             if source.is_file():
@@ -102,11 +114,17 @@ def verify_image(iso):
         twig = subprocess.check_output(['unsquashfs', '-cat', '-o', offset, str(iso), 'usr/local/bin/twig'], stderr=subprocess.PIPE)
         if twig != (ROOT / 'vendor/twig/twig.py').read_bytes():
             raise ValueError('ISO Twig runtime differs from the vendored source')
-        skippy = subprocess.check_output(['unsquashfs', '-cat', '-o', offset, str(iso), 'usr/local/bin/skippy-xd'], stderr=subprocess.PIPE)
-        build = json.loads(subprocess.check_output(['unsquashfs', '-cat', '-o', offset, str(iso), 'usr/local/share/doc/skippy-xd/build.json'], stderr=subprocess.PIPE))
-        commit = next(line.split(': ', 1)[1] for line in (ROOT / 'vendor/skippy-xd/UPSTREAM').read_text().splitlines() if line.startswith('Commit: '))
-        if build.get('erdos_source_sha256') != hashlib.sha256((ROOT / 'vendor/skippy-xd/src/skippy.c').read_bytes()).hexdigest() or build.get('physics') != 'disabled' or build.get('source_commit') != commit or build.get('sha256') != hashlib.sha256(skippy).hexdigest():
-            raise ValueError('ISO Skippy-XD binary/provenance/disabled-physics verification failed')
+        binary = subprocess.check_output(['unsquashfs','-cat','-o',offset,str(iso),'usr/local/bin/labwc'],stderr=subprocess.PIPE)
+        build = json.loads(subprocess.check_output(['unsquashfs','-cat','-o',offset,str(iso),'usr/local/share/doc/labwc/build.json'],stderr=subprocess.PIPE))
+        if build.get('sha256') != hashlib.sha256(binary).hexdigest() or build.get('effects') is not False:
+            raise ValueError('ISO labwc binary/build verification failed')
+        for project in ('labwc','wlroots'):
+            checksum=hashlib.sha256()
+            for path in sorted((ROOT/'vendor'/project).rglob('*')):
+                if path.is_file():
+                    checksum.update(str(path.relative_to(ROOT/'vendor'/project)).encode()+b'\0'+path.read_bytes())
+            if build.get(project+'_source_sha256') != checksum.hexdigest():
+                raise ValueError(f'ISO {project} source provenance differs from current source')
         return packages
 
 
@@ -139,7 +157,9 @@ def main():
     canonical = output / 'erdos-amd64.iso'
     if iso != canonical.resolve():
         shutil.copyfile(iso, canonical)
-    metadata.update(published=False, tag=None, date=date, status='Development build', version='dev')
+    release_fields = dict(line.split('=', 1) for line in (ROOT / 'config/includes.chroot/etc/erdos-release').read_text().splitlines() if '=' in line)
+    version = release_fields['VERSION']
+    metadata.update(published=False, tag=None, date=date, status='Prepared image; not published', version=version)
     metadata.pop('download_base_url', None)
     metadata['iso'] = {'filename': canonical.name, 'bytes': canonical.stat().st_size, 'sha256': checksum}
     metadata['source_filename'] = 'erdos-build-project.zip'

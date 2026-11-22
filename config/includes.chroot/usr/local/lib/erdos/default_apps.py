@@ -5,7 +5,7 @@ from pathlib import Path
 import shutil
 import subprocess
 
-os.environ.setdefault('XDG_CURRENT_DESKTOP', 'Openbox')
+os.environ.setdefault('XDG_CURRENT_DESKTOP', 'labwc')
 from gi.repository import Gio
 from settings import preferences, save_preferences
 

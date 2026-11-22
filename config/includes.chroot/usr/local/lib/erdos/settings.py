@@ -15,8 +15,7 @@ CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home() / '.config')))
 PREFERENCES = CONFIG / 'erdos/settings.json'
 DEFAULTS = dict(terminal_app='system', background='#202326', background_image=False, background_layout='fill', natural=True, tapping=True, clickfinger=True,
                 speed=0.0, automatic_displays=True, dynamic_workspaces=True, workspace_count=2, super_overview=True, menu_touchpad=True, menu_mouse=True)
-NS = 'http://openbox.org/3.4/rc'
-ET.register_namespace('', NS)
+NS = ''
 
 
 def run(*args, input=None, timeout=20):
@@ -52,19 +51,38 @@ def save_preferences(**values):
     prefs = preferences()
     prefs.update(values)
     write(PREFERENCES, json.dumps(prefs, indent=2) + '\n')
+    session = configparser.ConfigParser()
+    session['session'] = {key: str(prefs[key]).lower() for key in ('dynamic_workspaces', 'workspace_count', 'super_overview', 'menu_touchpad')}
+    stream = io.StringIO(); session.write(stream)
+    write(CONFIG / 'erdos/session.ini', stream.getvalue())
     return prefs
 
 
 def touchpad(prefs):
-    result = subprocess.run(['erdos-touchpad', *[str(int(prefs[k])) for k in
-                            ('natural', 'tapping', 'clickfinger')], str(prefs['speed']), str(int(prefs['menu_touchpad']))],
-                            text=True, capture_output=True, timeout=5)
-    if result.returncode not in (0, 3):
-        raise RuntimeError(result.stderr.strip() or 'Could not apply touchpad settings.')
-    return result.stderr.strip()
+    path = CONFIG / 'labwc/rc.xml'
+    tree = ET.parse(path)
+    libinput = tree.find('libinput')
+    if libinput is None:
+        libinput = ET.SubElement(tree.getroot(), 'libinput')
+    device = next((d for d in libinput if d.get('category') == 'touchpad'), None)
+    if device is None:
+        device = ET.SubElement(libinput, 'device', {'category': 'touchpad'})
+    values = {'naturalScroll': 'yes' if prefs['natural'] else 'no',
+              'tap': 'yes' if prefs['tapping'] else 'no',
+              'clickMethod': 'clickfinger' if prefs['clickfinger'] else 'buttonAreas',
+              'tapButtonMap': 'lrm', 'clickfingerButtonMap': 'lrm',
+              'pointerSpeed': str(prefs['speed']), 'scrollMethod': 'twofinger'}
+    for key, value in values.items():
+        node = device.find(key)
+        if node is None:
+            node = ET.SubElement(device, key)
+        node.text = value
+    write(path, ET.tostring(tree.getroot(), encoding='unicode') + '\n')
+    run('labwc', '--reconfigure')
 
 
-WALLPAPER_MODES = {'fill': '-cover', 'fit': '-full', 'center': '-center', 'tile': '-tile'}
+
+WALLPAPER_MODES = {'fill': 'fill', 'fit': 'fit', 'center': 'center', 'tile': 'tile'}
 
 
 def wallpaper_path():
@@ -72,37 +90,17 @@ def wallpaper_path():
 
 
 def validate_background(path):
-    # Use hsetroot's existing decoder; validate before touching the desktop.
-    import ctypes as C
-    imlib = C.CDLL('libImlib2.so.1')
-    imlib.imlib_load_image.argtypes = [C.c_char_p]
-    imlib.imlib_load_image.restype = C.c_void_p
-    imlib.imlib_context_set_image.argtypes = [C.c_void_p]
-    imlib.imlib_context_set_image.restype = None
-    imlib.imlib_free_image_and_decache.argtypes = []
-    imlib.imlib_free_image_and_decache.restype = None
-    decoded = imlib.imlib_load_image(os.fsencode(path))
-    if not decoded:
-        raise ValueError('This file cannot be read as a supported image. Try PNG or JPEG.')
-    imlib.imlib_context_set_image(decoded)
-    imlib.imlib_free_image_and_decache()
+    import gi
+    gi.require_version('GdkPixbuf', '2.0')
+    from gi.repository import GdkPixbuf
+    try:
+        GdkPixbuf.Pixbuf.new_from_file_at_scale(str(path), 1, 1, True)
+    except Exception as error:
+        raise ValueError('This file cannot be decoded. Try PNG or JPEG.') from error
 
 
 def apply_background(prefs=None):
-    prefs = preferences() if prefs is None else prefs
-    color = prefs.get('background', DEFAULTS['background'])
-    if not re.fullmatch(r'#[0-9a-fA-F]{6}', color):
-        color = DEFAULTS['background']
-    path = wallpaper_path()
-    if prefs.get('background_image') and path.is_file():
-        try:
-            validate_background(path)
-            run('hsetroot', '-solid', color,
-                WALLPAPER_MODES.get(prefs.get('background_layout'), '-cover'), str(path))
-            return
-        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError):
-            pass  # Missing/failed wallpaper must never prevent desktop login.
-    run('hsetroot', '-solid', color)
+    run('systemctl', '--user', 'restart', 'erdos-background.service')
 
 
 def set_background(color, image=False, layout='fill', source=None):
@@ -123,13 +121,11 @@ def set_background(color, image=False, layout='fill', source=None):
             with os.fdopen(fd, 'wb') as target, selected.open('rb') as original:
                 shutil.copyfileobj(original, target)
             validate_background(candidate)
-            run('hsetroot', '-solid', color, WALLPAPER_MODES[layout], str(candidate))
             os.replace(candidate, path)
-        else:
-            run('hsetroot', '-solid', color)
         save_preferences(background=color, background_image=bool(image), background_layout=layout)
         if not image:
             path.unlink(missing_ok=True)  # Only our private copy; never the user's original.
+        apply_background()
     finally:
         if candidate:
             candidate.unlink(missing_ok=True)
@@ -148,31 +144,31 @@ def appearance(theme, font, dark, color, image=False, layout='fill', source=None
 
 
 def keyboard():
-    path = CONFIG / 'openbox/rc.xml'
+    path = CONFIG / 'labwc/rc.xml'
     tree = ET.parse(path)
     rows = []
-    for bind in tree.findall(f'{{{NS}}}keyboard/{{{NS}}}keybind'):
+    for bind in tree.findall('keyboard/keybind'):
         if bind.get('erdos-custom') == 'true':
             continue
-        action = bind.find(f'{{{NS}}}action')
-        command = action.findtext(f'{{{NS}}}command') if action is not None else None
+        action = bind.find('action')
+        command = action.findtext('command') if action is not None else None
         label = command or (action.get('name', '') if action is not None else '')
-        target = action.findtext(f'{{{NS}}}to') if action is not None else None
+        target = action.findtext('to') if action is not None else None
         rows.append((bind.get('key', ''), label + (f' {target}' if target else '')))
     return rows
 
 
 def custom_keyboard():
-    tree = ET.parse(CONFIG / 'openbox/rc.xml')
-    return [(bind.get('key', ''), bind.findtext(f'{{{NS}}}action/{{{NS}}}command', ''))
-            for bind in tree.findall(f'{{{NS}}}keyboard/{{{NS}}}keybind')
+    tree = ET.parse(CONFIG / 'labwc/rc.xml')
+    return [(bind.get('key', ''), bind.findtext('action/command', ''))
+            for bind in tree.findall('keyboard/keybind')
             if bind.get('erdos-custom') == 'true']
 
 
 def save_keyboard(keys, custom=None):
-    tree = ET.parse(CONFIG / 'openbox/rc.xml')
-    keyboard_node = tree.find(f'{{{NS}}}keyboard')
-    binds = [b for b in keyboard_node.findall(f'{{{NS}}}keybind')
+    tree = ET.parse(CONFIG / 'labwc/rc.xml')
+    keyboard_node = tree.find('keyboard')
+    binds = [b for b in keyboard_node.findall('keybind')
              if b.get('erdos-custom') != 'true']
     if custom is None:
         custom = custom_keyboard()
@@ -199,46 +195,46 @@ def save_keyboard(keys, custom=None):
         if bind.get('erdos-custom') == 'true':
             keyboard_node.remove(bind)
     for key, command in custom:
-        bind = ET.SubElement(keyboard_node, f'{{{NS}}}keybind',
+        bind = ET.SubElement(keyboard_node, 'keybind',
                              {'key': key.strip(), 'erdos-custom': 'true'})
-        action = ET.SubElement(bind, f'{{{NS}}}action', {'name': 'Execute'})
-        ET.SubElement(action, f'{{{NS}}}command').text = command.strip()
-    write(CONFIG / 'openbox/rc.xml', ET.tostring(tree.getroot(), encoding='unicode') + '\n')
-    run('openbox', '--reconfigure')
+        action = ET.SubElement(bind, 'action', {'name': 'Execute'})
+        ET.SubElement(action, 'command').text = command.strip()
+    write(CONFIG / 'labwc/rc.xml', ET.tostring(tree.getroot(), encoding='unicode') + '\n')
+    run('labwc', '--reconfigure')
 
 
 def menu_triggers(touchpad_menu, mouse_menu):
-    path = CONFIG / 'openbox/rc.xml'
+    path = CONFIG / 'labwc/rc.xml'
     tree = ET.parse(path)
-    mouse = tree.getroot().find(f'{{{NS}}}mouse')
+    mouse = tree.getroot().find('mouse')
     if mouse is None:
-        raise ValueError('Openbox configuration has no mouse section.')
+        raise ValueError('labwc configuration has no mouse section.')
     # Only replace bindings owned by this feature; keep window actions intact.
-    for context in mouse.findall(f'{{{NS}}}context'):
+    for context in mouse.findall('context'):
         for binding in list(context):
             if binding.get('erdos-menu') == 'yes':
                 context.remove(binding)
     for name in ('Frame', 'Desktop'):
         context = next((node for node in mouse if node.get('name') == name), None)
         if context is None:
-            context = ET.SubElement(mouse, f'{{{NS}}}context', {'name': name})
-        for button, enabled in (('Button10', touchpad_menu), ('W-Right', mouse_menu)):
+            context = ET.SubElement(mouse, 'context', {'name': name})
+        for button, enabled in (('Task', touchpad_menu), ('W-Right', mouse_menu)):
             if enabled:
-                binding = ET.SubElement(context, f'{{{NS}}}mousebind',
+                binding = ET.SubElement(context, 'mousebind',
                     {'button': button, 'action': 'Press', 'erdos-menu': 'yes'})
-                action = ET.SubElement(binding, f'{{{NS}}}action', {'name': 'ShowMenu'})
-                ET.SubElement(action, f'{{{NS}}}menu').text = 'root-menu'
+                action = ET.SubElement(binding, 'action', {'name': 'ShowMenu'})
+                ET.SubElement(action, 'menu').text = 'root-menu'
     write(path, ET.tostring(tree.getroot(), encoding='unicode') + '\n')
-    run('openbox', '--reconfigure')
+    run('labwc', '--reconfigure')
     prefs = save_preferences(menu_touchpad=bool(touchpad_menu), menu_mouse=bool(mouse_menu))
     return touchpad(prefs) or 'Menu triggers applied.'
 
 
 def startup_file():
-    path = CONFIG / 'openbox/autostart'
+    path = CONFIG / 'labwc/autostart'
     if path.exists():
         return path.read_text()
-    for fallback in (Path('/etc/skel/.config/openbox/autostart'), Path('/etc/xdg/openbox/autostart')):
+    for fallback in (Path('/etc/skel/.config/labwc/autostart'), Path('/etc/xdg/labwc/autostart')):
         if fallback.is_file():
             return fallback.read_text()
     return '#!/bin/sh\n'
@@ -252,7 +248,7 @@ def save_startup(original, content):
     content = content if content.endswith('\n') else content + '\n'
     # Parse only: saving must never execute startup commands.
     run('sh', '-n', input=content)
-    write(CONFIG / 'openbox/autostart', content)
+    write(CONFIG / 'labwc/autostart', content)
     return 'Startup commands saved. They will run at your next desktop login.'
 
 
@@ -269,39 +265,21 @@ def save_gestures(distance, bindings):
         parser['bindings'][key] = action
     stream = io.StringIO(); parser.write(stream)
     write(CONFIG / 'erdos/gestures.conf', stream.getvalue())
-    run('erdos-gesture', 'reload')
+    run('labwc', '--reconfigure')
 
 
 def display_policy(enabled):
     save_preferences(automatic_displays=enabled)
-    run('erdos-displays', '--stop')
+    run('labwc', '--reconfigure')
     if enabled:
         run('erdos-displays', '--apply')
-        from display_settings import restore_saved
-        restore_saved()
-        subprocess.Popen(['erdos-displays', '--watch-current'], stdout=subprocess.DEVNULL,
-                         stderr=subprocess.DEVNULL, start_new_session=True)
 
 
 def apply_session():
-    try:
-        prefs = preferences()
-    except (OSError, ValueError):
-        prefs = DEFAULTS.copy()
-    actions = [lambda: touchpad(prefs)]
-    if prefs['automatic_displays']:
-        actions.append(lambda: run('erdos-displays', '--apply'))
-    from display_settings import restore_saved
-    actions.append(restore_saved)
-    actions.append(lambda: apply_background(prefs))
-    for action in actions:
-        try:
-            action()
-        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
-            print(f'ErdOS settings: {error}', file=__import__('sys').stderr)
-    if prefs['automatic_displays']:
-        subprocess.Popen(['erdos-displays', '--watch-current'], stdout=subprocess.DEVNULL,
-                         stderr=subprocess.DEVNULL, start_new_session=True)
+    # The compositor owns gestures/workspaces; only the background is resident.
+    apply_background()
+    if preferences()['automatic_displays']:
+        run('erdos-displays', '--apply')
 
 
 def audio_nodes():
@@ -354,34 +332,34 @@ def power_info():
     return batteries, connected
 
 
-MENU_NS = 'http://openbox.org/3.4/menu'
+MENU_NS = ''
 
 
 def menu_entries():
     """Keep original nodes so editing the root menu preserves nested/pipe menus."""
-    source = (CONFIG / 'openbox/menu.xml').read_text()
+    source = (CONFIG / 'labwc/menu.xml').read_text()
     tree = ET.fromstring(source)
-    root = tree.find(f"{{{MENU_NS}}}menu[@id='root-menu']")
+    root = tree.find("menu[@id='root-menu']")
     if root is None:
-        raise ValueError('No root-menu found in Openbox menu.xml.')
+        raise ValueError('No root-menu found in labwc menu.xml.')
     entries = []
     for node in root:
-        actions = node.findall(f'{{{MENU_NS}}}action')
-        editable = (node.tag == f'{{{MENU_NS}}}item' and len(actions) == 1
+        actions = node.findall('action')
+        editable = (node.tag == 'item' and len(actions) == 1
                     and actions[0].get('name') == 'Execute'
-                    and actions[0].find(f'{{{MENU_NS}}}command') is not None)
-        kind = 'Command' if editable else ('Separator' if node.tag == f'{{{MENU_NS}}}separator' else 'Built-in / submenu')
-        command = actions[0].findtext(f'{{{MENU_NS}}}command', '') if editable else ''
+                    and actions[0].find('command') is not None)
+        kind = 'Command' if editable else ('Separator' if node.tag == 'separator' else 'Built-in / submenu')
+        command = actions[0].findtext('command', '') if editable else ''
         entries.append((node.get('label', ''), command, kind, ET.tostring(node, encoding='unicode')))
     return source, entries
 
 
 def save_menu(source, entries):
-    path = CONFIG / 'openbox/menu.xml'
+    path = CONFIG / 'labwc/menu.xml'
     if path.read_text() != source:
         raise ValueError('The menu changed outside Settings. Close and reopen Settings before applying.')
     tree = ET.fromstring(source)
-    root = tree.find(f"{{{MENU_NS}}}menu[@id='root-menu']")
+    root = tree.find("menu[@id='root-menu']")
     if root is None:
         raise ValueError('No root-menu found.')
     nodes = []
@@ -395,11 +373,11 @@ def save_menu(source, entries):
         if original:
             node = ET.fromstring(original)
         elif kind == 'Command':
-            node = ET.Element(f'{{{MENU_NS}}}item')
-            action = ET.SubElement(node, f'{{{MENU_NS}}}action', {'name': 'Execute'})
-            ET.SubElement(action, f'{{{MENU_NS}}}command')
+            node = ET.Element('item')
+            action = ET.SubElement(node, 'action', {'name': 'Execute'})
+            ET.SubElement(action, 'command')
         elif kind == 'Separator':
-            node = ET.Element(f'{{{MENU_NS}}}separator')
+            node = ET.Element('separator')
         else:
             raise ValueError('Built-in entries must come from the existing menu.')
         if label.strip():
@@ -407,8 +385,8 @@ def save_menu(source, entries):
         else:
             node.attrib.pop('label', None)
         if kind == 'Command':
-            node.find(f'{{{MENU_NS}}}action/{{{MENU_NS}}}command').text = command.strip()
+            node.find('action/command').text = command.strip()
         nodes.append(node)
     root[:] = nodes
     write(path, ET.tostring(tree, encoding='unicode') + '\n')
-    run('openbox', '--reconfigure')
+    run('labwc', '--reconfigure')

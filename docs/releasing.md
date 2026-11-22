@@ -3,7 +3,7 @@
 Repository: <https://github.com/patx/erdos>. Website:
 <https://patx.gitman.io/erdos/>. These instructions prepare artifacts locally;
 the release-packaging script does not commit, tag, push, upload or publish.
-The current public release is [ErdOS 1 Alpha 2](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.2).
+The current public release is [ErdOS 1 Alpha 3](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.3).
 Both source remotes use `main`: GitHub at the URL above and Gitman at
 <https://gitman.io/git/patx/erdos>.
 
@@ -25,10 +25,11 @@ upload a release asset.
 Build on Debian 13 amd64 as described in [building.md](building.md), then complete
 [testing.md](testing.md). A successful build is not a boot/install test. Retain
 its logs outside Git. The checkout tracks current development; choose a new
-version and tag when preparing a release. Do not replace the published Alpha 2
-assets with an untested development build.
+version and tag when preparing a release. Keep published version directories immutable.
 
-The build writes the single current image to `dist/erdos-amd64.iso`. After testing, run:
+The build writes the current image to `dist/erdos-amd64.iso`. The previous X11
+development ISO is retained locally as `dist/erdos-x11-dev.iso` for comparison;
+it is not a new release asset. After testing, run:
 
 ```sh
 python3 scripts/prepare-release.py --iso dist/erdos-amd64.iso
@@ -41,7 +42,7 @@ checksums, and refreshes `docs/release.json` from the actual ISO. It requires
 `published` false and clears the tag for the newly prepared image. Restore the
 actual published tag and status only after its assets are available. Packaging
 a future build must not be mistaken for publishing it.
-The source ZIP requires compiling helpers before using the optional updater;
+The source ZIP requires compiling the compositor before using the optional updater;
 generated executables are not silently bundled into a source archive.
 
 Review and upload these assets to the versioned **Cloudflare R2** download directory:
@@ -55,13 +56,13 @@ Review and upload these assets to the versioned **Cloudflare R2** download direc
 ## Cloudflare R2 downloads
 
 The Standard-storage bucket is `erdos-releases`, served through
-<https://downloads.erd.sh/> with a minimum TLS version of 1.2. The Alpha 2 objects
-are under `v1.0.0-alpha.2/`; the ISO URL is
-<https://downloads.erd.sh/v1.0.0-alpha.2/erdos-amd64.iso>.
+<https://downloads.erd.sh/> with a minimum TLS version of 1.2. The Alpha 3 objects
+are under `v1.0.0-alpha.3/`; the ISO URL is
+<https://downloads.erd.sh/v1.0.0-alpha.3/erdos-amd64.iso>.
 The website remains on Gitman Pages, and source code stays on both Git remotes.
 The zone rule `erdos_alpha2_public_downloads` skips Security Level and Browser
-Integrity Check only for GET/HEAD requests to the six exact Alpha 2 download
-paths. Add each future version’s file paths to that rule before publishing its
+Integrity Check only for GET/HEAD requests to the exact release download
+paths for Alpha 2 and Alpha 3. Add each future version’s file paths to that rule before publishing its
 links; keep other hosts, paths and methods outside the exception.
 
 Use an S3-compatible multipart uploader for large files; Cloudflare documents
@@ -93,7 +94,7 @@ from the matching Debian archives with source repositories enabled.
 
 After the R2 files are verified and the GitHub prerelease is published, set the chosen tag and
 `published: true` in `docs/release.json`. Its existing filenames and digest must
-still match those assets. Set `download_base_url` to the matching version directory. The hero button links directly to the R2 `v1.0.0-alpha.2` ISO; the bottom download
+still match those assets. Set `download_base_url` to the matching version directory. The hero button links directly to the R2 `v1.0.0-alpha.3` ISO; the bottom download
 section links to its release page. Update both links in `index.html` for a future
 release, together with the version text and release metadata. Future builds use current Debian packages, so reusing a date does not
 imply an identical ISO or checksum.
@@ -147,4 +148,4 @@ reporting link in `SECURITY.md`.
 The landing page uses `docs/assets/og-image.png` for Open Graph and Twitter cards.
 Regenerate it with `python3 scripts/render-social-card.py` on a development host
 with Pillow and DejaVu Sans installed. The renderer uses the supplied logo and
-`docs/assets/desktop-hero.png`; its dependencies are not added to the ISO.
+`docs/assets/labwc-thumbnails.png`; its dependencies are not added to the ISO.

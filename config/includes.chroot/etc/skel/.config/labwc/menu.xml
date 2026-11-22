@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='utf-8'?>
+<openbox_menu>
+  <menu id="root-menu" label="ErdOS">
+    <item label="Terminal">
+      <action name="Execute">
+        <command>erdos-launch terminal</command>
+      </action>
+    </item>
+    <item label="Web Browser">
+      <action name="Execute">
+        <command>erdos-launch browser</command>
+      </action>
+    </item>
+    <item label="File Manager">
+      <action name="Execute">
+        <command>erdos-launch files</command>
+      </action>
+    </item>
+    <item label="Text Editor">
+      <action name="Execute">
+        <command>erdos-launch editor</command>
+      </action>
+    </item>
+    <menu id="erdos-applications" label="Applications" execute="/usr/local/bin/erdos-applications" />
+    <menu id="client-list-combined-menu" label="Workspaces" />
+    <item label="Settings">
+      <action name="Execute">
+        <command>erdos-settings</command>
+      </action>
+    </item>
+    <separator />
+    <item label="Logout">
+      <action name="Exit" />
+    </item>
+    <item label="Reboot">
+      <action name="Execute">
+        <command>systemctl reboot</command>
+      </action>
+    </item>
+    <item label="Power off">
+      <action name="Execute">
+        <command>systemctl poweroff</command>
+      </action>
+    </item>
+  </menu>
+</openbox_menu>

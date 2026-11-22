@@ -1,17 +1,18 @@
 {
   "schema": 1,
   "repository": "patx/erdos",
-  "published": false,
-  "tag": null,
-  "date": "2026-11-20",
-  "status": "Development build",
+  "published": true,
+  "tag": "v1.0.0-alpha.3",
+  "date": "2026-11-21",
+  "status": "ErdOS 1 Alpha 3",
   "iso": {
     "filename": "erdos-amd64.iso",
-    "bytes": 1184202752,
-    "sha256": "7fed387f4632abe580ab9cf07c334b9e04ff3599f7e4c94c6c525c7794251416"
+    "bytes": 1160970240,
+    "sha256": "eb636f2ae52c04c89595a2ab2bd978e6f4355eff7b94f1fc053021ac26f4bd81"
   },
   "packages_filename": "erdos-amd64.packages",
   "source_filename": "erdos-build-project.zip",
   "checksums_filename": "SHA256SUMS",
-  "version": "dev"
+  "version": "1.0.0-alpha.3",
+  "download_base_url": "https://downloads.erd.sh/v1.0.0-alpha.3"
 }

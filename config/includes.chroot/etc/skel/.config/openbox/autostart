@@ -1,8 +1,0 @@
-#!/bin/sh
-# Apply once at desktop startup, then listen only for RandR changes.
-erdos-settings --apply-session
-state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/erdos"
-mkdir -p "$state_dir"
-erdos-gesture session > "$state_dir/gestures.log" 2>&1 &
-lxpolkit &
-pcmanfm --daemon-mode &

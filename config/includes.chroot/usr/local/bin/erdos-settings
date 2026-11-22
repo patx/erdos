@@ -251,7 +251,7 @@ class Settings(Gtk.Application):
         tap = self.toggle(page, 'Tap to click', prefs['tapping'])
         click = self.toggle(page, 'Two-finger click for right-click', prefs['clickfinger'])
         speed = self.scale(page, 'Pointer speed', -1, 1, prefs['speed'], .1)
-        self.note(page, 'Applies to connected libinput touchpads and at each login. After connecting another touchpad, apply again.')
+        self.note(page, 'Applies to libinput touchpads now and automatically when connected.')
         def apply():
             values = dict(natural=natural.get_active(), tapping=tap.get_active(),
                           clickfinger=click.get_active(), speed=speed.get_value())
@@ -264,13 +264,13 @@ class Settings(Gtk.Application):
         count = self.scale(page, 'Fixed workspace count', 1,32,prefs['workspace_count'])
         count.set_sensitive(not dynamic.get_active())
         dynamic.connect('notify::active',lambda *_: count.set_sensitive(not dynamic.get_active()))
-        super_key = self.toggle(page, 'Tap Super alone to show windows', prefs['super_overview'])
+        super_key = self.toggle(page, 'Tap Super alone to show window thumbnails', prefs['super_overview'])
         self.note(page, 'Dynamic mode keeps one spare after the last occupied or current workspace. Empty gaps keep their numbers; only trailing workspaces disappear. Fixed mode never removes a workspace containing windows or the current workspace.')
         def apply_workspaces():
             values = dict(dynamic_workspaces=dynamic.get_active(), workspace_count=count.get_value_as_int(), super_overview=super_key.get_active())
             def job():
                 backend.save_preferences(**values)
-                backend.run('erdos-gesture','reload')
+                backend.run('labwc','--reconfigure')
             return job
         self.button(page, 'Apply workspace and Super-key settings', apply_workspaces)
         self.note(page, 'Double-click a shortcut to edit it. W = Super, C = Ctrl, A = Alt, S = Shift. Separate alternatives with spaces. Example: W-Return C-A-t. Fn mode is controlled by your keyboard or firmware.')
@@ -319,12 +319,7 @@ class Settings(Gtk.Application):
                 for combo in key.split():
                     symbol = combo.split('-')[-1]
                     if symbol.startswith('0x'):
-                        try:
-                            valid = 8 <= int(symbol, 16) <= 255
-                        except ValueError:
-                            valid = False
-                        if not valid:
-                            raise ValueError(f'Invalid X11 keycode: {symbol}')
+                        raise ValueError('Use key names such as 1, Return or F1 instead of X11 keycodes.')
                     elif Gdk.keyval_from_name(symbol) in (0, Gdk.KEY_VoidSymbol):
                         raise ValueError(f'Unknown key name: {symbol}')
             return lambda: backend.save_keyboard(keys, custom_rows)
@@ -381,14 +376,14 @@ class Settings(Gtk.Application):
             def job():
                 nonlocal source
                 backend.save_menu(source, values)
-                source = (backend.CONFIG / 'openbox/menu.xml').read_text()
+                source = (backend.CONFIG / 'labwc/menu.xml').read_text()
             return job
         self.button(page, 'Apply menu', apply)
         self.note(page, 'Super + I still opens Settings if you remove its menu entry. A .previous backup is saved beside menu.xml. Commands run only when you select an item.')
 
     def startup_applications(self, page):
-        self.note(page, 'Commands run once when you log into Openbox. Add one application per line, ending with & so it runs in the background. Keep the existing ErdOS startup commands for desktop features.')
-        self.note(page, str(backend.CONFIG / 'openbox/autostart'))
+        self.note(page, 'Commands run once when you log into labwc. Add one application per line, ending with & so it runs in the background. Keep the existing ErdOS startup commands for desktop features.')
+        self.note(page, str(backend.CONFIG / 'labwc/autostart'))
         editor = Gtk.TextView(monospace=True)
         editor.set_wrap_mode(Gtk.WrapMode.NONE)
         editor.set_left_margin(8); editor.set_right_margin(8)
@@ -430,15 +425,15 @@ class Settings(Gtk.Application):
 
     def gestures(self, page):
         parser = backend.gestures()
-        self.note(page, 'One action per swipe. Lower distance triggers sooner; very short distances can trigger accidentally. Overview physics stay disabled.')
+        self.note(page, 'One action per swipe. Lower distance triggers sooner; very short distances can trigger accidentally. The native thumbnail switcher has no decorative effects.')
         distance = self.scale(page, 'Swipe distance', 20, 1000, parser.getfloat('swipe','distance'), 10)
-        actions = [('none','Disabled'), ('overview-show','Show all windows'), ('workspace-overview','Show workspaces'), ('overview-hide','Close overview'),
+        actions = [('none','Disabled'), ('overview-show','Show window thumbnails'), ('workspaces-menu','Show workspaces menu'), ('overview-hide','Close overview'),
                    ('window-previous','Previous window'), ('window-next','Next window'),
                    ('workspace-previous','Previous workspace'), ('workspace-next','Next workspace')]
         choices = {}
         for key in ('3_up','3_down','3_left','3_right','4_up','4_down','4_left','4_right'):
             count, direction = key.split('_')
-            choices[key] = self.choice(page, f'{count} fingers {direction}', actions, parser.get('bindings',key, fallback='workspace-overview' if key in ('4_up', '4_down') else 'none'))
+            choices[key] = self.choice(page, f'{count} fingers {direction}', actions, parser.get('bindings',key, fallback='none'))
         def apply():
             value = distance.get_value_as_int(); bindings = {k:w.get_active_id() for k,w in choices.items()}
             return lambda: backend.save_gestures(value, bindings)

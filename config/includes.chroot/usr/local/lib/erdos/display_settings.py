@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: MIT
-"""Advertised RandR modes and a short-lived, crash-safe confirmation process."""
+"""Wayland output modes and a short-lived, crash-safe confirmation process."""
 import json
-import re
 import select
 import sys
 import settings
@@ -9,32 +8,21 @@ import settings
 
 def outputs():
     result = []
-    current = None
-    for line in settings.run('xrandr', '--query').splitlines():
-        header = re.match(r'^(\S+) (connected|disconnected)\b(.*)', line)
-        if header:
-            current = None
-            if header[2] != 'connected':
-                continue
-            geometry = re.search(r'(\d+)x(\d+)\+(\d+)\+(\d+)', header[3])
-            current = dict(name=header[1], primary=' primary ' in line, modes=[], mode=None,
-                           rate=None, x=0, y=0, width=0, height=0)
-            if geometry:
-                current.update(zip(('width','height','x','y'), map(int, geometry.groups())))
-                # ErdOS configures normal orientation; do not disturb custom rotations.
-                rotation = header[3][geometry.end():].split('(')[0].strip()
-                current['rotated'] = bool(re.search(r'\b(left|right|inverted)\b|[xy] axis', rotation))
-            result.append(current)
-        elif current is not None:
-            mode = re.match(r'^\s+(\d+x\d+\S*)\s+(.+)', line)
-            if mode:
-                rates = re.findall(r'(\d+(?:\.\d+)?)([+*]*)', mode[2])
-                if not rates:
-                    continue
-                current['modes'].append(mode[1])
-                for rate, flags in rates:
-                    if '*' in flags:
-                        current.update(mode=mode[1], rate=rate)
+    for item in json.loads(settings.run('wlr-randr', '--json')):
+        modes = item.get('modes', [])
+        current = next((mode for mode in modes if mode.get('current')), None)
+        enabled = bool(item.get('enabled') and current)
+        scale = item.get('scale', 1) or 1
+        position = item.get('position') or {}
+        result.append(dict(name=item['name'], primary=item['name'].startswith(('eDP-', 'LVDS-', 'DSI-')),
+            modes=list(dict.fromkeys(f"{mode['width']}x{mode['height']}" for mode in modes)),
+            mode=f"{current['width']}x{current['height']}" if enabled else None,
+            rate=str(current.get('refresh', 0)) if enabled else None,
+            x=position.get('x',0), y=position.get('y',0), scale=scale,
+            width=round(current['width']/scale) if enabled else 0,
+            height=round(current['height']/scale) if enabled else 0,
+            rotated=item.get('transform','normal') != 'normal',
+            preferred=next((f"{mode['width']}x{mode['height']}" for mode in modes if mode.get('preferred')), None)))
     return result
 
 
@@ -44,101 +32,88 @@ def topology(items):
 
 def layout(items, selections):
     active = [item for item in items if item['mode']]
-    if not active:
-        raise ValueError('No active display detected.')
-    if set(selections) != {item['name'] for item in active}:
+    if not active or set(selections) != {item['name'] for item in active}:
         raise ValueError('Connected displays changed. Refresh the display list.')
     if any(item.get('rotated') for item in active):
         raise ValueError('Return rotated displays to normal orientation before using this editor.')
     ordered = sorted(active, key=lambda item:item['x'])
+    command = ['wlr-randr']
     edge = 0
-    row = True
-    for item in ordered:
-        row = row and item['x'] == edge and item['y'] == 0
-        edge += item['width']
-    command = ['xrandr']
-    edge = 0
+    row = all(item['y'] == 0 for item in ordered)
     for item in ordered:
         mode = selections[item['name']]
         if mode not in item['modes']:
-            raise ValueError(f'{item["name"]} no longer advertises {mode}. Refresh the display list.')
-        command += ['--output', item['name'], '--mode', mode,
-                    '--pos', f'{edge if row else item["x"]}x{item["y"]}']
-        if item['primary']:
-            command.append('--primary')
-        edge += int(re.match(r'\d+',mode)[0])
+            raise ValueError(f'{item["name"]} no longer advertises {mode}. Refresh displays.')
+        command += ['--output',item['name'],'--mode',mode,'--pos',f'{edge if row else item["x"]},{item["y"]}']
+        edge += round(int(mode.split('x')[0])/item.get('scale',1))
     return command
+
+
+def automatic():
+    prefs = settings.preferences()
+    if not prefs['automatic_displays']:
+        return
+    items = outputs()
+    saved = prefs.get('display_modes', {})
+    saved_modes = saved.get('modes', {}) if topology(items) == saved.get('outputs') else {}
+    command = ['wlr-randr']
+    edge = 0
+    for item in sorted(items,key=lambda item:(not item['primary'],item['name'])):
+        mode = saved_modes.get(item['name']) or item['preferred'] or item['mode'] or next(iter(item['modes']),None)
+        if mode not in item['modes']:
+            mode = item['preferred'] or next(iter(item['modes']),None)
+        if not mode:
+            continue
+        command += ['--output',item['name'],'--on','--mode',mode,'--pos',f'{edge},0']
+        edge += round(int(mode.split('x')[0])/item.get('scale',1))
+    if len(command)>1:
+        settings.run(*command)
 
 
 def restore(items):
     now = outputs()
     if topology(now) != topology(items):
-        settings.run('erdos-displays','--apply')
+        automatic()
         return
-    command = ['xrandr']
+    command = ['wlr-randr']
     for item in items:
         command += ['--output',item['name']]
         if item['mode']:
-            command += ['--mode',item['mode'], '--pos',f'{item["x"]}x{item["y"]}']
-            if item['rate']:
-                command += ['--rate',item['rate']]
-            if item['primary']:
-                command += ['--primary']
+            mode=item['mode'] + ('@'+item['rate']+'Hz' if item['rate'] else '')
+            command += ['--on','--mode',mode,'--pos',f'{item["x"]},{item["y"]}','--scale',str(item['scale'])]
         else:
             command += ['--off']
     settings.run(*command)
 
 
-def restore_saved():
-    saved = settings.preferences().get('display_modes')
-    if not saved:
-        return
-    current = outputs()
-    if topology(current) == saved['outputs']:
-        try:
-            command = layout(current, saved['modes'])
-        except ValueError:
-            return  # A replaced monitor may advertise a different set of modes.
-        settings.run(*command)
-
-
 def trial():
-    """Pipe protocol: JSON selection, then keep/revert. EOF also restores."""
-    previous = None
-    confirmed = False
+    previous=None; confirmed=False
     try:
-        selection = json.loads(sys.stdin.readline())
-        previous = outputs()
-        command = layout(previous, selection)
-        settings.run(*command)
-        print(json.dumps({'status':'ready', 'seconds':15}), flush=True)
-        ready, _, _ = select.select([sys.stdin], [], [], 15)
-        answer = sys.stdin.readline().strip() if ready else ''
-        if answer == 'keep':
-            current = outputs()
-            if topology(current) != topology(previous) or any(
-                    item['mode'] != selection.get(item['name']) for item in current if item['mode']):
-                raise ValueError('Displays changed during confirmation. The selection was not saved.')
-            settings.save_preferences(display_modes={'outputs':topology(previous), 'modes':selection})
-            confirmed = True
-            print(json.dumps({'status':'kept'}), flush=True)
+        selection=json.loads(sys.stdin.readline())
+        previous=outputs()
+        settings.run(*layout(previous,selection))
+        print(json.dumps({'status':'ready','seconds':15}),flush=True)
+        ready,_,_=select.select([sys.stdin],[],[],15)
+        answer=sys.stdin.readline().strip() if ready else ''
+        if answer=='keep':
+            current=outputs()
+            if topology(current)!=topology(previous) or any(item['mode']!=selection.get(item['name']) for item in current if item['mode']):
+                raise ValueError('Displays changed during confirmation. Selection was not saved.')
+            settings.save_preferences(display_modes={'outputs':topology(previous),'modes':selection})
+            confirmed=True
+            print(json.dumps({'status':'kept'}),flush=True)
         else:
-            restore(previous)
-            previous = None
-            print(json.dumps({'status':'restored'}), flush=True)
+            restore(previous);previous=None
+            print(json.dumps({'status':'restored'}),flush=True)
     except Exception as error:
-        message = str(error)
+        message=str(error)
         if previous is not None and not confirmed:
-            try:
-                restore(previous)
-            except Exception as failure:
-                message += f' Could not restore displays: {failure}'
-        try:
-            print(json.dumps({'status':'error', 'message':message}), flush=True)
-        except BrokenPipeError:
-            pass
+            try:restore(previous)
+            except Exception as failure:message+=f' Could not restore displays: {failure}'
+        try:print(json.dumps({'status':'error','message':message}),flush=True)
+        except BrokenPipeError:pass
 
 
-if __name__ == '__main__':
-    sys.dont_write_bytecode = True
+if __name__=='__main__':
+    sys.dont_write_bytecode=True
     trial()

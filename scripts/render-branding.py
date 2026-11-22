@@ -21,7 +21,7 @@ def render(width, height, path):
     mark = logo.resize((logo_width, logo_height), Image.Resampling.LANCZOS)
     image.paste(mark, ((image.width - logo_width) // 2, round(82 * factor * scale)))
     for y, value, size, color in [
-        (188, 'A minimal Openbox desktop.', 22, '#f5f5f5'),
+        (188, 'A minimal Wayland desktop.', 22, '#f5f5f5'),
         (226, 'Built on Debian 13 · amd64', 16, '#aaaaaa'),
     ]:
         font = ImageFont.truetype(str(fontroot / 'DejaVuSans.ttf'), round(size * factor * scale))

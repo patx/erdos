@@ -1,12 +1,12 @@
 #!/usr/bin/python3
-"""Generate Openbox's Applications pipe menu from installed desktop entries."""
+"""Generate labwc's Applications pipe menu from installed desktop entries."""
 import locale
 import os
 import shlex
 import sys
 import xml.etree.ElementTree as ET
 
-os.environ.setdefault("XDG_CURRENT_DESKTOP", "Openbox")
+os.environ.setdefault("XDG_CURRENT_DESKTOP", "labwc")
 from gi.repository import Gio
 
 # Hide desktop-shell launchers; connection editing remains available in Applications.

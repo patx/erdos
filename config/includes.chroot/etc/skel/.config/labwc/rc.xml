@@ -1,0 +1,379 @@
+<?xml version='1.0' encoding='utf-8'?>
+<labwc_config>
+  <focus>
+    <focusNew>yes</focusNew>
+    <followMouse>no</followMouse>
+  </focus>
+  <theme>
+    <name>ErdOS</name>
+    <titlebar>
+      <layout>icon:iconify,max,close</layout>
+    </titlebar>
+    <font place="ActiveWindow">
+      <name>DejaVu Sans</name>
+      <size>10</size>
+      <weight>Bold</weight>
+    </font>
+    <font place="InactiveWindow">
+      <name>DejaVu Sans</name>
+      <size>10</size>
+    </font>
+    <font place="MenuItem">
+      <name>DejaVu Sans</name>
+      <size>10</size>
+    </font>
+    <font place="MenuHeader">
+      <name>DejaVu Sans</name>
+      <size>10</size>
+      <weight>Bold</weight>
+    </font>
+    <font place="ActiveOnScreenDisplay">
+      <name>DejaVu Sans</name>
+      <size>10</size>
+    </font>
+    <cornerRadius>0</cornerRadius>
+    <dropShadows>no</dropShadows>
+  </theme>
+  <keyboard>
+    <keybind key="W-space Menu">
+      <action name="ShowMenu">
+        <menu>root-menu</menu>
+      </action>
+    </keybind>
+    <keybind key="W-S-o">
+      <action name="ShowMenu">
+        <menu>client-list-combined-menu</menu>
+      </action>
+    </keybind>
+    <keybind key="W-i">
+      <action name="Execute">
+        <command>erdos-settings</command>
+      </action>
+    </keybind>
+    <keybind key="W-o">
+      <action name="ErdosOverview" />
+    </keybind>
+    <keybind key="W-C-Left">
+      <action name="ErdosPreviousWindow" />
+    </keybind>
+    <keybind key="W-C-Right">
+      <action name="ErdosNextWindow" />
+    </keybind>
+    <keybind key="Print">
+      <action name="Execute">
+        <command>erdos-screenshot</command>
+      </action>
+    </keybind>
+    <keybind key="A-Print">
+      <action name="ErdosScreenshotWindow" />
+    </keybind>
+    <keybind key="S-Print">
+      <action name="Execute">
+        <command>erdos-screenshot region</command>
+      </action>
+    </keybind>
+    <keybind key="XF86AudioRaiseVolume">
+      <action name="Execute">
+        <command>wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+</command>
+      </action>
+    </keybind>
+    <keybind key="XF86AudioLowerVolume">
+      <action name="Execute">
+        <command>wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-</command>
+      </action>
+    </keybind>
+    <keybind key="XF86AudioMute">
+      <action name="Execute">
+        <command>wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle</command>
+      </action>
+    </keybind>
+    <keybind key="XF86AudioMicMute">
+      <action name="Execute">
+        <command>wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle</command>
+      </action>
+    </keybind>
+    <keybind key="XF86MonBrightnessUp">
+      <action name="Execute">
+        <command>brightnessctl -q -c backlight set 5%+</command>
+      </action>
+    </keybind>
+    <keybind key="XF86MonBrightnessDown">
+      <action name="Execute">
+        <command>brightnessctl -q -c backlight set 5%-</command>
+      </action>
+    </keybind>
+    <keybind key="XF86KbdBrightnessUp">
+      <action name="Execute">
+        <command>brightnessctl -q -d '*::kbd_backlight' set 10%+</command>
+      </action>
+    </keybind>
+    <keybind key="XF86KbdBrightnessDown">
+      <action name="Execute">
+        <command>brightnessctl -q -n 0 -d '*::kbd_backlight' set 10%-</command>
+      </action>
+    </keybind>
+    <keybind key="W-Return C-A-t">
+      <action name="Execute">
+        <command>erdos-launch terminal</command>
+      </action>
+    </keybind>
+    <keybind key="W-e">
+      <action name="Execute">
+        <command>erdos-launch files</command>
+      </action>
+    </keybind>
+    <keybind key="W-t">
+      <action name="Execute">
+        <command>erdos-launch editor</command>
+      </action>
+    </keybind>
+    <keybind key="W-b">
+      <action name="Execute">
+        <command>erdos-launch browser</command>
+      </action>
+    </keybind>
+    <keybind key="W-q">
+      <action name="Close" />
+    </keybind>
+    <keybind key="W-S-1 W-F1">
+      <action name="GoToDesktop">
+        <to>1</to>
+      </action>
+    </keybind>
+    <keybind key="W-C-S-1">
+      <action name="SendToDesktop">
+        <to>1</to>
+        <follow>no</follow>
+      </action>
+    </keybind>
+    <keybind key="W-S-2 W-F2">
+      <action name="GoToDesktop">
+        <to>2</to>
+      </action>
+    </keybind>
+    <keybind key="W-C-S-2">
+      <action name="SendToDesktop">
+        <to>2</to>
+        <follow>no</follow>
+      </action>
+    </keybind>
+    <keybind key="W-Tab">
+      <action name="NextWindow" />
+    </keybind>
+    <keybind key="W-S-Tab">
+      <action name="PreviousWindow" />
+    </keybind>
+    <keybind key="A-F4">
+      <action name="Close" />
+    </keybind>
+    <keybind key="W-Left W-KP_4 W-KP_Left">
+      <action name="SnapToEdge">
+        <direction>left</direction>
+      </action>
+    </keybind>
+    <keybind key="W-Right W-KP_6 W-KP_Right">
+      <action name="SnapToEdge">
+        <direction>right</direction>
+      </action>
+    </keybind>
+    <keybind key="W-KP_8 W-KP_Up">
+      <action name="SnapToEdge">
+        <direction>up</direction>
+      </action>
+    </keybind>
+    <keybind key="W-KP_2 W-KP_Down">
+      <action name="SnapToEdge">
+        <direction>down</direction>
+      </action>
+    </keybind>
+    <keybind key="W-KP_7 W-KP_Home">
+      <action name="SnapToEdge">
+        <direction>up-left</direction>
+      </action>
+    </keybind>
+    <keybind key="W-KP_9 W-KP_Prior">
+      <action name="SnapToEdge">
+        <direction>up-right</direction>
+      </action>
+    </keybind>
+    <keybind key="W-KP_1 W-KP_End">
+      <action name="SnapToEdge">
+        <direction>down-left</direction>
+      </action>
+    </keybind>
+    <keybind key="W-KP_3 W-KP_Next">
+      <action name="SnapToEdge">
+        <direction>down-right</direction>
+      </action>
+    </keybind>
+    <keybind key="W-Up W-KP_5 W-KP_Begin W-m">
+      <action name="Maximize" />
+    </keybind>
+    <keybind key="W-Down">
+      <action name="Unmaximize" />
+      <action name="UnSnap" />
+    </keybind>
+    <keybind key="W-h">
+      <action name="Iconify" />
+    </keybind>
+    <keybind key="W-S-3 W-F3">
+      <action name="GoToDesktop">
+        <to>3</to>
+      </action>
+    </keybind>
+    <keybind key="W-C-S-3">
+      <action name="SendToDesktop">
+        <to>3</to>
+        <follow>no</follow>
+      </action>
+    </keybind>
+    <keybind key="W-S-4 W-F4">
+      <action name="GoToDesktop">
+        <to>4</to>
+      </action>
+    </keybind>
+    <keybind key="W-C-S-4">
+      <action name="SendToDesktop">
+        <to>4</to>
+        <follow>no</follow>
+      </action>
+    </keybind>
+    <keybind key="W-S-5 W-F5">
+      <action name="GoToDesktop">
+        <to>5</to>
+      </action>
+    </keybind>
+    <keybind key="W-C-S-5">
+      <action name="SendToDesktop">
+        <to>5</to>
+        <follow>no</follow>
+      </action>
+    </keybind>
+    <keybind key="W-S-6 W-F6">
+      <action name="GoToDesktop">
+        <to>6</to>
+      </action>
+    </keybind>
+    <keybind key="W-C-S-6">
+      <action name="SendToDesktop">
+        <to>6</to>
+        <follow>no</follow>
+      </action>
+    </keybind>
+    <keybind key="W-S-7 W-F7">
+      <action name="GoToDesktop">
+        <to>7</to>
+      </action>
+    </keybind>
+    <keybind key="W-C-S-7">
+      <action name="SendToDesktop">
+        <to>7</to>
+        <follow>no</follow>
+      </action>
+    </keybind>
+    <keybind key="W-S-8 W-F8">
+      <action name="GoToDesktop">
+        <to>8</to>
+      </action>
+    </keybind>
+    <keybind key="W-C-S-8">
+      <action name="SendToDesktop">
+        <to>8</to>
+        <follow>no</follow>
+      </action>
+    </keybind>
+    <keybind key="W-S-9 W-F9">
+      <action name="GoToDesktop">
+        <to>9</to>
+      </action>
+    </keybind>
+    <keybind key="W-C-S-9">
+      <action name="SendToDesktop">
+        <to>9</to>
+        <follow>no</follow>
+      </action>
+    </keybind>
+  </keyboard>
+  <mouse>
+    <context name="Frame">
+      <mousebind button="A-Left" action="Drag">
+        <action name="Move" />
+      </mousebind>
+      <mousebind button="A-Right" action="Drag">
+        <action name="Resize" />
+      </mousebind>
+    </context>
+    <context name="Titlebar">
+      <mousebind button="Left" action="Press">
+        <action name="Focus" />
+        <action name="Raise" />
+      </mousebind>
+      <mousebind button="Left" action="Drag">
+        <action name="Move" />
+      </mousebind>
+      <mousebind button="Left" action="DoubleClick">
+        <action name="ToggleMaximize" />
+      </mousebind>
+      <mousebind button="Right" action="Press">
+        <action name="ShowMenu">
+          <menu>client-menu</menu>
+        </action>
+      </mousebind>
+    </context>
+    <context name="Client">
+      <mousebind button="Left" action="Press">
+        <action name="Focus" />
+        <action name="Raise" />
+      </mousebind>
+    </context>
+    <context name="Close">
+      <mousebind button="Left" action="Click">
+        <action name="Close" />
+      </mousebind>
+    </context>
+    <context name="Iconify">
+      <mousebind button="Left" action="Click">
+        <action name="Iconify" />
+      </mousebind>
+    </context>
+    <context name="Maximize">
+      <mousebind button="Left" action="Click">
+        <action name="ToggleMaximize" />
+      </mousebind>
+    </context>
+    <context name="Desktop">
+      <mousebind button="Right" action="Press">
+        <action name="ShowMenu">
+          <menu>root-menu</menu>
+        </action>
+      </mousebind>
+    </context>
+    <context name="Frame Desktop">
+      <mousebind button="Task" action="Press" erdos-menu="yes">
+        <action name="ShowMenu">
+          <menu>root-menu</menu>
+        </action>
+      </mousebind>
+      <mousebind button="W-Right" action="Press" erdos-menu="yes">
+        <action name="ShowMenu">
+          <menu>root-menu</menu>
+        </action>
+      </mousebind>
+    </context>
+  </mouse>
+  <desktops number="2" popupTime="800" />
+  <windowSwitcher preview="no" outlines="no">
+    <osd style="thumbnail" output="cursor" show="yes" />
+  </windowSwitcher>
+  <libinput>
+    <device category="touchpad">
+      <naturalScroll>yes</naturalScroll>
+      <tap>yes</tap>
+      <tapButtonMap>lrm</tapButtonMap>
+      <clickMethod>clickfinger</clickMethod>
+      <clickfingerButtonMap>lrm</clickfingerButtonMap>
+      <scrollMethod>twofinger</scrollMethod>
+      <pointerSpeed>0</pointerSpeed>
+    </device>
+  </libinput>
+</labwc_config>
