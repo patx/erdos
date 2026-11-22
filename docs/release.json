@@ -1,10 +1,10 @@
 {
   "schema": 1,
   "repository": "patx/erdos",
-  "published": false,
-  "tag": null,
+  "published": true,
+  "tag": "v1.0.0-alpha.4",
   "date": "2026-11-22",
-  "status": "Prepared image; not published",
+  "status": "Published Alpha 4 prerelease",
   "iso": {
     "filename": "erdos-amd64.iso",
     "bytes": 1160970240,
@@ -14,5 +14,6 @@
   "source_filename": "erdos-build-project.zip",
   "checksums_filename": "SHA256SUMS",
   "version": "1.0.0-alpha.4",
-  "image_version": "dev-settings"
+  "image_version": "dev-settings",
+  "download_base_url": "https://downloads.erd.sh/v1.0.0-alpha.4/"
 }

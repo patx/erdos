@@ -39,6 +39,11 @@ not certify every hardware feature listed below. The selected ISO SHA-256 is
 Its internal image version remains `dev-settings`; Alpha 4 is its public release
 label. No ISO bytes are changed during release preparation.
 
+Alpha 4 is published under `v1.0.0-alpha.4/`. The complete hosted ISO and all
+five companion files were downloaded and verified against local SHA-256 hashes.
+The GitHub prerelease and its source revision (`90d00e4`) were checked publicly.
+The temporary upload Worker was removed after successful verification.
+
 The hosted desktop updater is tested independently with an isolated filesystem:
 successful installation and repeat execution, ordinary-user checks after an
 update, rejection of locally modified files, path/symlink rejection, rollback

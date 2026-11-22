@@ -3,7 +3,7 @@
 Repository: <https://github.com/patx/erdos>. Website:
 <https://patx.gitman.io/erdos/>. These instructions prepare artifacts locally;
 the release-packaging script does not commit, tag, push, upload or publish.
-The previous public release is [ErdOS 1 Alpha 3](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.3).
+The current public release is [ErdOS 1 Alpha 4](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.4).
 Both source remotes use `main`: GitHub at the URL above and Gitman at
 <https://gitman.io/git/patx/erdos>.
 
@@ -21,8 +21,10 @@ python3 scripts/prepare-release.py --iso dist/erdos-amd64.iso --version 1.0.0-al
 
 `image_version` records the internal label separately from `version`. This command
 verifies and packages the existing ISO; it does not generate a new filesystem.
-Upload to a new `v1.0.0-alpha.4/` directory and publish the prerelease before
-pushing the prepared Alpha 4 website links. Older release objects stay unchanged.
+The image and five companion artifacts are published under `v1.0.0-alpha.4/`.
+All six public downloads were read back and matched their local SHA-256 hashes.
+The GitHub prerelease targets source revision `90d00e4`; older release objects
+remain unchanged. The temporary scoped upload Worker was removed after verification.
 The updater is hosted separately and also works on Alpha 3; see [updates.md](updates.md).
 
 ## Source repository
@@ -75,14 +77,13 @@ Review and upload these assets to the versioned **Cloudflare R2** download direc
 ## Cloudflare R2 downloads
 
 The Standard-storage bucket is `erdos-releases`, served through
-<https://downloads.erd.sh/> with a minimum TLS version of 1.2. The Alpha 3 objects
-are under `v1.0.0-alpha.3/`; the ISO URL is
-<https://downloads.erd.sh/v1.0.0-alpha.3/erdos-amd64.iso>.
+<https://downloads.erd.sh/> with a minimum TLS version of 1.2. The Alpha 4 objects
+are under `v1.0.0-alpha.4/`; the ISO URL is
+<https://downloads.erd.sh/v1.0.0-alpha.4/erdos-amd64.iso>.
 The website remains on Gitman Pages, and source code stays on both Git remotes.
 The zone rule `erdos_alpha2_public_downloads` skips Security Level and Browser
 Integrity Check only for GET/HEAD requests to the exact release download
-paths for Alpha 2 and Alpha 3, plus the five explicitly approved updater files.
-Alpha 4 still needs its own six release-file paths added before publication.
+paths for Alpha 2, Alpha 3 and Alpha 4, plus the five explicitly approved updater files.
 Add each future version’s file paths to that rule before publishing its
 links; keep other hosts, paths and methods outside the exception.
 
@@ -115,7 +116,7 @@ from the matching Debian archives with source repositories enabled.
 
 After the R2 files are verified and the GitHub prerelease is published, set the chosen tag and
 `published: true` in `docs/release.json`. Its existing filenames and digest must
-still match those assets. Set `download_base_url` to the matching version directory. The prepared hero button links directly to the R2 `v1.0.0-alpha.4` ISO; the bottom download
+still match those assets. Set `download_base_url` to the matching version directory. The hero button links directly to the R2 `v1.0.0-alpha.4` ISO; the bottom download
 section links to its release page. Update both links in `index.html` for a future
 release, together with the version text and release metadata. Future builds use current Debian packages, so reusing a date does not
 imply an identical ISO or checksum.
