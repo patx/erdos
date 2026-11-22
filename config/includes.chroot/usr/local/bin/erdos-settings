@@ -31,20 +31,24 @@ class Settings(Gtk.Application):
     def __init__(self):
         super().__init__(application_id='org.erdos.Settings', flags=Gio.ApplicationFlags.FLAGS_NONE)
         self.window = None
+        self.groups = []
+        self.busy = False
 
     def do_activate(self):
         if self.window:
             self.window.present(); return
         self.window = Gtk.ApplicationWindow(application=self, title='ErdOS Settings')
-        self.window.set_default_size(820, 580)
-        self.window.connect('delete-event', lambda *_: not self.stack.get_sensitive())
+        self.window.set_default_size(880, 640)
+        self.groups = []
+        self.window.set_size_request(640, 420)
+        self.window.connect('delete-event', self.close_requested)
         self.window.connect('destroy', lambda *_: setattr(self, 'window', None))
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         body = Gtk.Box()
         self.stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.NONE)
         self.stack.set_hexpand(True)
         sidebar = Gtk.StackSidebar(stack=self.stack)
-        sidebar.set_size_request(155, -1)
+        sidebar.set_size_request(175, -1)
         body.pack_start(sidebar, False, False, 0)
         body.pack_start(self.stack, True, True, 0)
         self.status = Gtk.Label(xalign=0, wrap=True, selectable=True)
@@ -59,7 +63,7 @@ class Settings(Gtk.Application):
         self.resolution_bar = Gtk.Box(spacing=12)
         self.resolution_bar.set_border_width(12)
         self.resolution_label = Gtk.Label(xalign=0, wrap=True)
-        self.resolution_label.set_max_width_chars(30)
+        self.resolution_label.set_max_width_chars(45)
         self.resolution_bar.pack_start(self.resolution_label, True, True, 0)
         for label, answer in [('Revert', 'revert'), ('Keep resolution', 'keep')]:
             button = Gtk.Button(label=label)
@@ -70,9 +74,9 @@ class Settings(Gtk.Application):
         self.trial_timer = None
         self.window.add(outer)
         for name in ('Appearance', 'Default Programs', 'Touchpad', 'Keyboard', 'Menu', 'Startup Applications', 'Gestures', 'Displays', 'Sound', 'Network', 'Bluetooth', 'Power', 'Date & Time'):
-            page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
-            page.set_border_width(24)
-            title = Gtk.Label(xalign=0); title.set_markup(f'<big><b>{GLib.markup_escape_text(name)}</b></big>')
+            page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+            page.set_border_width(28)
+            title = Gtk.Label(xalign=0); title.set_markup(f'<span size="x-large" weight="bold">{GLib.markup_escape_text(name)}</span>')
             page.pack_start(title, False, False, 0)
             scroll = Gtk.ScrolledWindow(); scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
             scroll.add(page); self.stack.add_titled(scroll, name, name)
@@ -85,17 +89,105 @@ class Settings(Gtk.Application):
 
     def note(self, page, text):
         label = Gtk.Label(label=text, xalign=0, wrap=True)
-        label.set_max_width_chars(65)
-        page.pack_start(label, False, False, 0)
+        label.set_max_width_chars(62)
+        label.get_style_context().add_class('dim-label')
+        if len(text) > 190:
+            details = Gtk.Expander(label='More information')
+            label.set_margin_top(8)
+            details.add(label)
+            page.pack_start(details, False, False, 0)
+        else:
+            page.pack_start(label, False, False, 0)
         return label
 
     def row(self, page, title, widget):
-        box = Gtk.Box(spacing=16)
+        children = page.get_children()
+        frame = children[-1] if children else None
+        if not isinstance(frame, Gtk.Frame) or not hasattr(frame, 'settings_rows'):
+            frame = Gtk.Frame(shadow_type=Gtk.ShadowType.IN)
+            frame.settings_rows = Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
+            frame.add(frame.settings_rows)
+            page.pack_start(frame, False, False, 0)
+        row = Gtk.ListBoxRow(activatable=False, selectable=False)
+        box = Gtk.Box(spacing=20)
+        box.set_border_width(12)
         label = Gtk.Label(label=title, xalign=0, wrap=True)
+        label.set_max_width_chars(32)
+        widget.set_valign(Gtk.Align.CENTER)
         box.pack_start(label, True, True, 0)
         box.pack_end(widget, False, False, 0)
-        page.pack_start(box, False, False, 0)
+        row.add(box); frame.settings_rows.add(row)
         return widget
+
+    @staticmethod
+    def widgets(root):
+        yield root
+        if isinstance(root, Gtk.Container):
+            for child in root.get_children():
+                yield from Settings.widgets(child)
+
+    def close_requested(self, *_):
+        if self.trial_process is not None:
+            self.close_after_resolution = True
+            self.answer_resolution('revert')
+            return True
+        dirty = [g for g in self.groups if self.group_values(g) != g['saved']]
+        if dirty or self.busy:
+            dialog = Gtk.MessageDialog(transient_for=self.window, modal=True,
+                message_type=Gtk.MessageType.QUESTION, buttons=Gtk.ButtonsType.NONE,
+                text='Close Settings?')
+            dialog.format_secondary_text('Unsaved edits will be discarded.' if dirty else
+                'The change already started will finish in the background.')
+            dialog.add_buttons('Keep editing', Gtk.ResponseType.CANCEL, 'Close', Gtk.ResponseType.OK)
+            dialog.set_default_response(Gtk.ResponseType.CANCEL)
+            answer = dialog.run(); dialog.destroy()
+            return answer != Gtk.ResponseType.OK
+        return False
+
+    @staticmethod
+    def control_value(widget):
+        if isinstance(widget, Gtk.Switch): return widget.get_active()
+        if isinstance(widget, Gtk.ComboBox): return widget.get_active_id()
+        if isinstance(widget, Gtk.SpinButton): return widget.get_value()
+        if isinstance(widget, Gtk.Entry): return widget.get_text()
+        if isinstance(widget, Gtk.FontButton): return widget.get_font_name()
+        if isinstance(widget, Gtk.ColorButton): return widget.get_rgba().to_string()
+        if isinstance(widget, Gtk.FileChooserButton): return widget.get_filename()
+        if isinstance(widget, Gtk.TreeView): return [tuple(row) for row in widget.get_model()]
+        if isinstance(widget, Gtk.TextView):
+            buf=widget.get_buffer(); return buf.get_text(buf.get_start_iter(),buf.get_end_iter(),False)
+
+    def group_values(self, group):
+        return [self.control_value(w) for w in group['controls']]
+
+    def group_update(self, group, *_):
+        dirty = self.group_values(group) != group['saved']
+        group['hint'].set_text('Unsaved changes' if dirty else '')
+        group['apply'].set_sensitive(dirty and not self.busy and group.get('available',lambda:True)())
+        group['revert'].set_sensitive(dirty and not self.busy)
+
+    def group_revert(self, group):
+        for w,value in zip(group['controls'],group['saved']):
+            if isinstance(w, Gtk.Switch): w.set_active(value)
+            elif isinstance(w, Gtk.ComboBox): w.set_active_id(value)
+            elif isinstance(w, Gtk.SpinButton): w.set_value(value)
+            elif isinstance(w, Gtk.Entry): w.set_text(value)
+            elif isinstance(w, Gtk.FontButton): w.set_font_name(value)
+            elif isinstance(w, Gtk.ColorButton):
+                color=Gdk.RGBA(); color.parse(value); w.set_rgba(color)
+            elif isinstance(w, Gtk.FileChooserButton):
+                w.set_filename(value) if value else w.unselect_all()
+            elif isinstance(w, Gtk.TreeView):
+                model=w.get_model(); model.clear()
+                for row in value: model.append(row)
+            elif isinstance(w, Gtk.TextView):
+                w.get_buffer().set_text(value); w.get_buffer().set_modified(False)
+        self.group_update(group)
+
+    def reset_groups(self, page):
+        for group in self.groups:
+            if group['page'] is page:
+                group['saved']=self.group_values(group); self.group_update(group)
 
     def toggle(self, page, title, active):
         return self.row(page, title, Gtk.Switch(active=active, valign=Gtk.Align.CENTER))
@@ -117,8 +209,46 @@ class Settings(Gtk.Application):
 
     def button(self, page, title, action):
         button = Gtk.Button(label=title, halign=Gtk.Align.START)
-        button.connect('clicked', lambda *_: self.perform(action))
-        page.pack_start(button, False, False, 0)
+        group=None
+        if title.startswith(('Apply ', 'Save startup')):
+            previous = {id(child) for g in self.groups if g['page'] is page for w in g['controls'] for child in self.widgets(w)}
+            candidates=list(self.widgets(page))
+            controls=[w for w in candidates if id(w) not in previous and isinstance(w,
+                (Gtk.Switch,Gtk.ComboBox,Gtk.SpinButton,Gtk.FontButton,Gtk.ColorButton,Gtk.FileChooserButton,Gtk.TreeView,Gtk.TextView))]
+            # Entries inside composite controls are owned by that control.
+            for w in candidates:
+                if not isinstance(w,Gtk.Entry) or w in controls or id(w) in previous: continue
+                parent=w.get_parent()
+                while parent is not None and parent not in controls: parent=parent.get_parent()
+                if parent is None and id(w) not in previous: controls.append(w)
+            group={'page':page,'controls':controls,'apply':button,'hint':Gtk.Label(xalign=0),'revert':Gtk.Button(label='Revert')}
+            group['saved']=self.group_values(group)
+            self.groups.append(group)
+            group['hint'].get_style_context().add_class('dim-label')
+            bar=Gtk.Box(spacing=8)
+            bar.pack_start(group['hint'],True,True,0)
+            bar.pack_end(button,False,False,0)
+            bar.pack_end(group['revert'],False,False,0)
+            button.set_label('Save' if title.startswith('Save') else 'Apply')
+            button.get_style_context().add_class('suggested-action')
+            button.set_tooltip_text(title)
+            group['revert'].connect('clicked',lambda *_: self.group_revert(group))
+            def changed(*_): self.group_update(group)
+            for w in controls:
+                if isinstance(w,Gtk.TreeView):
+                    for signal in ('row-changed','row-inserted','row-deleted','rows-reordered'): w.get_model().connect(signal,changed)
+                elif isinstance(w,Gtk.TextView): w.get_buffer().connect('changed',changed)
+                elif isinstance(w,Gtk.Switch): w.connect('notify::active',changed)
+                elif isinstance(w,Gtk.FontButton): w.connect('font-set',changed)
+                elif isinstance(w,Gtk.ColorButton): w.connect('color-set',changed)
+                elif isinstance(w,Gtk.FileChooserButton): w.connect('file-set',changed)
+                elif isinstance(w,Gtk.SpinButton): w.connect('value-changed',changed)
+                else: w.connect('changed',changed)
+            page.pack_start(bar,False,False,0)
+            self.group_update(group)
+        else:
+            page.pack_start(button,False,False,0)
+        button.connect('clicked', lambda *_: self.perform(action, group=group))
         return button
 
     def report(self, message, error=False):
@@ -140,28 +270,58 @@ class Settings(Gtk.Application):
             message = message.split('GDBus.Error:', 1)[1].split(':', 1)[-1].strip()
         return message or 'The operation could not be completed. Try again.'
 
-    def perform(self, action, pending='Applying…'):
-        # Gather widget values on GTK's main thread, run commands off-thread.
+    def perform(self, action, pending='Applying…', group=None):
+        if self.busy:
+            self.report('Another change is still being applied. Please wait.'); return
         try:
             job = action()
         except Exception as error:
             self.report(self.error_text(error), error=True); return
-        self.stack.set_sensitive(False)
+        if not callable(job):
+            if group:
+                group['saved']=self.group_values(group); self.group_update(group)
+            if isinstance(job,str): self.report(job)
+            return
+        window=self.window
+        self.busy=True; self.hold()
+        if group: group['page'].set_sensitive(False)
+        for g in self.groups: self.group_update(g)
         self.report(pending)
         def worker():
             try:
-                result = job() if callable(job) else job
-                message = result if isinstance(result, str) and result else 'Changes applied.'
-                failed = False
+                result=job()
+                message=result if isinstance(result,str) and result else 'Changes applied.'
+                failed=False
             except Exception as error:
-                message = self.error_text(error)
-                failed = True
-            GLib.idle_add(finish, message, failed)
-        def finish(message, failed):
-            if self.window is None:
-                return
-            self.stack.set_sensitive(True); self.report(message, error=failed)
-        threading.Thread(target=worker, daemon=True).start()
+                message=self.error_text(error); failed=True
+            GLib.idle_add(finish,message,failed)
+        def finish(message,failed):
+            self.busy=False
+            if self.window is window:
+                if group:
+                    group['page'].set_sensitive(True)
+                    if not failed: group['saved']=self.group_values(group)
+                for g in self.groups: self.group_update(g)
+                self.report(message,error=failed)
+            elif self.window is not None:
+                for g in self.groups: self.group_update(g)
+            self.release()
+            return False
+        threading.Thread(target=worker,daemon=True).start()
+
+    def edit_fields(self, title, fields, commit):
+        dialog=Gtk.Dialog(title=title,transient_for=self.window,modal=True)
+        dialog.add_buttons('Cancel',Gtk.ResponseType.CANCEL,'Save',Gtk.ResponseType.OK)
+        dialog.set_default_response(Gtk.ResponseType.OK)
+        box=dialog.get_content_area(); box.set_border_width(18); box.set_spacing(12)
+        entries=[]
+        for label,value in fields:
+            box.pack_start(Gtk.Label(label=label,xalign=0),False,False,0)
+            entry=Gtk.Entry(text=value,activates_default=True); entry.set_width_chars(42)
+            box.pack_start(entry,False,False,0); entries.append(entry)
+        dialog.show_all()
+        if dialog.run()==Gtk.ResponseType.OK: commit([e.get_text() for e in entries])
+        dialog.destroy()
 
     def appearance(self, page):
         parser = configparser.ConfigParser(interpolation=None)
@@ -173,25 +333,34 @@ class Settings(Gtk.Application):
         current = values.get('gtk-theme-name', 'Adwaita'); themes.add(current)
         theme = self.choice(page, 'Application theme', [(t,t) for t in sorted(themes)], current)
         font = self.row(page, 'Font', Gtk.FontButton(font=values.get('gtk-font-name', 'DejaVu Sans 10')))
-        dark = self.toggle(page, 'Prefer dark applications', values.get('gtk-application-prefer-dark-theme') == 'true')
+        dark = self.toggle(page, 'Prefer dark appearance', backend.prefers_dark(values.get('gtk-application-prefer-dark-theme') == 'true'))
         prefs = backend.preferences()
         rgba = Gdk.RGBA(); rgba.parse(prefs['background'])
         color = self.row(page, 'Desktop color', Gtk.ColorButton(rgba=rgba))
         mode = self.choice(page, 'Background', [('solid', 'Solid color'), ('image', 'Image')],
                            'image' if prefs['background_image'] else 'solid')
+        image_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=12)
+        page.pack_start(image_box,False,False,0)
         chooser = Gtk.FileChooserButton(title='Choose a background image', action=Gtk.FileChooserAction.OPEN)
         image_filter = Gtk.FileFilter(); image_filter.set_name('Images'); image_filter.add_pixbuf_formats()
         chooser.add_filter(image_filter)
-        self.row(page, 'Choose image', chooser)
-        image_status = self.note(page, 'Saved image selected.' if prefs['background_image'] else 'No image selected.')
-        layout = self.choice(page, 'Image layout', [('fill','Fill (crop to fit)'), ('fit','Fit (keep whole image)'),
+        self.row(image_box, 'Choose image', chooser)
+        image_status = self.note(image_box, 'Saved image selected.' if prefs['background_image'] else 'No image selected.')
+        layout = self.choice(image_box, 'Image layout', [('fill','Fill (crop to fit)'), ('fit','Fit (keep whole image)'),
                              ('center','Center'), ('tile','Tile')], prefs['background_layout'])
         remove = Gtk.Button(label='Remove image', halign=Gtk.Align.START)
-        page.pack_start(remove, False, False, 0)
+        image_box.pack_start(remove, False, False, 0)
         def refresh(*_):
             enabled = mode.get_active_id() == 'image'
+            if enabled:
+                image_box.set_no_show_all(False); image_box.show_all()
+            else: image_box.hide()
+            image_box.set_no_show_all(True)
             chooser.set_sensitive(enabled); layout.set_sensitive(enabled)
             remove.set_sensitive(enabled)
+            if enabled:
+                image_status.set_text(Path(chooser.get_filename()).name if chooser.get_filename() else 'Saved image selected.' if backend.wallpaper_path().is_file() else 'Choose an image.')
+            else: image_status.set_text('Solid color selected.')
         def selected(*_):
             if chooser.get_filename():
                 mode.set_active_id('image')
@@ -199,18 +368,21 @@ class Settings(Gtk.Application):
         chooser.connect('file-set', selected)
         def clear(*_):
             chooser.unselect_all(); mode.set_active_id('solid')
-            image_status.set_text('Image will be removed when you apply.')
+            image_status.set_text('Solid color selected. Apply to remove the saved image.')
         remove.connect('clicked', clear)
         mode.connect('changed', refresh); refresh()
-        self.note(page, 'Apply to save a private copy of the image and restore it at login. Remove image returns to your desktop color when applied; the original file is never deleted. Fill crops without stretching; Fit uses your desktop color around the image.')
-        self.note(page, 'Themes and fonts apply to newly opened applications. Existing applications may need to be reopened.')
+        self.note(image_box, 'Apply to save a private copy of the image and restore it at login. Remove image returns to your desktop color when applied; the original file is never deleted. Fill crops without stretching; Fit uses your desktop color around the image.')
+        self.note(page, 'Firefox and supported websites follow this light/dark preference when set to use the system theme. Other themes and fonts may require reopening an app.')
         def apply():
             c = color.get_rgba(); hexcolor = '#%02x%02x%02x' % tuple(round(v*255) for v in (c.red,c.green,c.blue))
             args = (theme.get_active_id(), font.get_font_name(), dark.get_active(), hexcolor,
                     mode.get_active_id() == 'image', layout.get_active_id(), chooser.get_filename())
             def job():
                 backend.appearance(*args)
+                window=self.window
                 def saved():
+                    if self.window is not window or not chooser.get_parent(): return False
+                    Gtk.Settings.get_default().set_property('gtk-application-prefer-dark-theme',args[2])
                     chooser.unselect_all()
                     image_status.set_text('Saved image selected.' if args[4] else 'No image selected.')
                 GLib.idle_add(saved)
@@ -224,6 +396,8 @@ class Settings(Gtk.Application):
         for role, (label, *_rest) in default_apps.ROLES.items():
             fields[role] = self.row(page, label, Gtk.ComboBoxText())
         def refresh():
+            if any(g['page'] is page and self.group_values(g)!=g['saved'] for g in self.groups):
+                self.report('Apply or revert your default-app edits before refreshing.',error=True); return
             for role, widget in fields.items():
                 rows, selected = default_apps.choices(role)
                 widget.remove_all()
@@ -234,6 +408,7 @@ class Settings(Gtk.Application):
                     widget.append('', 'No application installed')
                     widget.set_active(0)
                 widget.set_sensitive(bool(rows))
+            self.reset_groups(page)
         refresh()
         button = Gtk.Button(label='Refresh application list', halign=Gtk.Align.START)
         button.connect('clicked', lambda *_: refresh())
@@ -273,17 +448,34 @@ class Settings(Gtk.Application):
                 backend.run('labwc','--reconfigure')
             return job
         self.button(page, 'Apply workspace and Super-key settings', apply_workspaces)
-        self.note(page, 'Double-click a shortcut to edit it. W = Super, C = Ctrl, A = Alt, S = Shift. Separate alternatives with spaces. Example: W-Return C-A-t. Fn mode is controlled by your keyboard or firmware.')
+        self.note(page, 'Select a shortcut and choose Edit, or double-click it. Separate alternatives with a comma. Fn mode is controlled by your keyboard.')
+        keyboard_source=backend.keyboard_source()
         model = Gtk.ListStore(str, str)
-        for key, action in backend.keyboard(): model.append([key, action])
+        labels={'ShowMenu root-menu':'Desktop menu','ShowMenu client-list-combined-menu':'Workspaces menu','NextWindow':'Cycle windows forward','PreviousWindow':'Cycle windows backward','erdos-screenshot':'Take a screenshot','ErdosScreenshotWindow':'Screenshot focused window','erdos-screenshot region':'Screenshot selected area','Unmaximize':'Restore window','Maximize':'Maximize window','Iconify':'Minimize window','Close':'Close window', 'ErdosOverview':'Window thumbnails', 'ErdosPreviousWindow':'Previous window', 'ErdosNextWindow':'Next window', 'erdos-settings':'Settings', 'erdos-launch browser':'Default browser', 'erdos-launch files':'Default file manager', 'erdos-launch editor':'Default text editor', 'erdos-launch terminal':'Default terminal'}
+        for key, action in backend.keyboard():
+            description=labels.get(action,action)
+            if action.startswith('GoToDesktop '): description='Switch to workspace '+action.split()[-1]
+            elif action.startswith('SendToDesktop '): description='Move window to workspace '+action.split()[-1]
+            elif action.startswith('wpctl set-volume'): description='Volume up' if action.endswith('+') else 'Volume down'
+            elif action.startswith('wpctl set-mute'): description='Mute microphone' if 'SOURCE' in action else 'Mute audio'
+            elif action.startswith('brightnessctl'): description=('Keyboard' if 'kbd_backlight' in action else 'Screen')+' brightness '+('up' if action.endswith('+') else 'down')
+            model.append([key,description])
         tree = Gtk.TreeView(model=model)
         renderer = Gtk.CellRendererText(editable=True)
-        renderer.connect('edited', lambda _, path, text: model.set_value(model.get_iter(path), 0, text))
-        tree.append_column(Gtk.TreeViewColumn('Shortcut', renderer, text=0))
+        renderer.connect('edited', lambda _, path, text: model.set_value(model.get_iter(path), 0, backend.shortcut_value(text)))
+        column=Gtk.TreeViewColumn('Shortcut',renderer)
+        column.set_cell_data_func(renderer,lambda _,cell,rows,row,data:cell.set_property('text',backend.shortcut_label(rows[row][0])))
+        column.set_min_width(220); tree.append_column(column)
+        renderer.connect('editing-started',lambda _,entry,path:entry.set_text(backend.shortcut_label(model[path][0])))
         cell = Gtk.CellRendererText(); cell.set_property('ellipsize', 3)
-        tree.append_column(Gtk.TreeViewColumn('Action', cell, text=1))
+        column=Gtk.TreeViewColumn('Action',cell,text=1); column.set_expand(True); tree.append_column(column)
         scroll = Gtk.ScrolledWindow(); scroll.set_min_content_height(260); scroll.add(tree)
         page.pack_start(scroll, True, True, 0)
+        def edit_selected(*_):
+            rows,row=tree.get_selection().get_selected()
+            if row is not None:
+                self.edit_fields('Edit shortcut',[('Shortcut',backend.shortcut_label(rows[row][0]))],lambda values: rows.set_value(row,0,backend.shortcut_value(values[0])))
+        edit=Gtk.Button(label='Edit selected shortcut',halign=Gtk.Align.START); edit.connect('clicked',edit_selected); page.pack_start(edit,False,False,0)
         self.note(page, 'Custom shortcuts: add a key combination and the command to launch. Double-click either field to edit. Commands run as your user when you press the shortcut.')
         custom = Gtk.ListStore(str, str)
         for key, command in backend.custom_keyboard():
@@ -291,8 +483,13 @@ class Settings(Gtk.Application):
         custom_tree = Gtk.TreeView(model=custom)
         for index, title in enumerate(('Shortcut', 'Command')):
             cell = Gtk.CellRendererText(editable=True)
-            cell.connect('edited', lambda _, path, text, col=index: custom.set_value(custom.get_iter(path), col, text))
-            custom_tree.append_column(Gtk.TreeViewColumn(title, cell, text=index))
+            cell.connect('edited', lambda _, path, text, col=index: custom.set_value(custom.get_iter(path), col, backend.shortcut_value(text) if col==0 else text))
+            column=Gtk.TreeViewColumn(title,cell,text=index)
+            column.set_min_width(220 if index==0 else 250); column.set_expand(index==1)
+            if index==0:
+                column.set_cell_data_func(cell,lambda _,renderer,rows,row,data:renderer.set_property('text',backend.shortcut_label(rows[row][0])))
+                cell.connect('editing-started',lambda _,entry,path:entry.set_text(backend.shortcut_label(custom[path][0])))
+            custom_tree.append_column(column)
         custom_scroll = Gtk.ScrolledWindow()
         custom_scroll.set_min_content_height(140)
         custom_scroll.add(custom_tree)
@@ -309,20 +506,26 @@ class Settings(Gtk.Application):
             if row is not None:
                 selected_model.remove(row)
         remove.connect('clicked', remove_custom)
+        def edit_custom(*_):
+            rows,row=custom_tree.get_selection().get_selected()
+            if row is None:return
+            def commit(values):
+                rows.set_value(row,0,backend.shortcut_value(values[0])); rows.set_value(row,1,values[1])
+            self.edit_fields('Edit custom shortcut',[('Shortcut',backend.shortcut_label(rows[row][0])),('Command',rows[row][1])],commit)
+        edit=Gtk.Button(label='Edit selected'); edit.connect('clicked',edit_custom)
+        controls.pack_start(edit,False,False,0)
         controls.pack_start(add, False, False, 0)
         controls.pack_start(remove, False, False, 0)
         page.pack_start(controls, False, False, 0)
         def apply():
             keys = [row[0] for row in model]
             custom_rows = [(row[0], row[1]) for row in custom]
-            for key in [*keys, *(key for key, _ in custom_rows)]:
-                for combo in key.split():
-                    symbol = combo.split('-')[-1]
-                    if symbol.startswith('0x'):
-                        raise ValueError('Use key names such as 1, Return or F1 instead of X11 keycodes.')
-                    elif Gdk.keyval_from_name(symbol) in (0, Gdk.KEY_VoidSymbol):
-                        raise ValueError(f'Unknown key name: {symbol}')
-            return lambda: backend.save_keyboard(keys, custom_rows)
+            backend.validate_shortcuts([*keys, *(key for key,_ in custom_rows)])
+            def job():
+                nonlocal keyboard_source
+                backend.save_keyboard(keys,custom_rows,keyboard_source)
+                keyboard_source=backend.keyboard_source()
+            return job
         self.button(page, 'Apply shortcuts', apply)
 
     def menu(self, page):
@@ -344,6 +547,10 @@ class Settings(Gtk.Application):
                 cell.connect('edited', lambda _, path, text, col=index: model.set_value(model.get_iter(path), col, text))
             column = Gtk.TreeViewColumn(title, cell, text=index)
             column.set_resizable(True)
+            column.set_min_width((140,220,100)[index])
+            column.set_expand(index==1)
+            if index==2:
+                column.set_cell_data_func(cell,lambda _,renderer,rows,row,data:renderer.set_property('text',{'Built-in / submenu':'Built-in','Command':'Command','Separator':'Separator'}[rows[row][2]]))
             if index == 1:
                 column.set_cell_data_func(cell, lambda _, renderer, rows, row, data: renderer.set_property('editable', rows[row][2] == 'Command'))
             tree.append_column(column)
@@ -352,6 +559,15 @@ class Settings(Gtk.Application):
         scroll.add(tree)
         page.pack_start(scroll, True, True, 0)
         controls = Gtk.Box(spacing=8)
+        def edit_item():
+            rows,row=tree.get_selection().get_selected()
+            if row is None: return
+            fields=[('Name',rows[row][0])]
+            if rows[row][2]=='Command': fields.append(('Command',rows[row][1]))
+            def commit(values):
+                rows.set_value(row,0,values[0])
+                if len(values)>1: rows.set_value(row,1,values[1])
+            self.edit_fields('Edit menu item',fields,commit)
         def add(kind):
             row = model.append(['New item' if kind == 'Command' else '', '', kind, ''])
             tree.set_cursor(model.get_path(row), tree.get_column(0), kind == 'Command')
@@ -365,8 +581,8 @@ class Settings(Gtk.Application):
                 index = model.get_path(row).get_indices()[0] + direction
                 if 0 <= index < len(model):
                     model.swap(row, model.get_iter(Gtk.TreePath.new_from_indices([index])))
-        for title, callback in [('Add item', lambda: add('Command')), ('Add separator', lambda: add('Separator')),
-                                ('Delete', remove), ('Move up', lambda: move(-1)), ('Move down', lambda: move(1))]:
+        for title, callback in [('Edit',edit_item), ('Add', lambda: add('Command')), ('Separator', lambda: add('Separator')),
+                                ('Delete', remove), ('Up', lambda: move(-1)), ('Down', lambda: move(1))]:
             button = Gtk.Button(label=title)
             button.connect('clicked', lambda _, callback=callback: callback())
             controls.pack_start(button, False, False, 0)
@@ -395,9 +611,6 @@ class Settings(Gtk.Application):
         scroll.set_min_content_height(280)
         scroll.add(editor)
         page.pack_start(scroll, True, True, 0)
-        dirty = Gtk.Label(xalign=0)
-        page.pack_start(dirty, False, False, 0)
-        buffer.connect('modified-changed', lambda *_: dirty.set_text('Unsaved changes' if buffer.get_modified() else ''))
         buffer.set_modified(False)
         def save():
             nonlocal source
@@ -419,6 +632,7 @@ class Settings(Gtk.Application):
                     return 'Reload cancelled; your edits are preserved.'
             source = backend.startup_file()
             buffer.set_text(source); buffer.set_modified(False)
+            self.reset_groups(page)
             return 'Startup commands reloaded.'
         self.button(page, 'Reload from disk', reload)
         self.note(page, 'Saving checks shell syntax and keeps the previous file as autostart.previous. It does not start applications now. Example: sakura &')
@@ -443,14 +657,13 @@ class Settings(Gtk.Application):
         modes_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         page.pack_start(modes_box, False, False, 0)
         def refresh():
-            for child in modes_box.get_children():
-                child.destroy()
-            self.load_section(modes_box, display_settings.outputs, self.resolution_controls)
+            self.reload_displays(modes_box)
+        self.refresh_displays=refresh
         button = Gtk.Button(label='Refresh displays', halign=Gtk.Align.START)
         button.connect('clicked', lambda *_: refresh())
         page.pack_start(button, False, False, 0)
         refresh()
-        self.note(page, 'Test a resolution, then keep it within 15 seconds. Otherwise the previous layout returns. Confirmed modes are restored at login for the same connected outputs. Reconnecting a monitor resets automatic layout to preferred modes; apply your selection again if needed.')
+        self.note(page, 'Keep a tested resolution within 15 seconds or the previous layout returns. Saved modes are reused for the same connected displays.')
         self.note(page, 'Automatic layout extends external displays to the right and keeps the laptop primary. Turning it off keeps the current layout and stops automatic rearrangement. Workspaces span all screens.')
         automatic = self.toggle(page, 'Automatically extend connected displays', backend.preferences()['automatic_displays'])
         def apply():
@@ -468,6 +681,10 @@ class Settings(Gtk.Application):
             self.button(page, 'Apply brightness', apply_brightness)
         else:
             self.note(page, 'No controllable screen backlight detected.')
+
+    def reload_displays(self, box):
+        for child in box.get_children(): child.destroy()
+        self.load_section(box, display_settings.outputs, self.resolution_controls)
 
     def resolution_controls(self, page, outputs):
         choices = {}
@@ -497,9 +714,10 @@ class Settings(Gtk.Application):
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
                 text=True, start_new_session=True)
             process = self.trial_process
+            self.close_after_resolution=False
             process.stdin.write(json.dumps(selections) + '\n'); process.stdin.flush()
         except Exception as error:
-            self.finish_resolution(str(error))
+            self.finish_resolution(self.error_text(error), True)
             return
         def worker():
             try:
@@ -511,14 +729,14 @@ class Settings(Gtk.Application):
                         message = {'kept':'Resolution saved.', 'restored':'Previous resolution restored.'}.get(
                             result['status'], result.get('message', 'Display change failed.'))
                         process.wait()
-                        GLib.idle_add(self.finish_resolution, message)
+                        GLib.idle_add(self.finish_resolution, message, result['status']=='error')
                         return
                 process.wait()
-                GLib.idle_add(self.finish_resolution, 'Display change ended. Refresh displays to check the current mode.')
+                GLib.idle_add(self.finish_resolution, 'Display helper ended unexpectedly. The previous layout may not have been restored.', True)
             except Exception as error:
                 # EOF tells the independent helper to roll back even if GTK fails.
                 process.stdin.close()
-                GLib.idle_add(self.finish_resolution, str(error))
+                GLib.idle_add(self.finish_resolution, self.error_text(error), True)
         threading.Thread(target=worker, daemon=True).start()
 
     def confirm_resolution(self, seconds):
@@ -546,7 +764,7 @@ class Settings(Gtk.Application):
             except (OSError, ValueError):
                 pass  # The helper may already have restored the timed-out change.
 
-    def finish_resolution(self, message):
+    def finish_resolution(self, message, error=False):
         if self.trial_timer:
             # A timer may already have expired; look it up before removing it.
             if GLib.MainContext.default().find_source_by_id(self.trial_timer):
@@ -558,20 +776,27 @@ class Settings(Gtk.Application):
         self.trial_process = None
         self.resolution_bar.hide()
         self.stack.set_sensitive(True)
-        self.report(message)
+        self.report(message,error=error)
+        if getattr(self,'close_after_resolution',False):
+            self.close_after_resolution=False; self.window.close()
+        else: self.refresh_displays()
 
-    def load_section(self, page, fetch, populate):
+    def load_section(self, page, fetch, populate, on_error=None):
+        generation=getattr(page,'load_generation',0)+1
+        page.load_generation=generation
+        window=self.window
         loading = self.note(page, 'Loading…')
         def finish(data, error):
-            if self.window is None:
-                return
+            if self.window is not window or getattr(page,'load_generation',None)!=generation:
+                return False
             loading.destroy()
             if error:
+                if on_error: on_error(error)
                 notice = self.note(page, f'Could not load this section: {error}')
                 retry = Gtk.Button(label='Retry', halign=Gtk.Align.START)
                 def again(*_):
                     notice.destroy(); retry.destroy()
-                    self.load_section(page, fetch, populate)
+                    self.load_section(page, fetch, populate, on_error)
                 retry.connect('clicked', again)
                 page.pack_start(retry, False, False, 0)
             else:
@@ -590,42 +815,74 @@ class Settings(Gtk.Application):
         threading.Thread(target=worker, daemon=True).start()
 
     def sound(self, page):
-        def fetch():
-            devices = backend.audio_nodes()
-            levels = {}
-            for target in ('@DEFAULT_AUDIO_SINK@', '@DEFAULT_AUDIO_SOURCE@'):
-                try:
-                    levels[target] = backend.run('wpctl', 'get-volume', target)
-                except Exception:
-                    levels[target] = 'Volume: 0.50'
-            return devices, levels
-        self.load_section(page, fetch, self.sound_controls)
+        content=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=16)
+        page.pack_start(content,False,False,0)
+        def refresh():
+            dirty=[g for g in self.groups if g['page'] is content and self.group_values(g)!=g['saved']]
+            if dirty:
+                self.report('Apply or revert your audio edits before refreshing.',error=True); return
+            self.groups=[g for g in self.groups if g['page'] is not content]
+            for child in content.get_children(): child.destroy()
+            self.load_section(content, backend.audio_nodes, self.sound_controls)
+        button=Gtk.Button(label='Refresh devices',halign=Gtk.Align.START)
+        button.connect('clicked',lambda *_:refresh()); page.pack_start(button,False,False,0)
+        refresh()
 
-    def sound_controls(self, page, data):
-        self.note(page, 'Changes apply to the selected device. New applications use the default device; existing streams may stay on their current device.')
-        devices, levels = data
+    def sound_controls(self, page, devices):
         if not devices:
-            self.note(page, 'No audio devices detected. Connect an audio device, then reopen Settings.')
-            return
-        for kind, title, target in [('Audio/Sink','Output','@DEFAULT_AUDIO_SINK@'), ('Audio/Source','Microphone','@DEFAULT_AUDIO_SOURCE@')]:
-            choices = [(target, 'Current default')] + [(i,n) for i,n,k in devices if k == kind]
-            choice = self.choice(page, title + ' device', choices, target)
-            try:
-                info = levels[target]
-                value = round(float(info.split()[1])*100); muted = '[MUTED]' in info
-            except Exception:
-                value, muted = 50, False
-            volume = self.scale(page, title + ' volume (%)', 0,100,min(value,100))
-            mute = self.toggle(page, title + ' muted', muted)
-            def apply(choice=choice, volume=volume, mute=mute):
-                selected, level, silent = choice.get_active_id(), volume.get_value_as_int(), mute.get_active()
+            self.note(page,'No audio devices detected. Connect a device and refresh.'); return
+        self.note(page,'Choose a device to see its current volume. Existing apps may keep using their previous device.')
+        for kind,title,target in [('Audio/Sink','Output','@DEFAULT_AUDIO_SINK@'),('Audio/Source','Microphone','@DEFAULT_AUDIO_SOURCE@')]:
+            matches=[(i,n) for i,n,k in devices if k==kind]
+            if not matches:
+                self.note(page,f'No {title.lower()} device detected.'); continue
+            choice=self.choice(page,title+' device',[(target,'Current default'),*matches],target)
+            volume=self.scale(page,title+' volume (%)',0,100,0)
+            mute=self.toggle(page,title+' muted',False)
+            detail=self.note(page,'Reading current volume…')
+            state={'revision':0,'ready':False}
+            def apply(choice=choice,volume=volume,mute=mute,state=state):
+                if not state['ready']: raise ValueError('Wait for the selected device to load, or refresh devices.')
+                selected,level,silent=choice.get_active_id(),volume.get_value_as_int(),mute.get_active()
                 def job():
                     if not selected.startswith('@'): backend.run('wpctl','set-default',selected)
                     backend.run('wpctl','set-volume','-l','1.0',selected,str(level/100))
                     backend.run('wpctl','set-mute',selected,str(int(silent)))
+                    return 'Audio settings applied.'
                 return job
-            self.button(page, 'Apply ' + title.lower(), apply)
-        self.note(page, 'Close and reopen Settings to refresh newly connected audio devices.')
+            button=self.button(page,'Apply '+title.lower(),apply)
+            group=self.groups[-1]
+            group['available']=lambda state=state: state['ready']
+            def changed(*_,choice=choice,volume=volume,mute=mute,detail=detail,state=state,group=group):
+                state['revision']+=1; revision=state['revision']; state['ready']=False
+                volume.set_sensitive(False); mute.set_sensitive(False)
+                selected=choice.get_active_id(); detail.set_text('Reading current volume…')
+                self.group_update(group)
+                window=self.window
+                def finish(info,error):
+                    if self.window is not window or revision!=state['revision'] or not choice.get_parent():return False
+                    if error:
+                        detail.set_text(self.error_text(error)); self.report(self.error_text(error),error=True)
+                    else:
+                        try: level=float(info.split()[1])*100
+                        except (ValueError,IndexError):
+                            detail.set_text('Could not read the device volume. Refresh devices to try again.'); return False
+                        volume.set_value(min(100,max(0,round(level))))
+                        mute.set_active('[MUTED]' in info)
+                        state['ready']=True; volume.set_sensitive(True); mute.set_sensitive(True)
+                        detail.set_text('Current device volume loaded.')
+                        # Switching devices is a pending default-device change; loading
+                        # its volume does not count as a user volume edit.
+                        for widget in (volume,mute):
+                            group['saved'][group['controls'].index(widget)]=self.control_value(widget)
+                    self.group_update(group)
+                    return False
+                def worker():
+                    try: info=backend.run('wpctl','get-volume',selected)
+                    except Exception as error: GLib.idle_add(finish,None,error)
+                    else: GLib.idle_add(finish,info,None)
+                threading.Thread(target=worker,daemon=True).start()
+            choice.connect('changed',changed); changed()
 
     def every(self, seconds, callback):
         callback()
@@ -682,6 +939,7 @@ class Settings(Gtk.Application):
             completion.set_match_func(lambda _, key, iterator, *extra: key.lower() in model[iterator][0].lower())
             entry.set_completion(completion)
             entry.set_text(selected)
+            self.reset_groups(page)
         self.load_section(page, fetch, loaded)
         def tick():
             if self.stack.get_visible_child_name() != 'Date & Time' and current.get_text():
@@ -706,8 +964,14 @@ class Settings(Gtk.Application):
             values = dict(line.split('=', 1) for line in backend.run('timedatectl', 'show',
                 '--property=NTP', '--property=NTPSynchronized').splitlines() if '=' in line)
             return 'Automatic time sync: ' + ('on' if values.get('NTP') == 'yes' else 'off') + '. Clock synchronized: ' + values.get('NTPSynchronized', 'unknown') + '.'
+        sync_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=8); page.pack_start(sync_box,False,False,0)
         def refresh_sync():
-            self.load_section(page, sync_fetch, lambda _, value: sync_status.set_text(value))
+            for child in sync_box.get_children(): child.destroy()
+            sync_status.set_text('Checking automatic time synchronization…')
+            self.feedback.hide()
+            def loaded(_,value):
+                sync_status.set_text(value)
+            self.load_section(sync_box,sync_fetch,loaded,lambda _:sync_status.set_text('Automatic time synchronization is unavailable.'))
         refresh_sync()
         self.button(page, 'Refresh sync status', refresh_sync)
         self.button(page, 'Enable automatic time sync', lambda: lambda: backend.run('timedatectl', 'set-ntp', 'true', timeout=120))

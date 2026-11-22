@@ -1,3 +1,25 @@
+# ErdOS 1 Alpha 4 — 2026-11-22
+
+## Settings and installed-system updates
+
+- Hosted desktop updates preserve drivers, firmware, Debian packages and personal
+  configuration, with local-change detection, backups and rollback.
+- The first update brings the Settings polish to existing Alpha 3 installations.
+
+- Keep Python/GTK 3 and the existing package set; no extra UI framework or daemon.
+- Group controls, add Apply/Revert and unsaved-edit close protection, and make
+  menu and shortcut editors readable.
+- Match shortcut conflict checks to labwc’s case-insensitive keysyms and aliases.
+- Load selected-device audio levels; refresh audio without reopening Settings.
+- Discard stale asynchronous loads, separate refresh from save feedback, and
+  refresh display choices after resolution trials with proper error reporting.
+- Publish light/dark preference through the existing Settings portal so Firefox
+  and supporting websites can follow the system appearance.
+- Keep Debian power policy and published Alpha 3 assets unchanged.
+- Select the existing hardware-tested ISO unchanged for Alpha 4; no rebuild.
+  The ISO retains its internal `dev-settings` image label; public release metadata
+  identifies it as `1.0.0-alpha.4`. The updater is hosted separately.
+
 # ErdOS 1 Alpha 3 — 2026-11-21
 
 Alpha 3 migrates ErdOS from Openbox/X11 to labwc/Wayland.

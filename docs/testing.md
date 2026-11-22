@@ -1,7 +1,62 @@
-# Alpha 3 validation
+# Alpha 4 validation
+
+## Settings polish and desktop updater
+
+The ISO selected unchanged for Alpha 4 retains Alpha 3’s package set, kernel, compositor and
+verified offline installer. Its Settings UI/backend and development label are
+updated, including the existing desktop portal’s light/dark preference; published
+Alpha 3 assets remain unchanged. The package manifest is byte-for-byte identical
+to Alpha 3. No dependencies or power-policy changes were introduced.
+
+The GTK/labwc regression checks cover shortcut conflict rejection, real workspace
+Apply/Revert, startup syntax safety, unsaved-edit close protection, stale refresh
+suppression and display/refresh feedback. Screenshots are reviewed with existing
+Adwaita themes. Hardware services are checked separately in a full live session;
+an isolated container without those services is not proof of hardware operation.
+
+The rebuilt development ISO passes a UEFI live boot and all 669 internal SHA-256
+checks. All thirteen Settings sections load against the live session’s actual
+services without section-load errors. Apply/Revert, unsaved-close protection,
+shortcut validation and startup-file safety pass in that session too. A fresh
+Firefox profile follows real portal preference changes: dark, light, then dark,
+verified through website `prefers-color-scheme`. Existing browser/site overrides
+can still take precedence.
+
+The image verifier now checks root ownership of privileged system files and
+sudo’s setuid bit. A deliberately broken cached extraction is rejected; the
+final image passes, and passwordless live-session sudo works in the VM.
+
+Physical audio-device volume/mute switching, Wi-Fi/Bluetooth hardware and display
+hotplug still require laptop checks. Virtual null audio nodes did not retain
+volume changes even outside Settings, so they are not accepted as proof of real
+audio-volume operation. No fresh disk install or new footprint measurement was
+performed for this Settings-only development image; the install and footprint
+results below belong to the Alpha 3 baseline.
+
+The user reports that the Settings image works on physical hardware. This does
+not certify every hardware feature listed below. The selected ISO SHA-256 is
+`3d979dd9d0c79233d657d5a65d9d140899d083c50db40077c1edc7affe7031e7`.
+Its internal image version remains `dev-settings`; Alpha 4 is its public release
+label. No ISO bytes are changed during release preparation.
+
+The hosted desktop updater is tested independently with an isolated filesystem:
+successful installation and repeat execution, ordinary-user checks after an
+update, rejection of locally modified files, path/symlink rejection, rollback
+that protects later local fixes, and automatic recovery after a real write
+failure. Driver, firmware, APT, power-policy and user-configuration sentinel
+files remain unchanged throughout. Public bootstrap, Python helper, manifest and
+bundle bytes match the tested local artifacts, and the live manifest hash
+validates the downloaded bundle. An installed Wayland VM also downloads and
+applies the hosted update as an ordinary user with sudo authorization. Its
+pre-release image label is normalized to the supported Alpha 3 baseline before
+that update test. Curl is absent from the minimal image; the documented Python
+fallback downloads successfully without installing packages.
+
+## Alpha 3 baseline validation
 
 Alpha 3 uses labwc/Wayland. Alpha 2 remains available as the older Openbox/X11
-release. The release image identity is recorded in [release.json](release.json).
+release. The current local image identity is recorded in [release.json](release.json);
+Alpha 4 preparation reuses the tested Settings image without rebuilding.
 
 ## Completed source and compositor checks
 

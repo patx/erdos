@@ -3,9 +3,27 @@
 Repository: <https://github.com/patx/erdos>. Website:
 <https://patx.gitman.io/erdos/>. These instructions prepare artifacts locally;
 the release-packaging script does not commit, tag, push, upload or publish.
-The current public release is [ErdOS 1 Alpha 3](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.3).
+The previous public release is [ErdOS 1 Alpha 3](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.3).
 Both source remotes use `main`: GitHub at the URL above and Gitman at
 <https://gitman.io/git/patx/erdos>.
+
+## Alpha 4: reuse the tested ISO
+
+Alpha 4 uses the existing Settings image unchanged, SHA-256
+`3d979dd9d0c79233d657d5a65d9d140899d083c50db40077c1edc7affe7031e7`.
+It is 1,160,970,240 bytes and retains its internal `dev-settings` version label.
+Do not rebuild or patch this image just to change its public release name.
+Prepare its source/checksum companions and external release label with:
+
+```sh
+python3 scripts/prepare-release.py --iso dist/erdos-amd64.iso --version 1.0.0-alpha.4 --date 2026-11-22
+```
+
+`image_version` records the internal label separately from `version`. This command
+verifies and packages the existing ISO; it does not generate a new filesystem.
+Upload to a new `v1.0.0-alpha.4/` directory and publish the prerelease before
+pushing the prepared Alpha 4 website links. Older release objects stay unchanged.
+The updater is hosted separately and also works on Alpha 3; see [updates.md](updates.md).
 
 ## Source repository
 
@@ -42,8 +60,9 @@ checksums, and refreshes `docs/release.json` from the actual ISO. It requires
 `published` false and clears the tag for the newly prepared image. Restore the
 actual published tag and status only after its assets are available. Packaging
 a future build must not be mistaken for publishing it.
-The source ZIP requires compiling the compositor before using the optional updater;
-generated executables are not silently bundled into a source archive.
+The source ZIP requires compiling the compositor to build a new ISO. The hosted
+[desktop updater](updates.md) reuses the installed compositor and needs no build.
+Generated executables are not silently bundled into a source archive.
 
 Review and upload these assets to the versioned **Cloudflare R2** download directory:
 
@@ -62,7 +81,9 @@ are under `v1.0.0-alpha.3/`; the ISO URL is
 The website remains on Gitman Pages, and source code stays on both Git remotes.
 The zone rule `erdos_alpha2_public_downloads` skips Security Level and Browser
 Integrity Check only for GET/HEAD requests to the exact release download
-paths for Alpha 2 and Alpha 3. Add each future version’s file paths to that rule before publishing its
+paths for Alpha 2 and Alpha 3, plus the five explicitly approved updater files.
+Alpha 4 still needs its own six release-file paths added before publication.
+Add each future version’s file paths to that rule before publishing its
 links; keep other hosts, paths and methods outside the exception.
 
 Use an S3-compatible multipart uploader for large files; Cloudflare documents
@@ -94,7 +115,7 @@ from the matching Debian archives with source repositories enabled.
 
 After the R2 files are verified and the GitHub prerelease is published, set the chosen tag and
 `published: true` in `docs/release.json`. Its existing filenames and digest must
-still match those assets. Set `download_base_url` to the matching version directory. The hero button links directly to the R2 `v1.0.0-alpha.3` ISO; the bottom download
+still match those assets. Set `download_base_url` to the matching version directory. The prepared hero button links directly to the R2 `v1.0.0-alpha.4` ISO; the bottom download
 section links to its release page. Update both links in `index.html` for a future
 release, together with the version text and release metadata. Future builds use current Debian packages, so reusing a date does not
 imply an identical ISO or checksum.

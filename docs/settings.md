@@ -1,9 +1,26 @@
 # ErdOS Settings
 
-Open **Settings** from the desktop menu or **Super + I**. Alpha 3
-uses labwc on Wayland. Thirteen sections share one Python/GTK window; no
-Settings daemon remains when you close it. Apply results distinguish errors from
-success and can be dismissed.
+Open **Settings** from the desktop menu or **Super + I**. Alpha 4 improves the labwc/Wayland Settings app introduced in Alpha 3. Thirteen
+sections share one Python/GTK window, with grouped controls and native theme styling.
+No extra UI libraries or background services are added. Existing Alpha 3 installs
+can get this interface through the [desktop updater](updates.md).
+
+## Editing and feedback
+
+Related controls have an **Apply** (or **Save**) and **Revert** row. Apply becomes
+available when something changes; Revert discards those unsaved edits. Switching
+sections keeps your edits. Closing asks before discarding unsaved changes.
+Settings stays open on errors so you can correct the value and try again.
+
+While a change runs, its section is temporarily disabled; you can still browse
+other sections. Saving another group waits until the current operation finishes.
+If you close during an operation, it finishes before the application exits.
+Refresh and loading messages are separate from save confirmations. Longer help
+is available under **More information**.
+
+A display-resolution trial has separate **Revert** and **Keep resolution** buttons.
+Closing during a trial requests rollback before closing. Error messages distinguish
+a rejected mode from a successful restore, and the display list refreshes afterward.
 
 | Section | Controls |
 | --- | --- |
@@ -38,7 +55,12 @@ login. Remove image and Apply returns to the selected solid color and removes
 only the private copy. Swaybg renders the background as a single process managed
 by `erdos-background.service` in the user's systemd session. The Python launcher
 executes swaybg rather than remaining resident. Backgrounds follow output changes.
-GTK changes may require reopening an already running application. Windows and
+**Prefer dark appearance** updates both GTK and the standard desktop portal
+color-scheme preference. Firefox and supporting websites follow it when Firefox
+uses its system theme/automatic website appearance. A browser theme or a site’s
+own saved theme can override this preference; ErdOS does not forcibly recolor
+websites. See [Firefox website appearance](https://support.mozilla.org/en-US/kb/change-website-appearance-settings-firefox)
+for its browser-level options. Other GTK changes may require reopening an already running application. Windows and
 menus use the supplied dark labwc theme, square corners and no shadows.
 
 ## Keyboard and workspaces
@@ -65,8 +87,11 @@ Super + Up maximizes, and Super + Down unmaximizes/unsnaps to natural geometry.
 Numpad snapping shortcuts remain available. Restore is validated across repeated
 snapping/maximizing and output changes before a release is considered tested.
 
-Double-click a shortcut to edit it. W = Super, C = Ctrl, A = Alt, S = Shift.
-Space-separated alternatives are supported. Custom commands run as your normal
+Select a shortcut and choose **Edit**, or double-click it. Shortcuts display as
+`Super + B`; enter alternatives separated by a comma or slash, such as
+`Super + Enter, Ctrl + Alt + T`. Existing labwc syntax (`W-Return C-A-t`) is also
+accepted. Case differences, keysym aliases and repeated modifiers cannot bypass
+duplicate checking. Custom commands run as your normal
 user when invoked. Duplicate shortcuts and empty commands are rejected. Use key
 names such as `Return`, `1` or `F1`, not old X11 hexadecimal keycodes. Fn/media-key
 mode remains a keyboard/firmware setting.
@@ -74,7 +99,8 @@ mode remains a keyboard/firmware setting.
 ## Menu
 
 Edit `~/.config/labwc/menu.xml` through this section. Add/delete/reorder entries
-and separators, or double-click a name/command. Apply saves a `.previous` backup.
+and separators. Select an item and choose **Edit**, or double-click its name/command.
+Apply saves a `.previous` backup; Revert restores the editor’s last saved values.
 Built-in actions and nested menus are preserved. Applications reads installed
 desktop entries on demand; new graphical apps appear automatically. CLI-only
 programs require a desktop entry to appear there. Super + I remains available if
@@ -133,7 +159,10 @@ NetworkManager provides current connection state and saved profiles. Wi-Fi
 connection and internet reachability are shown separately. Network changes update
 the visible controls via D-Bus events. Advanced profiles remain available through
 Advanced Network Configuration. Bluetooth uses BlueZ and its existing authorization agent;
-Sound uses PipeWire/WirePlumber. Missing adapters/devices are reported rather than
+Sound uses PipeWire/WirePlumber. Choosing an audio device loads its own volume
+and mute state before Apply is available. **Refresh devices** picks up newly
+connected devices without reopening Settings; apply or revert outstanding audio
+edits first. Missing adapters/devices are reported rather than
 shown as connected. These sections do not install device-specific drivers.
 
 ## Power and time

@@ -16,7 +16,7 @@ import zipfile
 from project_files import public_files
 
 ROOT = Path(__file__).resolve().parent.parent
-CORE = {'desktop-file-utils', 'network-manager', 'systemd-timesyncd', 'bluez', 'libspa-0.2-bluetooth', 'ca-certificates', 'debian-archive-keyring', 'sudo', 'sakura', 'firefox', 'pcmanfm', 'libinput10', 'libseat1', 'swaybg', 'grim', 'slurp', 'wlr-randr', 'xwayland', 'python3', 'python3-gi', 'gir1.2-gtk-3.0', 'procps'}
+CORE = {'desktop-file-utils', 'network-manager', 'systemd-timesyncd', 'bluez', 'libspa-0.2-bluetooth', 'ca-certificates', 'debian-archive-keyring', 'sudo', 'sakura', 'firefox', 'pcmanfm', 'libinput10', 'libxkbcommon0', 'gsettings-desktop-schemas', 'dconf-gsettings-backend', 'xdg-desktop-portal-gtk', 'libseat1', 'swaybg', 'grim', 'slurp', 'wlr-randr', 'xwayland', 'python3', 'python3-gi', 'gir1.2-gtk-3.0', 'procps'}
 
 
 def run(*args):
@@ -92,6 +92,27 @@ def verify_image(iso):
         if not match:
             raise ValueError('Cannot locate the ISO live filesystem')
         offset = str(int(match[1]) * 2048)
+        # Repacking an extracted tree must preserve privileged-file metadata.
+        critical = ('usr/bin/sudo', 'etc/sudo.conf', 'etc/sudoers',
+                    'usr/lib/systemd/systemd', 'usr/bin/systemctl',
+                    'usr/local/lib/erdos/configure-apt')
+        listing = subprocess.check_output(['unsquashfs', '-lln', '-o', offset,
+            str(iso), *critical], text=True, stderr=subprocess.PIPE)
+        checked = set()
+        for line in listing.splitlines():
+            fields = line.split(None, 5)
+            if len(fields) != 6 or not fields[0].startswith('-'):
+                continue
+            name = fields[5].removeprefix('squashfs-root/')
+            if name not in critical:
+                continue
+            if fields[1].split('/')[0] != '0':
+                raise ValueError(f'Privileged ISO file is not root-owned: {name}')
+            if name == 'usr/bin/sudo' and fields[0][3] != 's':
+                raise ValueError('ISO sudo executable has lost its setuid permission')
+            checked.add(name)
+        if checked != set(critical):
+            raise ValueError(f'ISO is missing privileged runtime files: {sorted(set(critical)-checked)}')
         # Keep live-media APT metadata, but reject downloaded build indexes and DEBs.
         apt_files = subprocess.check_output(['unsquashfs', '-ll', '-o', offset, str(iso),
             'var/lib/apt/lists', 'var/cache/apt'], text=True, stderr=subprocess.PIPE)
@@ -132,6 +153,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--iso', type=Path, default=ROOT / 'dist/erdos-amd64.iso')
     parser.add_argument('--verify-only', action='store_true', help='Verify the final image without creating assets or updating metadata')
+    parser.add_argument('--version', help='Public release label for an unchanged, already tested ISO')
     parser.add_argument('--date', help='Build date in YYYY-MM-DD form; unchanged images retain their recorded date')
     args = parser.parse_args()
     for tool in ('xorriso', 'unsquashfs'):
@@ -158,7 +180,10 @@ def main():
     if iso != canonical.resolve():
         shutil.copyfile(iso, canonical)
     release_fields = dict(line.split('=', 1) for line in (ROOT / 'config/includes.chroot/etc/erdos-release').read_text().splitlines() if '=' in line)
-    version = release_fields['VERSION']
+    version = args.version or release_fields['VERSION']
+    if not re.fullmatch(r'[a-zA-Z0-9._-]+', version):
+        parser.error('Invalid release version')
+    metadata['image_version'] = release_fields['VERSION']
     metadata.update(published=False, tag=None, date=date, status='Prepared image; not published', version=version)
     metadata.pop('download_base_url', None)
     metadata['iso'] = {'filename': canonical.name, 'bytes': canonical.stat().st_size, 'sha256': checksum}

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Small, per-user settings backend. No resident service or root access."""
 import configparser
+import ctypes
 import io
 import json
 import os
@@ -131,6 +132,33 @@ def set_background(color, image=False, layout='fill', source=None):
             candidate.unlink(missing_ok=True)
 
 
+def desktop_appearance():
+    from gi.repository import Gio
+    source=Gio.SettingsSchemaSource.get_default()
+    schema=source.lookup('org.gnome.desktop.interface',True) if source else None
+    if schema is None or not schema.has_key('color-scheme'):
+        return None
+    return Gio.Settings.new_full(schema,None,None)
+
+
+def prefers_dark(fallback=True):
+    interface=desktop_appearance()
+    value=interface.get_string('color-scheme') if interface else 'default'
+    return True if value=='prefer-dark' else False if value=='prefer-light' else fallback
+
+
+def set_color_scheme(dark, initialize=False):
+    from gi.repository import Gio
+    interface=desktop_appearance()
+    if interface is None:
+        raise RuntimeError('System color-scheme support is unavailable. Check gsettings-desktop-schemas.')
+    if initialize and interface.get_user_value('color-scheme') is not None:
+        return
+    if not interface.set_string('color-scheme','prefer-dark' if dark else 'prefer-light'):
+        raise RuntimeError('Could not save the system color scheme. Check your desktop settings permissions.')
+    Gio.Settings.sync()
+
+
 def appearance(theme, font, dark, color, image=False, layout='fill', source=None):
     set_background(color, image, layout, source)
     path = CONFIG / 'gtk-3.0/settings.ini'
@@ -141,6 +169,7 @@ def appearance(theme, font, dark, color, image=False, layout='fill', source=None
     parser['Settings'].update({'gtk-theme-name': theme, 'gtk-font-name': font,
                               'gtk-application-prefer-dark-theme': str(dark).lower()})
     stream = io.StringIO(); parser.write(stream); write(path, stream.getvalue())
+    set_color_scheme(dark)
 
 
 def keyboard():
@@ -153,6 +182,10 @@ def keyboard():
         action = bind.find('action')
         command = action.findtext('command') if action is not None else None
         label = command or (action.get('name', '') if action is not None else '')
+        if action is not None and action.get('name') == 'ShowMenu':
+            label = 'ShowMenu ' + action.findtext('menu','root-menu')
+        if action is not None and action.get('name') == 'SnapToEdge':
+            label = 'Tile ' + action.findtext('direction','')
         target = action.findtext('to') if action is not None else None
         rows.append((bind.get('key', ''), label + (f' {target}' if target else '')))
     return rows
@@ -165,9 +198,61 @@ def custom_keyboard():
             if bind.get('erdos-custom') == 'true']
 
 
-def save_keyboard(keys, custom=None):
+def shortcut_label(value):
+    names = {'W':'Super', 'C':'Ctrl', 'A':'Alt', 'S':'Shift', 'M':'Mod5', 'H':'Mod3'}
+    keys = {'Return':'Enter', 'space':'Space', 'Escape':'Esc'}
+    return ' / '.join(' + '.join([*(names.get(p,p) for p in combo.split('-')[:-1]),
+        keys.get(combo.split('-')[-1],combo.split('-')[-1].upper() if len(combo.split('-')[-1])==1 else combo.split('-')[-1])]) for combo in value.split())
+
+
+def shortcut_value(value):
+    value = re.sub(r'\s*\+\s*', '-', value.strip())
+    value = re.sub(r'\s*[,/]\s*', ' ', value)
+    modifiers = {'super':'W','ctrl':'C','control':'C','alt':'A','shift':'S','mod5':'M','mod3':'H'}
+    keys = {'enter':'Return','esc':'Escape','space':'space'}
+    result=[]
+    for combo in value.split():
+        parts=combo.split('-')
+        result.append('-'.join([*(modifiers.get(p.lower(),p) for p in parts[:-1]),keys.get(parts[-1].lower(),parts[-1])]))
+    return ' '.join(result)
+
+
+def validate_shortcuts(values):
+    # Use the same keysym lookup and lowercasing as labwc, including aliases.
+    xkb = ctypes.CDLL('libxkbcommon.so.0')
+    xkb.xkb_keysym_from_name.argtypes = [ctypes.c_char_p, ctypes.c_int]
+    xkb.xkb_keysym_from_name.restype = ctypes.c_uint32
+    xkb.xkb_keysym_to_lower.argtypes = [ctypes.c_uint32]
+    xkb.xkb_keysym_to_lower.restype = ctypes.c_uint32
+    seen=set()
+    for value in values:
+        if not value.strip():
+            raise ValueError('Every action needs a shortcut.')
+        for combo in value.split():
+            if not re.fullmatch(r'(?:(?:W|A|C|S|M|H)-)*[A-Za-z0-9_]+',combo):
+                raise ValueError(f'Invalid shortcut: {combo}. Use a key name such as Return or F1.')
+            parts=combo.split('-')
+            if parts[-1].lower().startswith('0x'):
+                raise ValueError('Use key names instead of X11 keycodes.')
+            symbol=xkb.xkb_keysym_to_lower(xkb.xkb_keysym_from_name(parts[-1].encode(),1))
+            if not symbol:
+                raise ValueError(f'Unknown key name: {parts[-1]}')
+            normalized=(frozenset(parts[:-1]),symbol)
+            if normalized in seen:
+                raise ValueError(f'Shortcut used twice: {shortcut_label(combo)}')
+            seen.add(normalized)
+
+
+def keyboard_source():
+    node=ET.parse(CONFIG / 'labwc/rc.xml').find('keyboard')
+    return ET.canonicalize(ET.tostring(node,encoding='unicode'),strip_text=True)
+
+
+def save_keyboard(keys, custom=None, original=None):
     tree = ET.parse(CONFIG / 'labwc/rc.xml')
     keyboard_node = tree.find('keyboard')
+    if original is not None and keyboard_source()!=original:
+        raise ValueError('Shortcuts changed outside this editor. Close and reopen Settings before applying.')
     binds = [b for b in keyboard_node.findall('keybind')
              if b.get('erdos-custom') != 'true']
     if custom is None:
@@ -177,18 +262,7 @@ def save_keyboard(keys, custom=None):
             raise ValueError('Every custom shortcut needs a command without control characters.')
     if len(keys) != len(binds):
         raise ValueError('Shortcuts changed outside Settings. Close and reopen Settings.')
-    seen = set()
-    for key in [*keys, *(key for key, _ in custom)]:
-        if not key.strip():
-            raise ValueError('Every action needs a shortcut.')
-        for combo in key.split():
-            if not re.fullmatch(r'(?:(?:W|A|C|S|M|H)-)*(?:[A-Za-z0-9_]+|0x[0-9a-fA-F]+)', combo):
-                raise ValueError(f'Invalid shortcut: {combo}')
-            # Canonical modifier ordering prevents duplicates such as W-S and S-W.
-            parts = combo.split('-'); normalized = tuple(sorted(parts[:-1])) + (parts[-1],)
-            if normalized in seen:
-                raise ValueError(f'Shortcut used twice: {combo}')
-            seen.add(normalized)
+    validate_shortcuts([*keys, *(key for key, _ in custom)])
     for bind, key in zip(binds, keys):
         bind.set('key', key.strip())
     for bind in list(keyboard_node):
@@ -276,6 +350,11 @@ def display_policy(enabled):
 
 
 def apply_session():
+    # Publish a default on first login; preserve a later explicit system choice.
+    parser=configparser.ConfigParser(interpolation=None)
+    parser.read(CONFIG / 'gtk-3.0/settings.ini')
+    dark=parser.getboolean('Settings','gtk-application-prefer-dark-theme',fallback=True)
+    set_color_scheme(dark,initialize=True)
     # The compositor owns gestures/workspaces; only the background is resident.
     apply_background()
     if preferences()['automatic_displays']:
