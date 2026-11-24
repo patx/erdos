@@ -19,9 +19,9 @@ without reinstalling or replacing machine-specific drivers and settings.
 
 ## Desktop
 
-The current checkout removes the overview dock and its Settings tab. The
-published Alpha 5 ISO still includes them; these changes require a future ISO
-build and are not delivered by the Settings-only hosted updater.
+The local `dev-lean` ISO includes the dock removal, menu clock/battery and
+package/startup cleanup. Published Alpha 5 still includes the dock and is
+unchanged; the Settings-only hosted updater does not deliver these changes.
 
 - Floating windows and square dark decorations; no panel or overview dock.
 - Native labwc overview with live window previews and a blurred desktop snapshot.
@@ -100,12 +100,17 @@ that file. The previous X11 development image is preserved separately as
 `dist/erdos-x11-dev.iso` for comparison and testing. Details and limitations are in [building.md](docs/building.md).
 
 Test the live desktop and a disposable installation before using real disks.
-Fresh offline VM measurement of the published Alpha 5 ISO on November 24, 2026
+Fresh offline VM measurements on November 24, 2026
 (2 vCPUs, 2 GiB RAM, 1280×800, software rendering):
 
 | Build | Installed disk | Idle RAM |
 | --- | --- | --- |
 | ErdOS 1 Alpha 5 | 1.751 GiB | 369.8 MiB |
+| Lean development ISO | 1.748 GiB | 353.2 MiB |
+
+The development image saves 2.6 MiB of installed disk and 16.6 MiB of idle
+RAM versus Alpha 5. Four packages were removed; Firefox also changed from
+160.0.1 to 161.0, contributing about 0.45 MiB of the disk saving.
 
 Disk includes root and EFI, excludes swap. RAM is the median of five
 MemTotal-minus-MemAvailable samples after a two-minute settle, with the default

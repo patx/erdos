@@ -1,5 +1,10 @@
 # Development
 
+- Build and fresh-install test the local `dev-lean` ISO. Same-VM measurements:
+  1.748 GiB installed and 353.2 MiB idle RAM, saving 2.6 MiB disk and 16.6 MiB RAM
+  versus Alpha 5. Firefox is also updated to 161.0; about 0.45 MiB of disk saving
+  comes from that version change. Published Alpha 5 remains unchanged.
+
 - Remove nm-connection-editor and pulsemixer; Settings retains normal Wi-Fi and
   sound controls, with nmcli available for advanced connection profiles.
 - Launch PCManFM only on demand rather than starting its daemon at login. Keep

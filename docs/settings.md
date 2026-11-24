@@ -7,8 +7,9 @@ feedback are shared across the app. No extra UI libraries, packages or backgroun
 services are added.
 
 The published Alpha 5 ISO still includes Overview Dock. The dock and its editor, nm-connection-editor and pulsemixer
-are removed in the current checkout. PCManFM starts on demand. These changes and
-the menu status rows described here need a new ISO build. The hosted Settings-only updater does not replace labwc.
+are removed in the local `dev-lean` ISO. PCManFM starts on demand. This image
+also includes the menu status rows described here; it is not published. The
+hosted Settings-only updater does not replace labwc.
 
 ## Editing and feedback
 

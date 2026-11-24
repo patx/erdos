@@ -1,8 +1,47 @@
+# Lean development ISO — 2026-11-24
+
+Rebuilt the current checkout (`60df297` plus the `dev-lean` image label) from
+scratch using the existing Debian 13 build environment, outside the shared
+workspace filesystem. The final image verifier passes embedded configuration,
+offline installer policy, package retention, compositor provenance, APT-cache
+budget and root ownership/sudo setuid checks.
+
+ISO SHA-256: `128fb9324f41a6934a9ab4751c970144ebba67bfe97dc8ad2fb043fe0b1f4efa`.
+The ISO is local and unpublished; public Alpha 5 and its release metadata are
+unchanged. Its six release artifacts are prepared separately from public
+website release metadata.
+
+A fresh offline UEFI installation completed on a new 24 GiB virtual disk with
+manual disk prompts answered only in the private VM fixture. The installed disk
+boots without installer media; console login starts labwc and its default
+wallpaper. The normal account successfully authorized sudo. No applications
+were opened before measurement. After a 120-second settle, five samples at
+10-second intervals give **1.748 GiB installed and 353.2 MiB idle RAM**. The same
+VM, sampler and console overhead were used for Alpha 5. Raw samples and exact
+ISO identities are in [footprint.json](footprint.json).
+
+Installed root used 1,876,951,040 bytes and EFI used
+311,296 bytes. Swap was unused, with no cached APT
+package indexes. NetworkManager and timesyncd were active; Bluetooth was inactive
+without an adapter. PCManFM was absent from the idle process inventory. After
+sampling, Super + E opened PCManFM; closing its window exited the process.
+Installed-system checks confirm GVfs backends/FUSE, SSH/SFTP, Avahi and every
+selected firmware/microcode package remain installed.
+
+Exactly four packages were removed: nm-connection-editor, pulsemixer, libnma0
+and libnma-common. None were added. The only version change is Firefox
+160.0.1~build1 to 161.0~build1. Its retained files are 470,721 bytes smaller,
+contributing about 0.45 MiB of the total 2.6 MiB disk saving; idle RAM is 16.6 MiB
+lower. These are net build comparisons, not a claim that every difference comes
+from a single change. Hardware/graphics configurations and later application
+use can change memory consumption. Actual network-share connections, removable
+hardware and physical GPU/touchpad operation were not retested by this offline VM.
+
 # Current checkout: window-only overview and menu status
 
 The current source removes the overview dock, its renderer/status timer and
 Settings editor. Published Alpha 5 artifacts and the footprint results below
-remain unchanged; no new ISO was built for this change.
+remain unchanged. A new local `dev-lean` ISO now includes these changes.
 
 The pinned compositor compiles on Debian 13. A non-root headless Wayland session
 exercises the actual compositor and GTK app together. Checks cover thirteen
@@ -23,9 +62,8 @@ A subsequent source cleanup removes nm-connection-editor and pulsemixer from the
 package list and PCManFM daemon mode from the default autostart. Build-time and
 final-image guards reject the removed utilities. Source checks and `build.sh
 --prepare` pass; staged configuration retains GVfs backends/FUSE, SSH/SFTP,
-Avahi and all firmware/microcode selections. This cleanup has not had an ISO
-build, fresh-install test or new RAM measurement. The Alpha 5 measurements below
-remain the published-image baseline.
+Avahi and all firmware/microcode selections. The new build and fresh-install
+results are recorded above; Alpha 5 remains the published-image baseline.
 
 # Alpha 5 ISO validation
 
@@ -194,6 +232,7 @@ coverage. Alongside-OS partitioning and Secure Boot are not certified.
 
 | Build | Installed disk | Idle RAM | Measured |
 | --- | --- | --- | --- |
+| Lean development ISO | 1.748 GiB | 353.2 MiB | 2026-11-24 |
 | ErdOS 1 Alpha 5 | 1.751 GiB | 369.8 MiB | 2026-11-24 |
 | Wayland candidate (Alpha 3) | 1.750 GiB | 355.4 MiB | 2026-11-21 |
 | Previous X11 dev | 1.814 GiB | 361.8 MiB | 2026-11-21 |
