@@ -1,4 +1,4 @@
-# Development — overview dock controls and Settings accessibility
+# ErdOS 1 Alpha 5 — release candidate
 
 - Add an Overview Dock tab: hide/show the dock, add/edit/remove/reorder launchers,
   choose installed applications and toggle launcher names, clock and battery.
@@ -7,8 +7,10 @@
 - Use native GTK layout, readable theme text, accessible input labels, keyboard
   focus, selected-row actions, progress feedback and inline validation throughout
   Settings. No packages, UI framework or background service are added.
-- Keep the website's red wordmark, favicon and social preview references current
-  with asset versioning so browsers can refresh cached branding.
+- Rebuild the live ISO with the blue ErdOS boot logo and Dark Glacier as the
+  bundled default wallpaper. Saved wallpaper and solid-color preferences take
+  precedence.
+- Refresh the website with the blue wordmark and new desktop screenshots.
 - Published Alpha 4 artifacts and the hosted updater remain unchanged.
 
 # ErdOS 1 Alpha 4 — 2026-11-22

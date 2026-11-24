@@ -6,13 +6,14 @@ from pathlib import Path
 import sys
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'lib/erdos'))
-from settings import preferences, wallpaper_path, validate_background, WALLPAPER_MODES
+from settings import preferences, selected_wallpaper_path, validate_background, WALLPAPER_MODES
 prefs = preferences()
 args = ['swaybg', '-c', prefs['background']]
-if prefs.get('background_image') and wallpaper_path().is_file():
+wallpaper = selected_wallpaper_path()
+if prefs.get('background_image') and wallpaper.is_file():
     try:
-        validate_background(wallpaper_path())
-        args += ['-i', str(wallpaper_path()), '-m', WALLPAPER_MODES.get(prefs.get('background_layout'), 'fill')]
+        validate_background(wallpaper)
+        args += ['-i', str(wallpaper), '-m', WALLPAPER_MODES.get(prefs.get('background_layout'), 'fill')]
     except (ValueError, OSError):
         pass
 os.execvp(args[0], args)

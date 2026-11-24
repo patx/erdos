@@ -14,6 +14,7 @@ import xml.etree.ElementTree as ET
 
 CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home() / '.config')))
 PREFERENCES = CONFIG / 'erdos/settings.json'
+DEFAULT_WALLPAPER = Path('/usr/share/erdos/backgrounds/default.png')
 DEFAULTS = dict(terminal_app='system', background='#202326', background_image=False, background_layout='fill', natural=True, tapping=True, clickfinger=True,
                 speed=0.0, automatic_displays=True, dynamic_workspaces=True, workspace_count=2, super_overview=True, menu_touchpad=True, menu_mouse=True)
 NS = ''
@@ -120,7 +121,8 @@ def save_dock(source, options, items):
 
 
 def preferences():
-    return {**DEFAULTS, **(json.loads(PREFERENCES.read_text()) if PREFERENCES.exists() else {})}
+    saved = json.loads(PREFERENCES.read_text()) if PREFERENCES.exists() else {}
+    return {**DEFAULTS, 'background_image': DEFAULT_WALLPAPER.is_file(), **saved}
 
 
 def save_preferences(**values):
@@ -165,6 +167,11 @@ def wallpaper_path():
     return CONFIG / 'erdos/background-image'
 
 
+def selected_wallpaper_path():
+    custom = wallpaper_path()
+    return custom if custom.is_file() else DEFAULT_WALLPAPER
+
+
 def validate_background(path):
     import gi
     gi.require_version('GdkPixbuf', '2.0')
@@ -189,15 +196,18 @@ def set_background(color, image=False, layout='fill', source=None):
     candidate = None
     try:
         if image:
-            selected = Path(source).expanduser() if source else path
+            selected = Path(source).expanduser() if source else selected_wallpaper_path()
             if not selected.is_file():
                 raise ValueError('Choose a readable image file first.')
-            fd, name = tempfile.mkstemp(prefix='.background-', dir=path.parent)
-            candidate = Path(name)
-            with os.fdopen(fd, 'wb') as target, selected.open('rb') as original:
-                shutil.copyfileobj(original, target)
-            validate_background(candidate)
-            os.replace(candidate, path)
+            if source:
+                fd, name = tempfile.mkstemp(prefix='.background-', dir=path.parent)
+                candidate = Path(name)
+                with os.fdopen(fd, 'wb') as target, selected.open('rb') as original:
+                    shutil.copyfileobj(original, target)
+                validate_background(candidate)
+                os.replace(candidate, path)
+            else:
+                validate_background(selected)
         save_preferences(background=color, background_image=bool(image), background_layout=layout)
         if not image:
             path.unlink(missing_ok=True)  # Only our private copy; never the user's original.

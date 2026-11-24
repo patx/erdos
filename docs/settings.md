@@ -55,7 +55,9 @@ keep their associations. Existing open apps are unaffected.
 
 ## Backgrounds and appearance
 
-Select a supported image and Fill, Fit, Center or Tile. ErdOS validates and copies
+New development images start with the bundled blue wallpaper. Choose Image in
+Settings to return to the bundled wallpaper after using a solid color.
+Select a custom image and Fill, Fit, Center or Tile. ErdOS validates and copies
 it into `~/.config/erdos/background-image`, so moving the original does not break
 login. Remove image and Apply returns to the selected solid color and removes
 only the private copy. Swaybg renders the background as a single process managed

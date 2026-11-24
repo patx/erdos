@@ -7,6 +7,16 @@ The current public release is [ErdOS 1 Alpha 4](https://github.com/patx/erdos/re
 Both source remotes use `main`: GitHub at the URL above and Gitman at
 <https://gitman.io/git/patx/erdos>.
 
+## Alpha 5 release candidate
+
+Alpha 5 uses a new ISO with the native window overview, configurable dock,
+updated Settings, blue boot branding and the Dark Glacier wallpaper. Build the
+source revision whose embedded version is `1.0.0-alpha.5`. Verify that exact
+image and check BIOS and UEFI boot before preparing its download artifacts.
+Upload the artifacts under `v1.0.0-alpha.5/` after validation. Switch the website
+download and release links once the hosted files and GitHub prerelease are
+available.
+
 ## Alpha 4: reuse the tested ISO
 
 Alpha 4 uses the existing Settings image unchanged, SHA-256
@@ -116,9 +126,8 @@ from the matching Debian archives with source repositories enabled.
 
 After the R2 files are verified and the GitHub prerelease is published, set the chosen tag and
 `published: true` in `docs/release.json`. Its existing filenames and digest must
-still match those assets. Set `download_base_url` to the matching version directory. The hero button links directly to the R2 `v1.0.0-alpha.4` ISO; the bottom download
-section links to its release page. Update both links in `index.html` for a future
-release, together with the version text and release metadata. Future builds use current Debian packages, so reusing a date does not
+still match those assets. Set `download_base_url` to the matching version directory. Update the direct ISO and release-note links in `index.html` and `guide.html`
+along with their release text and metadata. Future builds use current Debian packages, so reusing a date does not
 imply an identical ISO or checksum.
 
 Checksums verify bytes, not publisher identity. If you add artifact signing,
@@ -170,4 +179,4 @@ reporting link in `SECURITY.md`.
 The landing page uses `docs/assets/og-image.png` for Open Graph and Twitter cards.
 Regenerate it with `python3 scripts/render-social-card.py` on a development host
 with Pillow and DejaVu Sans installed. The renderer uses the supplied logo and
-`docs/assets/labwc-thumbnails.png`; its dependencies are not added to the ISO.
+`docs/assets/live-window-overview.png`; its dependencies are not added to the ISO.

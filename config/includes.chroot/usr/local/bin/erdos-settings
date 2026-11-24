@@ -379,7 +379,7 @@ class Settings(Gtk.Application):
         image_filter = Gtk.FileFilter(); image_filter.set_name('Images'); image_filter.add_pixbuf_formats()
         chooser.add_filter(image_filter)
         self.row(image_box, 'Choose image', chooser)
-        image_status = self.note(image_box, 'Saved image selected.' if prefs['background_image'] else 'No image selected.')
+        image_status = self.note(image_box, '')
         layout = self.choice(image_box, 'Image layout', [('fill','Fill (crop to fit)'), ('fit','Fit (keep whole image)'),
                              ('center','Center'), ('tile','Tile')], prefs['background_layout'])
         remove = Gtk.Button(label='Remove image', halign=Gtk.Align.START)
@@ -393,7 +393,16 @@ class Settings(Gtk.Application):
             chooser.set_sensitive(enabled); layout.set_sensitive(enabled)
             remove.set_sensitive(enabled)
             if enabled:
-                image_status.set_text(Path(chooser.get_filename()).name if chooser.get_filename() else 'Saved image selected.' if backend.wallpaper_path().is_file() else 'Choose an image.')
+                filename = chooser.get_filename()
+                if filename:
+                    message = Path(filename).name
+                elif backend.wallpaper_path().is_file():
+                    message = 'Saved image selected.'
+                elif backend.DEFAULT_WALLPAPER.is_file():
+                    message = 'Default ErdOS wallpaper selected.'
+                else:
+                    message = 'Choose an image.'
+                image_status.set_text(message)
             else: image_status.set_text('Solid color selected.')
         def selected(*_):
             if chooser.get_filename():

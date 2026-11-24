@@ -12,6 +12,8 @@ bounds = source.getchannel('A').point(lambda opacity: 255 if opacity >= 24 else 
 if not bounds:
     raise ValueError('The ErdOS logo contains no visible pixels')
 logo = source.crop(bounds)
+red, green, blue, alpha = logo.split()
+boot_logo = Image.merge('RGBA', (blue, green, red, alpha))
 
 
 def splash(width, height, path):
@@ -20,7 +22,7 @@ def splash(width, height, path):
     unit = width * scale / 800
     mark_width = round(400 * unit)
     mark_height = round(mark_width * logo.height / logo.width)
-    mark = logo.resize((mark_width, mark_height), Image.Resampling.LANCZOS)
+    mark = boot_logo.resize((mark_width, mark_height), Image.Resampling.LANCZOS)
     x = (canvas.width - mark_width) // 2
     y = round(87 * unit)
     pad_x = round(31 * unit)
