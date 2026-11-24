@@ -26,6 +26,12 @@ struct menuitem {
 	struct menu *parent;
 	struct menu *submenu;
 	bool selectable;
+	bool hidden;
+	enum {
+		LAB_MENU_STATUS_NONE,
+		LAB_MENU_STATUS_CLOCK,
+		LAB_MENU_STATUS_BATTERY,
+	} status;
 	enum menuitem_type type;
 	int native_width;
 	struct wlr_scene_tree *tree;

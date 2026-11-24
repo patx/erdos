@@ -2,6 +2,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include "menu/menu.h"
 #include <assert.h>
+#include <glib.h>
 #include <libxml/parser.h>
 #include <signal.h>
 #include <stdio.h>
@@ -422,6 +423,9 @@ menu_create_scene(struct menu *menu)
 	/* Menu width is the maximum item width, capped by menu.width.{min,max} */
 	menu->size.width = 0;
 	wl_list_for_each(item, &menu->menuitems, link) {
+		if (item->hidden) {
+			continue;
+		}
 		int width = item->native_width
 			+ 2 * theme->menu_items_padding_x
 			+ 2 * theme->menu_border_width;
@@ -438,6 +442,9 @@ menu_create_scene(struct menu *menu)
 	int item_y = theme->menu_border_width;
 	wl_list_for_each(item, &menu->menuitems, link) {
 		assert(!item->tree);
+		if (item->hidden) {
+			continue;
+		}
 		switch (item->type) {
 		case LAB_MENU_ITEM:
 			item_create_scene(item, &item_y);
@@ -483,6 +490,13 @@ fill_item(struct menu *menu, xmlNode *node)
 	}
 
 	struct menuitem *item = item_create(menu, label, icon_name, false);
+	char *status = (char *)xmlGetProp(node, (xmlChar *)"erdos-status");
+	if (status && !strcmp(status, "clock")) {
+		item->status = LAB_MENU_STATUS_CLOCK;
+	} else if (status && !strcmp(status, "battery")) {
+		item->status = LAB_MENU_STATUS_BATTERY;
+	}
+	xmlFree(status);
 	lab_xml_expand_dotted_attributes(node);
 	append_parsed_actions(node, &item->actions);
 
@@ -1164,6 +1178,91 @@ menu_close(struct menu *menu)
 	_close(menu);
 }
 
+static char *
+power_property(const char *supply, const char *property)
+{
+	g_autofree char *path = g_build_filename("/sys/class/power_supply",
+		supply, property, NULL);
+	char *value = NULL;
+	return g_file_get_contents(path, &value, NULL, NULL) ? g_strstrip(value) : NULL;
+}
+
+static char *
+battery_label(void)
+{
+	g_autoptr(GDir) supplies = g_dir_open("/sys/class/power_supply", 0, NULL);
+	if (!supplies) {
+		return NULL;
+	}
+	int total = 0, count = 0;
+	bool charging = false;
+	const char *name;
+	while ((name = g_dir_read_name(supplies))) {
+		g_autofree char *type = power_property(name, "type");
+		if (g_strcmp0(type, "Battery")) {
+			continue;
+		}
+		g_autofree char *scope = power_property(name, "scope");
+		g_autofree char *present = power_property(name, "present");
+		if (!g_strcmp0(scope, "Device") || !g_strcmp0(present, "0")) {
+			continue;
+		}
+		g_autofree char *value = power_property(name, "capacity");
+		gint64 capacity;
+		if (!value || !g_ascii_string_to_signed(value, 10, 0, 100, &capacity, NULL)) {
+			continue;
+		}
+		total += capacity;
+		++count;
+		g_autofree char *status = power_property(name, "status");
+		charging |= !g_strcmp0(status, "Charging");
+	}
+	return count ? g_strdup_printf("Battery: %d%%%s", (total + count / 2) / count,
+		charging ? " · Charging" : "") : NULL;
+}
+
+/* Refresh only when opened: no timer, subprocess or idle work. */
+static void
+refresh_status_items(struct menu *menu)
+{
+	bool changed = false;
+	struct menuitem *item;
+	wl_list_for_each(item, &menu->menuitems, link) {
+		if (item->status == LAB_MENU_STATUS_NONE) {
+			continue;
+		}
+		g_autofree char *text = NULL;
+		if (item->status == LAB_MENU_STATUS_CLOCK) {
+			g_autoptr(GDateTime) now = g_date_time_new_now_local();
+			if (now) {
+				int hour = g_date_time_get_hour(now);
+				text = g_strdup_printf("%d:%02d %s", hour % 12 ? hour % 12 : 12,
+					g_date_time_get_minute(now), hour < 12 ? "AM" : "PM");
+			} else {
+				text = g_strdup("Time unavailable");
+			}
+		} else {
+			text = battery_label();
+		}
+		bool hidden = !text;
+		if (hidden != item->hidden || g_strcmp0(item->text, text ? text : "")) {
+			changed = true;
+			item->hidden = hidden;
+			item->selectable = !hidden;
+			free(item->text);
+			item->text = xstrdup(text ? text : "");
+			item->native_width = font_width(&rc.font_menuitem, item->text);
+		}
+	}
+	if (changed && menu->scene_tree) {
+		wlr_scene_node_destroy(&menu->scene_tree->node);
+		menu->scene_tree = NULL;
+		wl_list_for_each(item, &menu->menuitems, link) {
+			item->tree = item->normal_tree = item->selected_tree = NULL;
+		}
+	}
+}
+
 static void
 open_menu(struct menu *menu, struct wlr_box anchor_rect)
 {
@@ -1172,6 +1271,7 @@ open_menu(struct menu *menu, struct wlr_box anchor_rect)
 	} else if (!strcmp(menu->id, "client-send-to-menu")) {
 		update_client_send_to_menu(menu->server);
 	}
+	refresh_status_items(menu);
 
 	if (!menu->scene_tree) {
 		menu_create_scene(menu);

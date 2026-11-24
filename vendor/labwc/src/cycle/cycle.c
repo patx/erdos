@@ -9,7 +9,6 @@
 #include "common/lab-scene-rect.h"
 #include "common/list.h"
 #include "common/mem.h"
-#include "common/spawn.h"
 #include "common/scene-helpers.h"
 #include "config/rcxml.h"
 #include "labwc.h"
@@ -223,25 +222,7 @@ cycle_toggle_overview(struct server *server)
 void
 cycle_overview_click(struct server *server)
 {
-	struct wlr_cursor *cursor = server->seat.cursor;
-	char *command = NULL;
-	struct cycle_osd_output *osd_output;
-	wl_list_for_each(osd_output, &server->cycle.osd_outputs, link) {
-		struct wlr_box *dock = &osd_output->dock;
-		if (wlr_box_contains_point(dock, cursor->x, cursor->y)) {
-			int index = (int)(cursor->x - dock->x) / osd_output->dock_button_width;
-			if (index >= osd_output->dock_button_count) {
-				return; /* Clock and battery are passive indicators. */
-			}
-			command = xstrdup(osd_output->dock_commands[index]);
-			break;
-		}
-	}
 	cycle_finish(server, false);
-	if (command) {
-		spawn_async_no_shell(command);
-		free(command);
-	}
 }
 
 void
@@ -388,9 +369,6 @@ handle_osd_tree_destroy(struct wl_listener *listener, void *data)
 	}
 	wl_list_remove(&osd_output->tree_destroy.link);
 	wl_list_remove(&osd_output->link);
-	for (int i = 0; i < osd_output->dock_button_count; ++i) {
-		free(osd_output->dock_commands[i]);
-	}
 	free(osd_output);
 }
 

@@ -1,3 +1,24 @@
+# Current checkout: window-only overview and menu status
+
+The current source removes the overview dock, its renderer/status timer and
+Settings editor. Published Alpha 5 artifacts and the footprint results below
+remain unchanged; no new ISO was built for this change.
+
+The pinned compositor compiles on Debian 13. A non-root headless Wayland session
+exercises the actual compositor and GTK app together. Checks cover thirteen
+Settings sections, `--time`/`--power` deep links reusing the existing window,
+menu-editor preservation of the native rows, keyboard activation of both menu
+actions, and opening/selecting/closing the dock-free overview. Menu placement
+is after Settings and before Logout/Reboot/Power off.
+
+Synthetic sysfs batteries are bound only inside a private test mount namespace.
+Charging and discharging labels, percentage changes, absence, reappearance and
+exclusion of peripheral batteries are exercised across repeated menu openings.
+Rendered menus were reviewed with and without a system battery. Values refresh
+on opening, with no status timer or subprocess. These checks do not certify a
+physical laptop battery, touchpad or GPU. Source syntax, documentation links and
+installer-policy checks pass. No package dependencies were changed.
+
 # Alpha 5 ISO validation
 
 The Alpha 5 amd64 ISO was rebuilt from source revision `a5779b4` in a Debian 13

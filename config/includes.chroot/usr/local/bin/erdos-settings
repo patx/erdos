@@ -34,16 +34,18 @@ class Settings(Gtk.Application):
     def __init__(self):
         super().__init__(application_id='org.erdos.Settings',
                          flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
-        self.add_main_option('network', 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
-                             'Open the Network tab', None)
+        for option, title in (('network', 'Network'), ('power', 'Power'), ('time', 'Date & Time')):
+            self.add_main_option(option, 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
+                                 'Open ' + title, None)
         self.window = None
         self.groups = []
         self.busy = False
 
     def do_command_line(self, command_line):
         self.activate()
-        if command_line.get_options_dict().contains('network'):
-            self.stack.set_visible_child_name('Network')
+        for option, title in (('network', 'Network'), ('power', 'Power'), ('time', 'Date & Time')):
+            if command_line.get_options_dict().contains(option):
+                self.stack.set_visible_child_name(title)
         return 0
 
     def do_activate(self):
@@ -89,7 +91,7 @@ class Settings(Gtk.Application):
         self.trial_process = None
         self.trial_timer = None
         self.window.add(outer)
-        for name in ('Appearance', 'Default Programs', 'Touchpad', 'Keyboard', 'Overview Dock', 'Menu', 'Startup Applications', 'Gestures', 'Displays', 'Sound', 'Network', 'Bluetooth', 'Power', 'Date & Time'):
+        for name in ('Appearance', 'Default Programs', 'Touchpad', 'Keyboard', 'Menu', 'Startup Applications', 'Gestures', 'Displays', 'Sound', 'Network', 'Bluetooth', 'Power', 'Date & Time'):
             page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
             page.set_border_width(28)
             title = Gtk.Label(xalign=0); title.set_markup(f'<span size="x-large" weight="bold">{GLib.markup_escape_text(name)}</span>')
@@ -572,121 +574,6 @@ class Settings(Gtk.Application):
                 keyboard_source=backend.keyboard_source()
             return job
         self.button(page, 'Apply shortcuts', apply)
-
-    def overview_dock(self, page):
-        source, options, items = backend.dock_settings()
-        enabled = self.toggle(page, 'Show dock in overview', options['enabled'])
-        self.note(page, 'Apply your changes, then reopen the overview.')
-        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
-        page.pack_start(content, True, True, 0)
-        flags = {'enabled': enabled}
-        display = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        display_options = Gtk.Expander(label='Display options')
-        display_options.add(display)
-        for key, label in [('show_labels', 'Show launcher names'), ('show_clock', 'Show clock'), ('show_battery', 'Show battery status')]:
-            flags[key] = self.toggle(display, label, options[key])
-        self.note(display, 'Default-program launchers follow your selected apps. Commands run as your user without a shell. Hiding the dock keeps window previews available.')
-        model = Gtk.ListStore(str, str, str)
-        for item in items: model.append(item)
-        tree = Gtk.TreeView(model=model)
-        for index, title in enumerate(('Name', 'Command')):
-            cell = Gtk.CellRendererText(); cell.set_property('ellipsize', 3)
-            column = Gtk.TreeViewColumn(title, cell, text=index)
-            column.set_min_width(130 if index == 0 else 220)
-            column.set_expand(index == 1); column.set_resizable(True)
-            tree.append_column(column)
-        scroll = Gtk.ScrolledWindow(); scroll.set_min_content_height(180); scroll.add(tree)
-        content.pack_start(scroll, True, True, 0)
-        def edit_item(add=False):
-            rows, row = tree.get_selection().get_selected()
-            if not add and row is None: return
-            if add and len(model) >= 12:
-                self.report('Dock supports up to 12 launchers.', error=True); return
-            dialog = Gtk.Dialog(title='Add launcher' if add else 'Edit launcher', transient_for=self.window, modal=True)
-            dialog.add_buttons('Cancel', Gtk.ResponseType.CANCEL, 'Add' if add else 'Save', Gtk.ResponseType.OK)
-            dialog.set_default_size(440, -1)
-            fields = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10); fields.set_border_width(16)
-            dialog.get_content_area().add(fields)
-            presets = Gtk.ComboBoxText()
-            for i, item in enumerate(backend.DOCK_PRESETS): presets.append(str(i), item[0] + (' (default program)' if item[1].startswith('erdos-launch ') else ''))
-            presets.append('custom', 'Custom command')
-            name, command = Gtk.Entry(), Gtk.Entry()
-            icons = Gtk.ComboBoxText()
-            for icon in backend.DOCK_ICONS: icons.append(icon, icon.replace('wifi', 'Wi-Fi').title())
-            error_label = Gtk.Label(xalign=0, wrap=True)
-            error_label.get_style_context().add_class('error')
-            for label, widget in [('Launcher', presets), ('Name', name), ('Command', command), ('Icon', icons)]:
-                caption = Gtk.Label(label=label, xalign=0); caption.set_mnemonic_widget(widget)
-                widget.get_accessible().set_name(label)
-                fields.pack_start(caption, False, False, 0)
-                fields.pack_start(widget, False, False, 0)
-            choose_app = Gtk.Button(label='Choose installed application…', halign=Gtk.Align.START)
-            def installed(*_):
-                chooser = Gtk.AppChooserDialog(content_type='application/octet-stream', transient_for=dialog, modal=True)
-                chooser.get_widget().set_show_all(True)
-                if chooser.run() == Gtk.ResponseType.OK:
-                    app = chooser.get_app_info()
-                    filename = app.get_filename() if app and isinstance(app, Gio.DesktopAppInfo) else None
-                    if filename:
-                        presets.set_active_id('custom'); name.set_text(app.get_display_name())
-                        command.set_text('gio launch ' + GLib.shell_quote(filename)); icons.set_active_id('application')
-                chooser.destroy()
-            choose_app.connect('clicked', installed)
-            fields.pack_start(choose_app, False, False, 0)
-            fields.pack_start(error_label, False, False, 0)
-            for entry in (name, command): entry.set_activates_default(True)
-            dialog.set_default_response(Gtk.ResponseType.OK)
-            def choose(*_):
-                selected = presets.get_active_id()
-                if selected and selected != 'custom':
-                    label, text, icon = backend.DOCK_PRESETS[int(selected)]
-                    name.set_text(label); command.set_text(text); icons.set_active_id(icon)
-            presets.connect('changed', choose)
-            presets.set_active_id('0' if add else 'custom')
-            if not add:
-                name.set_text(rows[row][0]); command.set_text(rows[row][1]); icons.set_active_id(rows[row][2])
-            if icons.get_active_id() is None: icons.set_active_id('application')
-            dialog.show_all()
-            while dialog.run() == Gtk.ResponseType.OK:
-                try: values = backend.validate_dock_item(name.get_text(), command.get_text(), icons.get_active_id())
-                except ValueError as error: error_label.set_text(str(error)); continue
-                if add:
-                    added = model.append(values); tree.get_selection().select_iter(added)
-                else:
-                    for index, value in enumerate(values): rows.set_value(row, index, value)
-                break
-            dialog.destroy()
-        def remove():
-            _, row = tree.get_selection().get_selected()
-            if row is not None: model.remove(row)
-        def move(direction):
-            _, row = tree.get_selection().get_selected()
-            if row is not None:
-                index = model.get_path(row).get_indices()[0] + direction
-                if 0 <= index < len(model): model.swap(row, model.get_iter(Gtk.TreePath.new_from_indices([index])))
-        buttons = Gtk.Box(spacing=8)
-        selection = []
-        for label, callback in [('Add', lambda: edit_item(True)), ('Edit', edit_item), ('Remove', remove), ('Up', lambda: move(-1)), ('Down', lambda: move(1))]:
-            button = Gtk.Button(label=label); button.connect('clicked', lambda _, callback=callback: callback())
-            buttons.pack_start(button, False, False, 0)
-            if label != 'Add': selection.append((button, {'Up': -1, 'Down': 1}.get(label)))
-        self.selection_actions(tree, selection)
-        tree.get_accessible().set_name('Overview dock launchers')
-        content.pack_start(buttons, False, False, 0)
-        content.pack_start(display_options, False, False, 0)
-        tree.connect('row-activated', lambda *_: edit_item())
-        content.set_sensitive(enabled.get_active())
-        enabled.connect('notify::active', lambda *_: content.set_sensitive(enabled.get_active()))
-        def apply():
-            values = {key: widget.get_active() for key, widget in flags.items()}
-            entries = [tuple(row) for row in model]
-            def job():
-                nonlocal source
-                message = backend.save_dock(source, values, entries)
-                source = backend.dock_source()
-                return message
-            return job
-        self.button(page, 'Apply overview dock', apply)
 
     def menu(self, page):
         prefs = backend.preferences()

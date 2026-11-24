@@ -3,4 +3,4 @@ Repository: https://github.com/labwc/labwc
 Version: 0.9.7
 Commit: f0dbad27fcf6e388cad1aa32448a1d548da68990
 License: GPL-2.0-only
-ErdOS changes: Native threshold-based 3/4-finger swipe actions, a native live-window overview with a blurred desktop snapshot and an on-demand dock, Super-key activation, event-driven spare-workspace policy, touchpad-only middle-click menu remapping, focused-window screenshot geometry, and one-shot display hotplug dispatch. The overview is implemented in src/cycle/. Gesture and key dispatch are in src/erdos.c. There is no separate overview process.
+ErdOS changes: Native threshold-based 3/4-finger swipe actions, a native live-window overview with a blurred desktop snapshot, on-open clock/battery menu rows, Super-key activation, event-driven spare-workspace policy, touchpad-only middle-click menu remapping, focused-window screenshot geometry, and one-shot display hotplug dispatch. The overview is implemented in src/cycle/. Gesture and key dispatch are in src/erdos.c. There is no separate overview process.

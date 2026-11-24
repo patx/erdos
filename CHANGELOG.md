@@ -1,3 +1,13 @@
+# Development
+
+- Remove the overview dock, its renderer/status timer, launch helper and Settings
+  tab. Keep the native live window overview and give its grid the freed space.
+- Add a clickable 12-hour clock and battery percentage below Settings in the
+  desktop menu, before Logout/Reboot/Power off. They open Date & Time and Power
+  in the existing Settings window. Hide battery status when no system battery
+  is available; refresh only when the menu opens. No new dependencies or daemon.
+- Published Alpha 5 ISO, benchmarks and hosted updater remain unchanged.
+
 # ErdOS 1 Alpha 5 — 2026-11-23
 
 - Add an Overview Dock tab: hide/show the dock, add/edit/remove/reorder launchers,

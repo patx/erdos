@@ -29,6 +29,17 @@
       </action>
     </item>
     <separator />
+    <item label="Clock (12-hour)" erdos-status="clock">
+      <action name="Execute">
+        <command>erdos-settings --time</command>
+      </action>
+    </item>
+    <item label="Battery" erdos-status="battery">
+      <action name="Execute">
+        <command>erdos-settings --power</command>
+      </action>
+    </item>
+    <separator />
     <item label="Logout">
       <action name="Exit" />
     </item>

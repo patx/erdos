@@ -1,12 +1,14 @@
 # ErdOS Settings
 
-Open **Settings** from the desktop menu or **Super + I**. Alpha 5 has fourteen sections in one Python/GTK window, including **Overview
-Dock**. Native theme colors, grouped controls, readable labels, keyboard focus,
-inline validation and Apply/Revert feedback are shared across the app. No extra
-UI libraries, packages or background services are added.
+Open **Settings** from the desktop menu or **Super + I**. The current checkout
+has thirteen sections in one Python/GTK window. Native theme colors, grouped
+controls, readable labels, keyboard focus, inline validation and Apply/Revert
+feedback are shared across the app. No extra UI libraries, packages or background
+services are added.
 
-The Alpha 4 ISO and hosted Settings-only updater retain the earlier
-thirteen-section interface and thumbnail switcher.
+The published Alpha 5 ISO still includes Overview Dock. The dock and its editor
+are removed in the current checkout; the menu status rows described here need
+a new ISO build. The hosted Settings-only updater does not replace labwc.
 
 ## Editing and feedback
 
@@ -31,7 +33,6 @@ a rejected mode from a successful restore, and the display list refreshes afterw
 | Default Programs | Terminal, browser, file manager and text editor |
 | Touchpad | Natural scrolling, tapping, clickfinger right-click and pointer speed |
 | Keyboard | Dynamic/fixed workspaces, Super-key overview, shortcuts and custom commands |
-| Overview Dock | Show/hide dock, add/edit/remove/reorder launchers, labels, clock and battery |
 | Menu | Edit/reorder menu entries; enable three-finger and Super + right-click triggers |
 | Startup Applications | Edit labwc login commands with syntax validation and backup |
 | Gestures | Swipe distance and configurable three/four-finger actions |
@@ -79,10 +80,8 @@ close the overview. Super + Tab / Super + Shift + Tab cycles current-workspace
 windows in the regular switcher.
 
 The opening desktop frame is blurred once. Window previews update while the
-overview is open. The dock launches the browser, file manager, terminal, and
-Settings. Wi-Fi opens the Network tab in the existing Settings app. The dock
-also shows local time in 12-hour format and the battery percentage, with a
-lightning bolt while charging.
+overview is open. There are no launchers or status widgets in the overview.
+Use the desktop menu for applications, the clock and battery information.
 
 Dynamic workspaces retain one empty workspace after the last occupied or current
 workspace, including minimized windows. Empty gaps keep their numbers; only
@@ -109,36 +108,24 @@ user when invoked. Duplicate shortcuts and empty commands are rejected. Use key
 names such as `Return`, `1` or `F1`, not old X11 hexadecimal keycodes. Fn/media-key
 mode remains a keyboard/firmware setting.
 
-## Overview Dock
-
-Use **Settings → Overview Dock** to turn the entire dock off or on. Turning it off
-keeps the overview's window previews and navigation, removes dock click targets,
-and lets the window grid use the extra space.
-
-Select a launcher to **Edit**, **Remove**, or move it **Up/Down**. **Add** offers
-default browser, files, terminal and editor roles, Settings, Wi-Fi, or a custom
-command. **Choose installed application…** uses GTK's native app chooser. Default
-roles follow your selected programs; an explicitly chosen installed application
-stays pinned to that application. There is a limit of twelve launchers.
-
-Under **Display options**, independently toggle launcher names, the 12-hour clock
-and battery status. These options are collapsed by default to keep the main
-editor compact. Removing Wi-Fi from the launcher list hides that button. An empty
-dock with both status items off draws nothing. Disabled or absent status widgets
-have no timer or battery reads; there is never a permanent dock process.
-
-Click **Apply**, then close and reopen the overview. **Revert** discards staged
-edits. Changes do not require restarting labwc. Commands run as your user with
-quoted arguments supported, without a shell; shell pipelines require an explicit
-shell command. Validation never executes a command.
-
-Configuration is private to your account at `~/.config/erdos/dock.ini` (or under
-`$XDG_CONFIG_HOME`). A `.previous` backup is kept beside it. Saving refuses to
-overwrite a configuration edited externally since Settings opened. The default
-layout remains unchanged until you save a customization.
-
-
 ## Menu
+
+The default menu places a **12-hour clock** and **Battery: …%** after the app and
+Settings entries, before Logout, Reboot and Power off. Clicking the clock opens
+**Date & Time**; clicking the battery opens **Power**. An already-open Settings
+window is reused. The clock uses local time, and the battery label includes
+**Charging** when appropriate. Machines without a readable system battery omit
+that row; mouse/keyboard peripheral batteries are excluded.
+
+Values refresh each time the menu opens and remain unchanged while it stays
+open. No polling timer, subprocess or service is added. These are built-in rows
+in the menu editor: they can be reordered or removed while their dynamic labels
+and actions are preserved. The default XML marks them with
+`erdos-status="clock"` and `erdos-status="battery"`; their commands are
+`erdos-settings --time` and `erdos-settings --power`. Existing custom menu files
+are not overwritten. Add the marked items from the default
+[`menu.xml`](../config/includes.chroot/etc/skel/.config/labwc/menu.xml) if migrating
+an existing configuration. Old `~/.config/erdos/dock.ini` files are ignored.
 
 Edit `~/.config/labwc/menu.xml` through this section. Add/delete/reorder entries
 and separators. Select an item and choose **Edit**, or double-click its name/command.

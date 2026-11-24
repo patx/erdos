@@ -19,16 +19,19 @@ without reinstalling or replacing machine-specific drivers and settings.
 
 ## Desktop
 
-Alpha 5 includes the live overview and fourteen-section GTK Settings app. The
-Alpha 4 ISO and hosted Alpha 3 desktop updater use the previous window switcher.
+The current checkout removes the overview dock and its Settings tab. The
+published Alpha 5 ISO still includes them; these changes require a future ISO
+build and are not delivered by the Settings-only hosted updater.
 
-- Floating windows and square dark decorations. The dock appears only in the window overview.
-- Native labwc overview with live window previews, a blurred desktop snapshot, and an app dock with Wi-Fi, a clock and battery status.
+- Floating windows and square dark decorations; no panel or overview dock.
+- Native labwc overview with live window previews and a blurred desktop snapshot.
 - Dynamic workspaces with one spare, shared across monitors, plus a Workspaces menu.
 - One Python/GTK Settings window: defaults, input, shortcuts, menu, startup,
   displays, backgrounds, audio, networking, Bluetooth, battery and time.
 - **Sakura**, **Firefox** (regular Mozilla release), **PCManFM** with USB/network
   support, and **Twig**. Menu entries and launch shortcuts follow selected defaults.
+- Clickable 12-hour clock and battery status in the desktop menu open Date & Time
+  and Power. Values refresh when the menu opens; no status daemon or timer.
 - Console login starts labwc. Logout returns to a clear login prompt.
 - Debian's text installer works offline, sets signed APT sources and grants the
   first account sudo. Disk selection and erase/write approval stay manual.
