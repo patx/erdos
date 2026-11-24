@@ -28,7 +28,7 @@ text((64, 244), 'Linux desktop.', 44, bold=True)
 text((64, 338), 'ErdOS 1 Alpha 4', 24, '#ff6884')
 text((64, 384), 'Debian 13 + Wayland', 20, '#a2a8ad')
 text((64, 550), 'patx.gitman.io/erdos', 18, '#a2a8ad')
-shot = Image.open(ROOT / 'docs/assets/labwc-thumbnails.png').convert('RGB')
+shot = Image.open(ROOT / 'docs/assets/live-window-overview.png').convert('RGB')
 shot = shot.resize((590 * SCALE, round(590 * shot.height / shot.width) * SCALE), Image.Resampling.LANCZOS)
 x, y = 555 * SCALE, 158 * SCALE
 canvas.paste(shot, (x, y))
