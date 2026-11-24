@@ -83,7 +83,7 @@ class Settings(Gtk.Application):
         self.resolution_label = Gtk.Label(xalign=0, wrap=True)
         self.resolution_label.set_max_width_chars(45)
         self.resolution_bar.pack_start(self.resolution_label, True, True, 0)
-        for label, answer in [('Revert', 'revert'), ('Keep resolution', 'keep')]:
+        for label, answer in [('Revert', 'revert'), ('Keep changes', 'keep')]:
             button = Gtk.Button(label=label)
             button.connect('clicked', lambda _, answer=answer: self.answer_resolution(answer))
             self.resolution_bar.pack_start(button, False, False, 0)
@@ -91,7 +91,7 @@ class Settings(Gtk.Application):
         self.trial_process = None
         self.trial_timer = None
         self.window.add(outer)
-        for name in ('Appearance', 'Default Programs', 'Touchpad', 'Keyboard', 'Menu', 'Startup Applications', 'Gestures', 'Displays', 'Sound', 'Network', 'Bluetooth', 'Power', 'Date & Time'):
+        for name in ('Appearance', 'Default Programs', 'Touchpad', 'Mouse', 'Keyboard', 'Menu', 'Startup Applications', 'Gestures', 'Displays', 'Sound', 'Network', 'Bluetooth', 'Power', 'Date & Time'):
             page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
             page.set_border_width(28)
             title = Gtk.Label(xalign=0); title.set_markup(f'<span size="x-large" weight="bold">{GLib.markup_escape_text(name)}</span>')
@@ -363,13 +363,37 @@ class Settings(Gtk.Application):
         parser = configparser.ConfigParser(interpolation=None)
         parser.read(backend.CONFIG / 'gtk-3.0/settings.ini')
         values = parser['Settings'] if parser.has_section('Settings') else {}
-        themes = {'Adwaita'}
-        for root in (Path('/usr/share/themes'), Path.home() / '.themes', Path.home() / '.local/share/themes'):
-            themes.update(p.parent.name for p in root.glob('*/gtk-3.0') if p.is_dir())
-        current = values.get('gtk-theme-name', 'Adwaita'); themes.add(current)
-        theme = self.choice(page, 'Application theme', [(t,t) for t in sorted(themes)], current)
+        themes = {'Adwaita'} | backend.theme_names('*/gtk-3.*/gtk.css')
+        current = values.get('gtk-theme-name', 'Adwaita')
+        if current in ('Default', 'Emacs') and current not in themes:
+            current = 'Adwaita'
+        themes.add(current)
+        theme = self.choice(page, 'Application theme (GTK 3)', [(t,t) for t in sorted(themes)], current)
+        current_icons = values.get('gtk-icon-theme-name', 'Adwaita')
+        icon_themes = backend.icon_theme_names(Gtk.IconTheme.get_default().get_search_path())
+        icon_themes.update(('Adwaita', current_icons))
+        icons = self.choice(page, 'Application icon theme', [(t,t) for t in sorted(icon_themes)], current_icons)
         font = self.row(page, 'Font', Gtk.FontButton(font=values.get('gtk-font-name', 'DejaVu Sans 10')))
         dark = self.toggle(page, 'Prefer dark appearance', backend.prefers_dark(values.get('gtk-application-prefer-dark-theme') == 'true'))
+        self.note(page, 'Reopen GTK 3 apps to see theme, icon, or font changes.')
+
+        def apply_gtk():
+            args = (theme.get_active_id(), font.get_font_name(), dark.get_active(), icons.get_active_id())
+
+            def job():
+                backend.set_gtk_appearance(*args)
+                window = self.window
+
+                def saved():
+                    if self.window is window and self.window is not None:
+                        settings = Gtk.Settings.get_default()
+                        for key, value in zip(('gtk-theme-name', 'gtk-font-name',
+                                               'gtk-application-prefer-dark-theme', 'gtk-icon-theme-name'), args):
+                            settings.set_property(key, value)
+                GLib.idle_add(saved)
+            return job
+
+        self.button(page, 'Apply application appearance', apply_gtk)
         prefs = backend.preferences()
         rgba = Gdk.RGBA(); rgba.parse(prefs['background'])
         color = self.row(page, 'Desktop color', Gtk.ColorButton(rgba=rgba))
@@ -417,23 +441,41 @@ class Settings(Gtk.Application):
         remove.connect('clicked', clear)
         mode.connect('changed', refresh); refresh()
         self.note(image_box, 'Apply to save a private copy of the image and restore it at login. Remove image returns to your desktop color when applied; the original file is never deleted. Fill crops without stretching; Fit uses your desktop color around the image.')
-        self.note(page, 'Firefox and supported websites follow this light/dark preference when set to use the system theme. Other themes and fonts may require reopening an app.')
-        def apply():
-            c = color.get_rgba(); hexcolor = '#%02x%02x%02x' % tuple(round(v*255) for v in (c.red,c.green,c.blue))
-            args = (theme.get_active_id(), font.get_font_name(), dark.get_active(), hexcolor,
-                    mode.get_active_id() == 'image', layout.get_active_id(), chooser.get_filename())
+        def apply_background():
+            rgba = color.get_rgba()
+            hexcolor = '#%02x%02x%02x' % tuple(round(channel * 255)
+                                               for channel in (rgba.red, rgba.green, rgba.blue))
+            args = (hexcolor, mode.get_active_id() == 'image', layout.get_active_id(), chooser.get_filename())
+
             def job():
-                backend.appearance(*args)
-                window=self.window
+                backend.set_background(*args)
+                window = self.window
+
                 def saved():
-                    if self.window is not window or not chooser.get_parent(): return False
-                    Gtk.Settings.get_default().set_property('gtk-application-prefer-dark-theme',args[2])
+                    if self.window is not window or not chooser.get_parent():
+                        return
                     chooser.unselect_all()
-                    image_status.set_text('Saved image selected.' if args[4] else 'No image selected.')
+                    image_status.set_text('Saved image selected.' if args[1] else 'Solid color selected.')
                 GLib.idle_add(saved)
             return job
-        self.button(page, 'Apply appearance', apply)
+
+        self.button(page, 'Apply background', apply_background)
+        self.labwc_theme_controls(page)
         self.accent_controls(page)
+
+    def labwc_theme_controls(self, page):
+        current = backend.labwc_theme()
+        names = backend.theme_names('*/labwc/themerc', '*/openbox-3/themerc')
+        if current:
+            names.add(current)
+        choices = [('', 'Labwc default')] + [(name, name) for name in sorted(names)]
+        theme = self.choice(page, 'Window manager theme (labwc)', choices, current)
+
+        def apply():
+            name = theme.get_active_id()
+            return lambda: backend.set_labwc_theme(name)
+
+        self.button(page, 'Apply window manager theme', apply)
 
     def accent_controls(self, page):
         desktop, applications, linked = backend.accents()
@@ -522,7 +564,47 @@ class Settings(Gtk.Application):
             return lambda: backend.touchpad(backend.save_preferences(**values))
         self.button(page, 'Apply touchpad settings', apply)
 
+    def mouse(self, page):
+        values = backend.mouse_values()
+        speed = self.scale(page, 'Pointer speed', -1, 1, values['speed'], .1)
+        scroll = self.scale(page, 'Scroll speed', .1, 5, values['scroll'], .1)
+        natural = self.toggle(page, 'Natural scrolling', values['natural'])
+        left = self.toggle(page, 'Left-handed buttons', values['left'])
+        profile = self.choice(page, 'Pointer acceleration',
+                              [('default', 'Device default'), ('adaptive', 'Adaptive'), ('flat', 'Flat')],
+                              values['profile'])
+
+        def apply():
+            args = (speed.get_value(), scroll.get_value(), natural.get_active(),
+                    left.get_active(), profile.get_active_id())
+            return lambda: backend.set_mouse(*args)
+
+        self.button(page, 'Apply mouse settings', apply)
+
+    def keyboard_layout_controls(self, page):
+        layouts, variants, switch = backend.keyboard_layout()
+        catalog, switches = backend.keyboard_layout_options()
+        layout_entry = self.row(page, 'Layout codes', Gtk.Entry(text=layouts))
+        completion = Gtk.EntryCompletion(inline_completion=False)
+        model = Gtk.ListStore(str)
+        for code in sorted(catalog):
+            model.append((code,))
+        completion.set_model(model)
+        completion.set_text_column(0)
+        layout_entry.set_completion(completion)
+        variant_entry = self.row(page, 'Variant codes', Gtk.Entry(text=variants))
+        shortcut = self.choice(page, 'Switch layouts',
+                               [('', 'Disabled')] + sorted(switches.items(), key=lambda item: item[1]), switch)
+        self.note(page, 'Separate up to four layouts with commas, such as us,gb. Use blank variant entries for layouts that use their default.')
+
+        def apply():
+            values = (layout_entry.get_text(), variant_entry.get_text(), shortcut.get_active_id())
+            return lambda: backend.set_keyboard_layout(*values)
+
+        self.button(page, 'Apply keyboard layouts', apply)
+
     def keyboard(self, page):
+        self.keyboard_layout_controls(page)
         prefs = backend.preferences()
         dynamic = self.toggle(page, 'Dynamic workspaces', prefs['dynamic_workspaces'])
         count = self.scale(page, 'Fixed workspace count', 1,32,prefs['workspace_count'])
@@ -757,7 +839,7 @@ class Settings(Gtk.Application):
         button.connect('clicked', lambda *_: refresh())
         page.pack_start(button, False, False, 0)
         refresh()
-        self.note(page, 'Keep a tested resolution within 15 seconds or the previous layout returns. Saved modes are reused for the same connected displays.')
+        self.note(page, 'Higher scaling makes text and windows larger. Keep changes within 15 seconds or the previous layout returns. Confirmed settings are restored for the same displays. Positions use logical pixels.')
         self.note(page, 'Automatic layout extends external displays to the right and keeps the laptop primary. Turning it off keeps the current layout and stops automatic rearrangement. Workspaces span all screens.')
         automatic = self.toggle(page, 'Automatically extend connected displays', backend.preferences()['automatic_displays'])
         def apply():
@@ -786,22 +868,53 @@ class Settings(Gtk.Application):
             if not output['mode']:
                 self.note(page, output['name'] + ': connected but inactive')
                 continue
-            choices[output['name']] = self.choice(page,
-                output['name'] + (' (primary)' if output['primary'] else ''),
-                [(mode, mode) for mode in output['modes']], output['mode'])
+            label = output['name'] + (' (primary)' if output['primary'] else '')
+            modes = output['modes']
+            resolutions = list(dict.fromkeys(map(display_settings.resolution, modes)))
+            resolution = self.choice(page, f'{label} resolution',
+                                     [(mode, mode) for mode in resolutions],
+                                     display_settings.resolution(output['mode']))
+            resolution.set_sensitive(len(resolutions) > 1)
+            rate = self.choice(page, f'{label} refresh rate', [])
+
+            def refresh_rates(widget, rate=rate, modes=modes, current=output['mode']):
+                matching = [mode for mode in modes if display_settings.resolution(mode) == widget.get_active_id()]
+                rate.remove_all()
+                for mode in matching:
+                    rate.append(mode, mode.split('@', 1)[1].removesuffix('Hz') + ' Hz')
+                if not rate.set_active_id(current):
+                    rate.set_active(0)
+                rate.set_sensitive(len(matching) > 1)
+
+            resolution.connect('changed', refresh_rates)
+            refresh_rates(resolution)
+            scales = sorted({1.0, 1.25, 1.5, 1.75, 2.0, output['scale']})
+            scale = self.choice(page, f'{label} scale',
+                                [(value, f'{value:.1%}'.replace('.0%', '%')) for value in scales],
+                                output['scale'])
+            rotation = self.choice(page, f'{label} rotation', list(zip(
+                display_settings.TRANSFORMS,
+                ('Normal', '90°', '180°', '270°', 'Flipped', 'Flipped 90°', 'Flipped 180°', 'Flipped 270°')
+            )), output['transform'])
+            x = self.scale(page, f'{label} horizontal position', -32768, 32768, output['x'])
+            y = self.scale(page, f'{label} vertical position', -32768, 32768, output['y'])
+            choices[output['name']] = (rate, scale, rotation, x, y)
         if not choices:
             self.note(page, 'No active display detected.')
             return
-        button = Gtk.Button(label='Test resolution', halign=Gtk.Align.START)
-        button.connect('clicked', lambda *_: self.test_resolution(
-            {name: widget.get_active_id() for name, widget in choices.items()}))
+        button = Gtk.Button(label='Test display changes', halign=Gtk.Align.START)
+        button.connect('clicked', lambda *_: self.test_resolution({
+            name: dict(mode=rate.get_active_id(), scale=float(scale.get_active_id()),
+                       transform=rotation.get_active_id(), x=x.get_value_as_int(), y=y.get_value_as_int())
+            for name, (rate, scale, rotation, x, y) in choices.items()
+        }))
         page.pack_start(button, False, False, 0)
 
     def test_resolution(self, selections):
         if self.trial_process is not None:
             return
         self.stack.set_sensitive(False)
-        self.report('Testing resolution…')
+        self.report('Testing display changes…')
         try:
             self.trial_process = subprocess.Popen(
                 [sys.executable, '-B', str(Path(display_settings.__file__))],
@@ -820,7 +933,7 @@ class Settings(Gtk.Application):
                     if result['status'] == 'ready':
                         GLib.idle_add(self.confirm_resolution, result['seconds'])
                     else:
-                        message = {'kept':'Resolution saved.', 'restored':'Previous resolution restored.'}.get(
+                        message = {'kept':'Display changes saved.', 'restored':'Previous display settings restored.'}.get(
                             result['status'], result.get('message', 'Display change failed.'))
                         process.wait()
                         GLib.idle_add(self.finish_resolution, message, result['status']=='error')
@@ -842,7 +955,7 @@ class Settings(Gtk.Application):
         deadline = time.monotonic() + seconds
         def tick():
             remaining = max(0, int(deadline - time.monotonic()))
-            self.resolution_label.set_text(f'Keep this resolution? Reverting in {remaining} seconds.')
+            self.resolution_label.set_text(f'Keep these display changes? Reverting in {remaining} seconds.')
             return self.trial_process is not None and remaining > 0
         tick()
         self.resolution_bar.set_sensitive(True)
@@ -1013,7 +1126,30 @@ class Settings(Gtk.Application):
                     self.note(content, 'Charge cycles: ' + battery['cycles'])
             content.show_all()
         self.every(10, update)
-        self.note(page, 'Battery health and cycle counts appear only when reported by the hardware. This page does not change charging limits or suspend policy.')
+        self.note(page, 'Battery health and cycle counts appear only when reported by the hardware.')
+        actions = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        page.pack_start(actions, False, False, 0)
+
+        def capabilities():
+            bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
+            supported = []
+            for action in ('Suspend', 'Hibernate'):
+                reply = bus.call_sync('org.freedesktop.login1', '/org/freedesktop/login1',
+                    'org.freedesktop.login1.Manager', 'Can' + action, None, GLib.VariantType.new('(s)'),
+                    Gio.DBusCallFlags.NONE, 3000, None)
+                if reply.unpack()[0] in ('yes', 'challenge'):
+                    supported.append(action)
+            return supported
+
+        def controls(box, supported):
+            if not supported:
+                self.note(box, 'Suspend and hibernate are unavailable.')
+            for action in supported:
+                def apply(action=action):
+                    return lambda: backend.run('systemctl', action.lower())
+                self.button(box, action + ' now', apply)
+
+        self.load_section(actions, capabilities, controls)
 
     def date_time(self, page):
         current = self.note(page, '')

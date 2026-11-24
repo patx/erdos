@@ -1,7 +1,7 @@
 # ErdOS Settings
 
 Open **Settings** from the desktop menu or **Super + I**. The current checkout
-has thirteen sections in one Python/GTK window. Native theme colors, grouped
+has fourteen sections in one Python/GTK window. Native theme colors, grouped
 controls, readable labels, keyboard focus, inline validation and Apply/Revert
 feedback are shared across the app. No extra UI libraries, packages or background
 services are added.
@@ -24,24 +24,25 @@ If you close during an operation, it finishes before the application exits.
 Refresh and loading messages are separate from save confirmations. Longer help
 is available under **More information**.
 
-A display-resolution trial has separate **Revert** and **Keep resolution** buttons.
+A display trial has separate **Revert** and **Keep changes** buttons.
 Closing during a trial requests rollback before closing. Error messages distinguish
 a rejected mode from a successful restore, and the display list refreshes afterward.
 
 | Section | Controls |
 | --- | --- |
-| Appearance | GTK theme, font, dark preference, labwc and GTK 3 accents, desktop color and image backgrounds |
+| Appearance | GTK 3, icon, and labwc themes, font, dark preference, accents, desktop color and image backgrounds |
 | Default Programs | Terminal, browser, file manager and text editor |
 | Touchpad | Natural scrolling, tapping, clickfinger right-click and pointer speed |
-| Keyboard | Dynamic/fixed workspaces, Super-key overview, shortcuts and custom commands |
+| Mouse | Pointer and scroll speed, acceleration, natural scrolling and left-handed buttons |
+| Keyboard | Layouts and layout switching, dynamic/fixed workspaces, Super-key overview, shortcuts and custom commands |
 | Menu | Edit/reorder menu entries; enable three-finger and Super + right-click triggers |
 | Startup Applications | Edit labwc login commands with syntax validation and backup |
 | Gestures | Swipe distance and configurable three/four-finger actions |
-| Displays | Resolutions with timed rollback, automatic extension and laptop brightness |
+| Displays | Resolution, refresh rate, scale, rotation and position with timed rollback, automatic extension and laptop brightness |
 | Sound | PipeWire input/output devices, volume and mute |
-| Network | Wi-Fi/internet state, radio, scan/connect and saved profiles |
+| Network | Wi-Fi/internet state, saved profiles, PEAP enterprise Wi-Fi, IPv4 and DNS |
 | Bluetooth | Scan, pair, connect/disconnect, trust and forget |
-| Power | Battery status, capacity, health and cycles where available |
+| Power | Battery status, capacity, health and cycles, plus suspend and hibernate where available |
 | Date & Time | Current time, time zone and synchronization status |
 
 ## Default programs
@@ -69,7 +70,13 @@ uses its system theme/automatic website appearance. A browser theme or a site’
 own saved theme can override this preference; ErdOS does not forcibly recolor
 websites. See [Firefox website appearance](https://support.mozilla.org/en-US/kb/change-website-appearance-settings-firefox)
 for its browser-level options. Other GTK changes may require reopening an already running application. Windows and
-menus use the supplied dark labwc theme, square corners and no shadows.
+menus use the supplied dark ErdOS theme by default.
+
+**Application theme (GTK 3)** and **Application icon theme** set the widget
+style and icons used by GTK 3 apps. The pickers show compatible themes already
+installed on the system or for your user. **Window manager theme (labwc)** sets
+the theme for window decorations and the desktop menu. Apply that choice to
+reload labwc. An active custom desktop accent still sets the menu highlight.
 
 **Desktop accent** sets the highlight in the labwc desktop menu.
 **Application accent** sets selection and control highlights in GTK 3 apps
@@ -83,6 +90,11 @@ is the upstream graphical tool for labwc themes and compositor settings.
 appearance controls, including icon and cursor themes. Both are optional tools.
 
 ## Keyboard and workspaces
+
+Set up to four XKB layouts in **Keyboard** and choose a shortcut to switch
+between them. Enter comma-separated layout codes such as `us,gb`. Variant
+codes follow the same order. Leave an entry blank to use that layout's default.
+**Mouse** controls non-touch pointing devices independently of **Touchpad**.
 
 Tap Super or swipe three fingers up to open the live window overview on the
 display nearest the pointer. It shows windows across workspaces and outputs.
@@ -189,23 +201,30 @@ locked. Physical support depends on the touchpad; typical VMs expose only a mous
 ## Displays
 
 Resolutions come from the Wayland output-management protocol through `wlr-randr`.
-A test must be confirmed within 15 seconds; timeout, Revert, closing Settings or
-a helper error restores the previous layout where possible. Confirmed choices
-are saved for the same connected outputs.
+Set a higher scale to make text and windows larger while keeping the display
+at its native resolution. Set the refresh rate, rotation, and position for
+each active output. Positions use logical pixels and stay where you set them
+when you edit scale. Confirm changes within 15 seconds. Timeout, Revert,
+closing Settings, or a helper error restores the previous settings where
+possible. Confirmed settings are reused for the same connected outputs even
+when automatic extension is disabled.
 
 Automatic layout keeps the built-in laptop screen at the left and extends
 external monitors to its right. Workspaces span all screens. Hotplug invokes a
-one-shot layout helper, not a resident monitor polling process. Disabling the
-policy leaves the current layout untouched. Custom rotated layouts should be
-returned to normal orientation before editing resolutions here. Hardware
-backlight controls do not imply DDC brightness support for external monitors.
+one-shot layout helper. When automatic extension is disabled, connecting a
+different combination of displays leaves the current layout in place.
+Hardware backlight controls apply to the built-in panel.
 
 ## Network, Bluetooth and sound
 
 NetworkManager provides current connection state and saved profiles. Wi-Fi
 connection and internet reachability are shown separately. Network changes update
-the visible controls via D-Bus events. Advanced profiles use `nmcli` in Terminal;
-there is no bundled nm-connection-editor. Volume controls and media keys use
+the visible controls via D-Bus events. Edit DHCP, a static IPv4 address,
+the gateway, and IPv4 DNS on saved Wi-Fi and Ethernet profiles. Reconnect
+to apply profile changes. Enterprise Wi-Fi supports PEAP with MSCHAPv2 and
+requires a CA certificate and server domain. Enter the password again when
+reconnecting to that profile. Other enterprise methods use `nmcli`.
+Volume controls and media keys use
 WirePlumber directly, so pulsemixer is not needed. Bluetooth uses BlueZ and its existing authorization agent;
 Sound uses PipeWire/WirePlumber. Choosing an audio device loads its own volume
 and mute state before Apply is available. **Refresh devices** picks up newly
@@ -215,8 +234,9 @@ shown as connected. These sections do not install device-specific drivers.
 
 ## Power and time
 
-Power is informational. Debian's logind defaults handle lid closure, sleep keys
-and power-button presses; no charge-limit or automatic-sleep service is added.
+Power offers **Suspend now** and **Hibernate now** where logind reports them
+available. Debian's logind policy handles lid closure, sleep keys and
+power-button presses.
 There is no bundled screen locker, including on resume. Behavior depends on
 hardware, docking and inhibitors. Closing the lid normally suspends except when
 docked/using another display. See [Debian logind documentation](https://manpages.debian.org/trixie/systemd/logind.conf.5.en.html).

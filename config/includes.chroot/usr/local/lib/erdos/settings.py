@@ -169,8 +169,169 @@ def set_color_scheme(dark, initialize=False):
     Gio.Settings.sync()
 
 
-def appearance(theme, font, dark, color, image=False, layout='fill', source=None):
-    set_background(color, image, layout, source)
+def theme_roots():
+    user_data = Path(os.environ.get('XDG_DATA_HOME') or Path.home() / '.local/share')
+    system_data = os.environ.get('XDG_DATA_DIRS') or '/usr/local/share:/usr/share:/opt/share'
+    return (Path.home() / '.themes', user_data / 'themes',
+            *(Path(path) / 'themes' for path in system_data.split(':') if path))
+
+
+def theme_names(*patterns):
+    return {path.parent.parent.name for root in theme_roots()
+            for pattern in patterns for path in root.glob(pattern) if path.is_file()}
+
+
+def icon_theme_names(search_paths):
+    names = set()
+    for search_path in search_paths:
+        for path in Path(search_path).glob('*/index.theme'):
+            parser = configparser.ConfigParser(interpolation=None, strict=False)
+            try:
+                parser.read(path)
+                if parser.get('Icon Theme', 'Directories', fallback='').strip():
+                    names.add(path.parent.name)
+            except (configparser.Error, UnicodeError, OSError):
+                continue
+    return names
+
+
+def update_labwc(path, source, updated):
+    if source == updated:
+        return
+    write(path, updated)
+    try:
+        run('labwc', '--reconfigure')
+    except Exception:
+        if source is None:
+            path.unlink(missing_ok=True)
+        else:
+            write(path, source)
+        raise
+
+
+def labwc_config():
+    path = CONFIG / 'labwc/rc.xml'
+    source = path.read_text() if path.exists() else None
+    parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True, insert_pis=True))
+    root = ET.fromstring(source, parser) if source is not None else ET.Element('labwc_config')
+    return path, source, root
+
+
+def mouse_values():
+    _, _, root = labwc_config()
+    node = root.find("libinput/device[@category='non-touch']")
+    value = node.findtext if node is not None else lambda key, default: default
+    return dict(speed=float(value('pointerSpeed', '0')), scroll=float(value('scrollFactor', '1')),
+                natural=value('naturalScroll', 'no') == 'yes', left=value('leftHanded', 'no') == 'yes',
+                profile=value('accelProfile', '') or 'default')
+
+
+def set_mouse(speed, scroll, natural, left, profile):
+    if not (-1 <= speed <= 1 and 0.1 <= scroll <= 5 and profile in ('default', 'flat', 'adaptive')):
+        raise ValueError('Invalid mouse settings.')
+    path, source, root = labwc_config()
+    libinput = root.find('libinput')
+    if libinput is None:
+        libinput = ET.SubElement(root, 'libinput')
+    device = libinput.find("device[@category='non-touch']")
+    if device is None:
+        device = ET.SubElement(libinput, 'device', {'category': 'non-touch'})
+    values = dict(pointerSpeed=f'{speed:.2f}', scrollFactor=f'{scroll:.2f}',
+                  naturalScroll='yes' if natural else 'no', leftHanded='yes' if left else 'no',
+                  accelProfile=profile if profile != 'default' else None)
+    for key, value in values.items():
+        node = device.find(key)
+        if value is None:
+            if node is not None:
+                device.remove(node)
+            continue
+        if node is None:
+            node = ET.SubElement(device, key)
+        node.text = value
+    update_labwc(path, source, ET.tostring(root, encoding='unicode') + '\n')
+
+
+XKB_LAYOUT_KEYS = ('XKB_DEFAULT_LAYOUT', 'XKB_DEFAULT_VARIANT', 'XKB_DEFAULT_OPTIONS')
+
+
+def keyboard_layout_options():
+    catalog = ET.parse('/usr/share/X11/xkb/rules/evdev.xml')
+    layouts = {}
+    for node in catalog.findall('layoutList/layout'):
+        name = node.findtext('configItem/name')
+        layouts[name] = {v.text for v in node.findall('variantList/variant/configItem/name')}
+    switches = {node.findtext('configItem/name'): node.findtext('configItem/description')
+                for node in catalog.findall('optionList/group/option')
+                if node.findtext('configItem/name', '').startswith('grp:')}
+    return layouts, switches
+
+
+def keyboard_environment(source):
+    values = {key: os.environ.get(key, '') for key in XKB_LAYOUT_KEYS}
+    for line in source.splitlines():
+        key, _, value = line.partition('=')
+        if key.strip() in values:
+            values[key.strip()] = value.strip()
+    return values
+
+
+def keyboard_layout():
+    path = CONFIG / 'labwc/environment'
+    values = keyboard_environment(path.read_text() if path.exists() else '')
+    layouts, variants, options = (values[key] for key in XKB_LAYOUT_KEYS)
+    switch = next((option for option in options.split(',') if option.startswith('grp:')), '')
+    return layouts or 'us', variants, switch
+
+
+def set_keyboard_layout(layouts, variants, switch):
+    catalog, switches = keyboard_layout_options()
+    layouts = [value.strip() for value in layouts.split(',')]
+    variants = [value.strip() for value in variants.split(',')] if variants.strip() else []
+    if not 1 <= len(layouts) <= 4 or any(layout not in catalog for layout in layouts):
+        raise ValueError('Enter one to four valid keyboard layout codes, such as us,gb.')
+    if len(variants) > len(layouts) or any(variant and variant not in catalog[layout]
+                                          for layout, variant in zip(layouts, variants)):
+        raise ValueError('Enter variants in layout order, with commas for blank entries.')
+    if switch and (switch not in switches or len(layouts) < 2):
+        raise ValueError('Choose at least two layouts to use a switching shortcut.')
+    path = CONFIG / 'labwc/environment'
+    source = path.read_text() if path.exists() else None
+    values = keyboard_environment(source or '')
+    options = [value for value in values['XKB_DEFAULT_OPTIONS'].split(',')
+               if value and not value.startswith('grp:')]
+    if switch:
+        options.append(switch)
+    new_values = dict(zip(XKB_LAYOUT_KEYS, (','.join(layouts), ','.join(variants), ','.join(options))))
+    lines = [line for line in (source or '').splitlines() if line.partition('=')[0].strip() not in new_values]
+    lines.extend(f'{key}={value}' for key, value in new_values.items())
+    update_labwc(path, source, '\n'.join(lines) + '\n')
+
+
+def labwc_theme():
+    path = CONFIG / 'labwc/rc.xml'
+    return ET.parse(path).findtext('theme/name', '').strip() if path.exists() else ''
+
+
+def set_labwc_theme(name):
+    path, source, root = labwc_config()
+    theme = root.find('theme')
+    if theme is None:
+        if not name:
+            return
+        theme = ET.SubElement(root, 'theme')
+    node = theme.find('name')
+    if name == theme.findtext('name', '').strip():
+        return
+    if not name:
+        theme.remove(node)
+    else:
+        if node is None:
+            node = ET.SubElement(theme, 'name')
+        node.text = name
+    update_labwc(path, source, ET.tostring(root, encoding='unicode') + '\n')
+
+
+def set_gtk_appearance(theme, font, dark, icon_theme):
     path = CONFIG / 'gtk-3.0/settings.ini'
     parser = configparser.ConfigParser(interpolation=None)
     parser.read(path)
@@ -178,6 +339,7 @@ def appearance(theme, font, dark, color, image=False, layout='fill', source=None
         parser.add_section('Settings')
     parser['Settings'].update({'gtk-theme-name': theme, 'gtk-font-name': font,
                               'gtk-application-prefer-dark-theme': str(dark).lower()})
+    parser['Settings']['gtk-icon-theme-name'] = icon_theme
     stream = io.StringIO(); parser.write(stream); write(path, stream.getvalue())
     set_color_scheme(dark)
 
@@ -456,8 +618,7 @@ def apply_session():
     set_color_scheme(dark,initialize=True)
     # The compositor owns gestures/workspaces; only the background is resident.
     apply_background()
-    if preferences()['automatic_displays']:
-        run('erdos-displays', '--apply')
+    run('erdos-displays', '--apply')
 
 
 def audio_nodes():

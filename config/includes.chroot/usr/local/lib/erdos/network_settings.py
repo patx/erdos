@@ -1,6 +1,10 @@
 # SPDX-License-Identifier: MIT
 """Network controls with current state, explicit actions and event-driven refresh."""
+import ipaddress
+from pathlib import Path
+import tempfile
 import threading
+import uuid
 from gi.repository import Gio, GLib, Gtk
 import settings as backend
 
@@ -9,10 +13,11 @@ def snapshot():
     devices = backend.nm_lines('-f', 'DEVICE,TYPE,STATE,CONNECTION', 'device', 'status')
     wifi = [row for row in devices if row[1] == 'wifi']
     radio = backend.run('nmcli', 'radio', 'wifi') == 'enabled'
-    profiles = [row for row in backend.nm_lines('-f', 'UUID,NAME,TYPE,ACTIVE', 'connection', 'show')
-                if row[2] in ('wifi', '802-11-wireless')]
+    connections = backend.nm_lines('-f', 'UUID,NAME,TYPE,ACTIVE', 'connection', 'show')
+    profiles = [row for row in connections if row[2] in ('wifi', '802-11-wireless')]
     aps = backend.nm_lines('-f', 'IN-USE,BSSID,SSID,SIGNAL,SECURITY', 'device', 'wifi', 'list', '--rescan', 'no') if wifi and radio else []
     return dict(devices=devices, wifi=wifi, radio=radio, profiles=profiles, aps=aps,
+                connections=[row for row in connections if row[2] in ('wifi', '802-11-wireless', 'ethernet', '802-3-ethernet')],
                 internet=backend.run('nmcli', '-g', 'CONNECTIVITY', 'general'))
 
 
@@ -35,6 +40,55 @@ def summary(info):
     if all(state in ('unavailable', 'unmanaged') for state in states):
         return 'Wi-Fi is unavailable. Check airplane mode or the wireless switch.'
     return 'Wi-Fi is on. Not connected to a network.'
+
+
+def set_ipv4(profile, address, gateway, dns):
+    address, gateway = address.strip(), gateway.strip()
+    if address and '/' not in address:
+        raise ValueError('Include a prefix length in the IPv4 address, such as /24.')
+    if gateway and not address:
+        raise ValueError('Set a static IPv4 address to specify a gateway.')
+    ip = str(ipaddress.IPv4Interface(address)) if address else ''
+    router = str(ipaddress.IPv4Address(gateway)) if gateway else ''
+    servers = ','.join(str(ipaddress.IPv4Address(server.strip())) for server in dns.split(',') if server.strip())
+    backend.run('nmcli', 'connection', 'modify', 'uuid', profile,
+                'ipv4.method', 'manual' if ip else 'auto', 'ipv4.addresses', ip,
+                'ipv4.gateway', router, 'ipv4.dns', servers,
+                'ipv4.ignore-auto-dns', 'yes' if servers else 'no')
+
+
+def activate_enterprise(profile, password):
+    if not password or any(char in password for char in ('\0', '\r', '\n')):
+        raise ValueError('Enter a single-line enterprise Wi-Fi password.')
+    with tempfile.NamedTemporaryFile(mode='w', prefix='erdos-wifi-') as credentials:
+        credentials.write(f'802-1x.password:{password}\n')
+        credentials.flush()
+        backend.run('nmcli', '--wait', '30', 'connection', 'up', 'uuid', profile,
+                    'passwd-file', credentials.name, timeout=40)
+
+
+def connect_enterprise(ssid, identity, domain, certificate, password):
+    if not all((ssid, identity, domain, certificate, password)) or any(
+            char in password for char in ('\0', '\r', '\n')):
+        raise ValueError('Enter the network, identity, server domain, CA certificate, and a single-line password.')
+    cert = Path(certificate).expanduser()
+    if not cert.is_file():
+        raise ValueError('Choose a readable CA certificate file.')
+    profile = str(uuid.uuid4())
+    backend.run('nmcli', 'connection', 'add', 'type', 'wifi', 'ifname', '*',
+                'con-name', ssid, 'ssid', ssid, 'connection.uuid', profile,
+                'connection.autoconnect', 'no', 'wifi-sec.key-mgmt', 'wpa-eap',
+                '802-1x.eap', 'peap', '802-1x.phase2-auth', 'mschapv2',
+                '802-1x.identity', identity, '802-1x.ca-cert', str(cert.resolve()),
+                '802-1x.domain-suffix-match', domain, '802-1x.password-flags', '2')
+    try:
+        activate_enterprise(profile, password)
+    except Exception as error:
+        try:
+            backend.run('nmcli', 'connection', 'delete', 'uuid', profile)
+        except Exception as cleanup:
+            raise RuntimeError(f'{error} Could not remove the incomplete profile: {cleanup}') from error
+        raise
 
 
 class Network:
@@ -82,7 +136,16 @@ class Network:
         button = Gtk.Button(label='Refresh status', halign=Gtk.Align.START)
         button.connect('clicked', lambda *_: self.operation(lambda: None, 'Refreshing network status…', lambda info: 'Network status refreshed.'))
         page.pack_start(button, False, False, 0)
-        self.app.note(page, 'Wi-Fi connection and internet access are shown separately. Leave the password empty for an open or saved network. Use nmcli in Terminal for enterprise Wi-Fi and advanced profiles.')
+        self.advanced = self.app.choice(page, 'Network profile', [])
+        self.ipv4 = Gtk.Button(label='Edit IPv4 and DNS', halign=Gtk.Align.START)
+        self.ipv4.connect('clicked', self.edit_ipv4)
+        page.pack_start(self.ipv4, False, False, 0)
+        self.enterprise = Gtk.Button(label='Connect to enterprise Wi-Fi', halign=Gtk.Align.START)
+        self.enterprise.connect('clicked', self.enterprise_wifi)
+        page.pack_start(self.enterprise, False, False, 0)
+        self.app.note(page, 'Enterprise Wi-Fi supports PEAP with MSCHAPv2. Use the CA certificate and server domain supplied by your network administrator. Enter your password again when reconnecting to a saved enterprise network.')
+        self.profile_status = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        page.pack_start(self.profile_status, False, False, 0)
         self.ready = True
         self.update(info)
 
@@ -124,6 +187,12 @@ class Network:
         self.saved.set_active_id(selected or '')
         if self.saved.get_active() < 0 and info['profiles']:
             self.saved.set_active(0)
+        selected = self.advanced.get_active_id()
+        self.advanced.remove_all()
+        for profile, name, _, _ in info['connections']:
+            self.advanced.append(profile, name)
+        if not selected or not self.advanced.set_active_id(selected):
+            self.advanced.set_active(0)
         self.sensitivity()
         # Do not leave an old "Connected" confirmation over a new disconnected state.
         if old != text and not self.busy and self.app.status.get_text() == self.last_message:
@@ -147,6 +216,9 @@ class Network:
         connected = {row[0] for row in self.info['profiles'] if row[3] == 'yes'}
         self.saved.set_sensitive(enabled and bool(self.info['profiles']))
         self.saved_connect.set_sensitive(enabled and bool(selected) and selected not in connected)
+        self.advanced.set_sensitive(bool(self.info['connections']))
+        self.ipv4.set_sensitive(bool(self.info['connections']))
+        self.enterprise.set_sensitive(enabled)
 
     def operation(self, action, progress, confirmation):
         def prepare():
@@ -223,8 +295,67 @@ class Network:
             self.app.report('Select a saved Wi-Fi connection first.', error=True)
             return
         name = next(row[1] for row in self.info['profiles'] if row[0] == selected)
-        self.operation(lambda: backend.run('nmcli', '--wait', '30', 'connection', 'up', 'uuid', selected, timeout=40),
-                       f'Connecting to “{name}”…', summary)
+        password = self.password.get_text()
+        self.password.set_text('')
+
+        def connect():
+            if password:
+                security = backend.run('nmcli', '-g', '802-11-wireless-security.key-mgmt',
+                                       'connection', 'show', 'uuid', selected)
+                if security in ('wpa-eap', 'wpa-eap-suite-b-192'):
+                    activate_enterprise(selected, password)
+                    return
+            backend.run('nmcli', '--wait', '30', 'connection', 'up', 'uuid', selected, timeout=40)
+
+        self.operation(connect, f'Connecting to “{name}”…', summary)
+
+    def edit_ipv4(self, *_):
+        profile = self.advanced.get_active_id()
+        if not profile:
+            return
+        def fetch():
+            return [backend.run('nmcli', '-g', key, 'connection', 'show', 'uuid', profile)
+                    for key in ('ipv4.method', 'ipv4.addresses', 'ipv4.gateway', 'ipv4.dns')]
+
+        def edit(_box, values):
+            method, address, gateway, dns = values
+            if (method not in ('auto', 'manual') or (method == 'auto' and address)
+                    or ',' in address or '\n' in address):
+                self.app.report('This profile needs advanced IPv4 settings. Manage it with nmcli.', error=True)
+                return
+            def save(fields):
+                self.operation(lambda: set_ipv4(profile, *fields), 'Saving network profile…',
+                               lambda _: 'Profile saved. Reconnect to use the new settings.')
+            self.app.edit_fields('IPv4 and DNS', [
+                ('Static IPv4 address with prefix (blank for DHCP)', address),
+                ('IPv4 gateway', gateway),
+                ('DNS servers (comma-separated)', dns.replace('\n', ',')),
+            ], save)
+
+        box = self.profile_status
+        for child in box.get_children():
+            child.destroy()
+        box.show()
+        self.app.load_section(box, fetch, edit)
+
+    def enterprise_wifi(self, *_):
+        dialog = Gtk.Dialog(title='Enterprise Wi-Fi (PEAP)', transient_for=self.app.window, modal=True)
+        dialog.add_buttons('Cancel', Gtk.ResponseType.CANCEL, 'Connect', Gtk.ResponseType.OK)
+        box = dialog.get_content_area()
+        box.set_border_width(12)
+        ssid = self.app.row(box, 'Network name (SSID)', Gtk.Entry())
+        identity = self.app.row(box, 'Identity', Gtk.Entry())
+        domain = self.app.row(box, 'Server domain', Gtk.Entry())
+        certificate = self.app.row(box, 'CA certificate', Gtk.FileChooserButton(
+            title='Choose a CA certificate', action=Gtk.FileChooserAction.OPEN))
+        password = self.app.row(box, 'Password', Gtk.Entry(visibility=False, input_purpose=Gtk.InputPurpose.PASSWORD))
+        dialog.show_all()
+        if dialog.run() == Gtk.ResponseType.OK:
+            values = (ssid.get_text(), identity.get_text(), domain.get_text(), certificate.get_filename(), password.get_text())
+            dialog.destroy()
+            self.operation(lambda: connect_enterprise(*values), 'Connecting to enterprise Wi-Fi…', summary)
+        else:
+            dialog.destroy()
 
     def disconnect_wifi(self, *_):
         devices = [row[0] for row in self.info['wifi'] if row[2].startswith(('connected', 'connecting'))]

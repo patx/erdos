@@ -1,9 +1,17 @@
 # SPDX-License-Identifier: MIT
-"""Wayland output modes and a short-lived, crash-safe confirmation process."""
+"""Wayland output settings and an independent confirmation process."""
 import json
+import math
 import select
 import sys
+
 import settings
+
+TRANSFORMS = ('normal', '90', '180', '270', 'flipped', 'flipped-90', 'flipped-180', 'flipped-270')
+
+
+def mode_id(mode):
+    return f"{mode['width']}x{mode['height']}@{mode['refresh']}Hz"
 
 
 def outputs():
@@ -12,17 +20,15 @@ def outputs():
         modes = item.get('modes', [])
         current = next((mode for mode in modes if mode.get('current')), None)
         enabled = bool(item.get('enabled') and current)
-        scale = item.get('scale', 1) or 1
         position = item.get('position') or {}
-        result.append(dict(name=item['name'], primary=item['name'].startswith(('eDP-', 'LVDS-', 'DSI-')),
-            modes=list(dict.fromkeys(f"{mode['width']}x{mode['height']}" for mode in modes)),
-            mode=f"{current['width']}x{current['height']}" if enabled else None,
-            rate=str(current.get('refresh', 0)) if enabled else None,
-            x=position.get('x',0), y=position.get('y',0), scale=scale,
-            width=round(current['width']/scale) if enabled else 0,
-            height=round(current['height']/scale) if enabled else 0,
-            rotated=item.get('transform','normal') != 'normal',
-            preferred=next((f"{mode['width']}x{mode['height']}" for mode in modes if mode.get('preferred')), None)))
+        result.append(dict(
+            name=item['name'], primary=item['name'].startswith(('eDP-', 'LVDS-', 'DSI-')),
+            modes=list(dict.fromkeys(mode_id(mode) for mode in modes)),
+            mode=mode_id(current) if enabled else None, scale=float(item.get('scale') or 1),
+            x=position.get('x', 0), y=position.get('y', 0),
+            transform=item.get('transform', 'normal'),
+            preferred=next((mode_id(mode) for mode in modes if mode.get('preferred')), None),
+        ))
     return result
 
 
@@ -30,43 +36,92 @@ def topology(items):
     return sorted(item['name'] for item in items)
 
 
+def valid_scale(scale):
+    return type(scale) in (int, float) and math.isfinite(scale) and scale > 0
+
+
+def resolution(mode):
+    return mode.split('@', 1)[0]
+
+
+def current_settings(item):
+    return {key: item[key] for key in ('mode', 'scale', 'x', 'y', 'transform')}
+
+
+def output_args(item, target):
+    mode, scale, transform = target['mode'], target['scale'], target['transform']
+    if mode not in item['modes']:
+        raise ValueError(f'{item["name"]} no longer advertises {mode}. Refresh displays.')
+    if not valid_scale(scale):
+        raise ValueError(f'Invalid scale for {item["name"]}.')
+    if transform not in TRANSFORMS or any(type(target[axis]) is not int for axis in ('x', 'y')):
+        raise ValueError(f'Invalid rotation or position for {item["name"]}.')
+    args = ['--output', item['name']]
+    if item['mode'] is None:
+        args += ['--on']
+    if mode != item['mode']:
+        args += ['--mode', mode]
+    return args + ['--scale', str(scale), '--transform', transform, '--pos', f'{target["x"]},{target["y"]}']
+
+
 def layout(items, selections):
     active = [item for item in items if item['mode']]
     if not active or set(selections) != {item['name'] for item in active}:
         raise ValueError('Connected displays changed. Refresh the display list.')
-    if any(item.get('rotated') for item in active):
-        raise ValueError('Return rotated displays to normal orientation before using this editor.')
-    ordered = sorted(active, key=lambda item:item['x'])
     command = ['wlr-randr']
-    edge = 0
-    row = all(item['y'] == 0 for item in ordered)
-    for item in ordered:
-        mode = selections[item['name']]
-        if mode not in item['modes']:
-            raise ValueError(f'{item["name"]} no longer advertises {mode}. Refresh displays.')
-        command += ['--output',item['name'],'--mode',mode,'--pos',f'{edge if row else item["x"]},{item["y"]}']
-        edge += round(int(mode.split('x')[0])/item.get('scale',1))
+    for item in active:
+        command.extend(output_args(item, selections[item['name']]))
     return command
 
 
 def automatic():
     prefs = settings.preferences()
-    if not prefs['automatic_displays']:
-        return
     items = outputs()
     saved = prefs.get('display_modes', {})
-    saved_modes = saved.get('modes', {}) if topology(items) == saved.get('outputs') else {}
+    if topology(items) != saved.get('outputs'):
+        saved = {}
+    configurations = saved.get('configurations', {})
     command = ['wlr-randr']
+    if configurations:
+        try:
+            available = {item['name']: item for item in items}
+            for name, target in configurations.items():
+                command.extend(output_args(available[name], target))
+        except (KeyError, TypeError, ValueError):
+            command = ['wlr-randr']
+        if len(command) > 1:
+            settings.run(*command)
+            return
+    if not prefs['automatic_displays']:
+        # Older saves have no arrangement. Keep the current position and rotation.
+        for item in items:
+            legacy = saved.get('modes', {}).get(item['name'])
+            scale = saved.get('scales', {}).get(item['name'])
+            if item['mode'] and (legacy or valid_scale(scale)):
+                mode = next((mode for mode in item['modes']
+                             if mode == legacy or resolution(mode) == legacy), item['mode'])
+                command.extend(output_args(item, {**current_settings(item), 'mode': mode,
+                                                  'scale': scale if valid_scale(scale) else item['scale']}))
+        if len(command) > 1:
+            settings.run(*command)
+        return
+
     edge = 0
-    for item in sorted(items,key=lambda item:(not item['primary'],item['name'])):
-        mode = saved_modes.get(item['name']) or item['preferred'] or item['mode'] or next(iter(item['modes']),None)
-        if mode not in item['modes']:
-            mode = item['preferred'] or next(iter(item['modes']),None)
+    for item in sorted(items, key=lambda item: (not item['primary'], item['name'])):
+        legacy = saved.get('modes', {}).get(item['name'])
+        modes = item['modes']
+        mode = next((mode for mode in modes if mode == legacy or resolution(mode) == legacy), None)
+        mode = mode or item['preferred'] or item['mode'] or next(iter(modes), None)
         if not mode:
             continue
-        command += ['--output',item['name'],'--on','--mode',mode,'--pos',f'{edge},0']
-        edge += round(int(mode.split('x')[0])/item.get('scale',1))
-    if len(command)>1:
+        scale = saved.get('scales', {}).get(item['name'])
+        if not valid_scale(scale):
+            scale = item['scale']
+        transform = item['transform']
+        command.extend(output_args(item, dict(mode=mode, scale=scale, x=edge, y=0, transform=transform)))
+        width, height = map(int, resolution(mode).split('x'))
+        edge += round((height if transform in ('90', '270', 'flipped-90', 'flipped-270') else width) / scale)
+    if len(command) > 1:
         settings.run(*command)
 
 
@@ -76,44 +131,55 @@ def restore(items):
         automatic()
         return
     command = ['wlr-randr']
+    available = {item['name']: item for item in now}
     for item in items:
-        command += ['--output',item['name']]
         if item['mode']:
-            mode=item['mode'] + ('@'+item['rate']+'Hz' if item['rate'] else '')
-            command += ['--on','--mode',mode,'--pos',f'{item["x"]},{item["y"]}','--scale',str(item['scale'])]
+            command.extend(output_args(available[item['name']], current_settings(item)))
         else:
-            command += ['--off']
+            command.extend(['--output', item['name'], '--off'])
     settings.run(*command)
 
 
 def trial():
-    previous=None; confirmed=False
+    previous = None
+    confirmed = False
     try:
-        selection=json.loads(sys.stdin.readline())
-        previous=outputs()
-        settings.run(*layout(previous,selection))
-        print(json.dumps({'status':'ready','seconds':15}),flush=True)
-        ready,_,_=select.select([sys.stdin],[],[],15)
-        answer=sys.stdin.readline().strip() if ready else ''
-        if answer=='keep':
-            current=outputs()
-            if topology(current)!=topology(previous) or any(item['mode']!=selection.get(item['name']) for item in current if item['mode']):
-                raise ValueError('Displays changed during confirmation. Selection was not saved.')
-            settings.save_preferences(display_modes={'outputs':topology(previous),'modes':selection})
-            confirmed=True
-            print(json.dumps({'status':'kept'}),flush=True)
+        selection = json.loads(sys.stdin.readline())
+        before = outputs()
+        command = layout(before, selection)
+        previous = before
+        settings.run(*command)
+        print(json.dumps({'status': 'ready', 'seconds': 15}), flush=True)
+        ready, _, _ = select.select([sys.stdin], [], [], 15)
+        answer = sys.stdin.readline().strip() if ready else ''
+        if answer == 'keep':
+            current = outputs()
+            active = {item['name']: current_settings(item) for item in current if item['mode']}
+            if (topology(current) != topology(previous) or active.keys() != selection.keys()
+                    or any(any(item[key] != selection[name][key] for key in ('mode', 'x', 'y', 'transform'))
+                           or not math.isclose(item['scale'], selection[name]['scale'], abs_tol=0.005)
+                           for name, item in active.items())):
+                raise ValueError('Display settings did not match the requested changes.')
+            settings.save_preferences(display_modes={'outputs': topology(previous), 'configurations': active})
+            confirmed = True
+            print(json.dumps({'status': 'kept'}), flush=True)
         else:
-            restore(previous);previous=None
-            print(json.dumps({'status':'restored'}),flush=True)
+            restore(previous)
+            previous = None
+            print(json.dumps({'status': 'restored'}), flush=True)
     except Exception as error:
-        message=str(error)
+        message = str(error)
         if previous is not None and not confirmed:
-            try:restore(previous)
-            except Exception as failure:message+=f' Could not restore displays: {failure}'
-        try:print(json.dumps({'status':'error','message':message}),flush=True)
-        except BrokenPipeError:pass
+            try:
+                restore(previous)
+            except Exception as failure:
+                message += f' Could not restore displays: {failure}'
+        try:
+            print(json.dumps({'status': 'error', 'message': message}), flush=True)
+        except BrokenPipeError:
+            pass
 
 
-if __name__=='__main__':
-    sys.dont_write_bytecode=True
+if __name__ == '__main__':
+    sys.dont_write_bytecode = True
     trial()
