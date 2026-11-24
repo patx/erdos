@@ -3,7 +3,7 @@ from pathlib import Path
 
 DIRECTORIES = ('.github', 'LICENSES', 'branding', 'config', 'docs', 'helpers', 'scripts', 'vendor')
 FILES = ('.editorconfig', '.gitattributes', '.gitignore', 'CHANGELOG.md', 'CONTRIBUTING.md',
-         'LICENSE', 'README.md', 'SECURITY.md', 'THIRD_PARTY.md', 'build.sh')
+         'LICENSE', 'README.md', 'SECURITY.md', 'THIRD_PARTY.md', 'AGENTS.md', 'build.sh')
 
 
 def public_files(root: Path):

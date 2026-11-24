@@ -27,16 +27,85 @@ sudo ./build.sh
    Twig, the compositor binary/source hashes and the APT-cache budget before replacing
    `dist/erdos-amd64.iso` and its `.sha256` file.
 
-Logs and temporary state are under `work/build-XXXXXXXX`. Never delete a build
-while it is running or has active mounts. The successful ISO is independent of
-this directory. Root-owned generated build state can be removed after validating
-the image and confirming its mounts have gone away. The previous X11 development
-ISO is intentionally retained as `dist/erdos-x11-dev.iso`.
+## Automatic cleanup and logs
 
-`./build.sh --prepare` stages source without compiling or building an ISO.
-`./scripts/build-helpers.sh` produces `release-tools/labwc` and its build record
-for the optional existing-install updater. Compiler headers, Meson, Ninja, hwdata
-and development libraries are host-only dependencies, not live-image packages.
+`build.sh` owns a temporary directory under `work/` and removes it after success,
+failure, Ctrl+C or SIGTERM. It stops its own child process group and unmounts
+filesystems below that workspace before removal. It never deletes through a
+remaining mount. A failed or interrupted build preserves the previous verified
+ISO and checksum. Successful publication copies/checks the new image first,
+replaces the canonical pair, then deletes older top-level `erdos*.iso` images,
+their sidecars and standard stale release companions in `dist/`. Source and
+other projects are outside this cleanup boundary.
+
+Only the latest log for each build, staging check or test is kept under ignored
+`logs/`. Each is capped at 8 MiB, retaining the tail if necessary. No full failed
+build tree or compiler copy in `release-tools/` is retained by the ISO build.
+`./build.sh --prepare` checks staging without compiling/building and cleans its
+staged files on exit. `./scripts/build-helpers.sh OUTPUT_DIRECTORY` remains an
+explicit way to retain a requested standalone compositor binary; its compiler
+temporary directory is cleaned by its existing exit trap.
+
+One managed build/staging/test runs at a time per checkout. Another invocation
+fails clearly rather than deleting an active run's data. On the next run, marked
+abandoned workspaces can be recovered after verifying their recorded owner is no
+longer active. Docker recovery requires a Docker wrapper and checks the exact
+per-run ownership label. Unknown active process groups, reused PIDs, unmount
+failures or an unavailable Docker daemon produce an explicit cleanup error and
+leave the workspace for inspection. SIGKILL/power loss cannot run exit handlers;
+never manually remove a leftover mounted/active tree to bypass those checks.
+Recovery also checks the boot and PID namespace before acting on recorded PIDs.
+An interrupted publication that leaves `dist/.erdos-publish-*` blocks the next
+run for inspection, preserving its backup rather than guessing which pair to keep.
+
+## Disposable Docker builds
+
+With Docker available, a non-Debian host can run:
+
+```sh
+./scripts/build-in-docker.sh
+```
+
+This uses an owned `debian:13` container with live-build's required privileged
+mount access. The host project is mounted read-only. Only its disposable result
+workspace is writable in the container. The entry point installs compiler/build
+prerequisites into the temporary container, copies the allowlisted public source
+to its native filesystem, builds/verifies there, and returns the ISO/checksum for
+host publication. Container build trees, VM files and APT caches disappear when
+the container is removed; the shared Debian base image stays cached. Future
+builds reinstall build tools rather than retaining a multi-gigabyte container.
+No unrelated containers, images, volumes or build caches are pruned.
+
+## Managed tests
+
+Use the wrapper instead of manually retaining test directories:
+
+```sh
+./scripts/run-test.sh python3 scripts/check-project.py
+./scripts/run-test.sh python3 scripts/tests/test_workspaces.py
+```
+
+Test programs must place disposable VM disks, extracted systems and screenshots
+under `$ERDOS_TEST_DIR` (also available as `$ERDOS_WORK_DIR`). On host tests,
+`TMPDIR` points inside that workspace. Print small results to stdout/stderr so
+they remain in `logs/latest-test.log`; save accepted benchmark results in the
+tracked footprint report as part of the test procedure. Background children are
+stopped before files are removed, even when the main test command exits early.
+Keep test/VM processes in the foreground; do not daemonize or detach them into
+new sessions outside the managed process group.
+
+For a temporary Debian environment:
+
+```sh
+./scripts/run-in-debian.sh bash -c 'echo "Test workspace: $ERDOS_TEST_DIR"'
+```
+
+Install any required tools within that disposable container. `/project` exposes
+the source/latest ISO read-only, and `/artifacts` is `$ERDOS_TEST_DIR`. Add
+`--privileged` before the command only for KVM/mount tests that require it. The
+container uses `--rm` and per-run cleanup, including on command failure; the host
+wrapper also removes its own container after interruption. This is privileged
+build tooling when requested, not a security sandbox for untrusted code.
 
 ## Upstream compositor maintenance
 

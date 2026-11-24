@@ -310,19 +310,20 @@
     "120-second settle followed by five samples 10 seconds apart; median reported.",
     "Disk is root plus EFI used filesystem blocks, excluding swap; swap report from /proc/swaps is in KiB.",
     "Virtual display uses software rendering; physical GPU, driver, RAM capacity and hardware services can change idle RAM.",
-    "X11 development image is preserved; this baseline is not the older published Alpha 2 image.",
+    "X11 development image was preserved for this measurement; it is not the older published Alpha 2 image. Historical local ISOs were later removed under the latest-ISO-only cleanup policy.",
     "Alpha 5 includes the default image wallpaper. Its serial getty was started temporarily for measurement to match the earlier setup; the desktop remained active on tty1. No persistent power/service settings were changed.",
     "Lean development build measured on 2026-11-24 using the same VM and sampler. PCManFM is not started at login; no applications were opened before measurement.",
     "Package versions match Alpha 5 except Firefox 160.0.1~build1 to 161.0~build1. Four packages removed and none added. New Firefox retained file data is 470,721 bytes smaller, contributing to disk savings."
   ],
   "release": {
-    "version": "dev-lean",
-    "published": false,
+    "version": "1.0.0-beta.1",
+    "published": true,
     "iso_sha256": "128fb9324f41a6934a9ab4751c970144ebba67bfe97dc8ad2fb043fe0b1f4efa",
-    "note": "Locally rebuilt development ISO; published Alpha 5 assets and release.json are unchanged."
+    "note": "Beta 1 promotes the exact tested lean development ISO without rebuilding it. Embedded label remains dev-lean.",
+    "image_version": "dev-lean"
   },
   "current_build": "lean_dev",
-  "delta_comparison": "Lean development ISO minus published Alpha 5",
+  "delta_comparison": "Beta 1 (unchanged lean development ISO) minus Alpha 5",
   "package_comparison": {
     "removed": {
       "libnma-common": "1.10.6-5",

@@ -16,6 +16,13 @@ Keep changes focused. Installer changes must preserve interactive disk selection
 partitioning, and erase/write approval. Never put a target disk, account password,
 or automatic erase confirmation into the production preseed.
 
+## Build/test storage
+
+Use the managed wrappers and disposable workspaces described in
+[building.md](docs/building.md#automatic-cleanup-and-logs) and [AGENTS.md](AGENTS.md).
+Do not retain ad hoc VM disks, chroot copies or persistent build containers.
+Only the latest verified ISO is kept after an ordinary build.
+
 ## Local checks
 
 ```sh

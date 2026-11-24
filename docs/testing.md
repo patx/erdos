@@ -1,3 +1,31 @@
+# Beta 1 release verification — 2026-11-24
+
+Beta 1 promotes the previously tested `dev-lean` image unchanged, SHA-256
+`128fb9324f41a6934a9ab4751c970144ebba67bfe97dc8ad2fb043fe0b1f4efa`.
+The embedded label remains `dev-lean`. The final-image verifier was rerun against
+the current runtime configuration and passed installer, package, permissions,
+APT-cache, Twig and compositor-source checks. Earlier fresh-install tests and
+measurements below apply to these identical bytes. No rebuild was performed.
+
+# Automatic workspace cleanup — 2026-11-24
+
+Host tooling now owns build/test workspaces, bounded logs and disposable Docker
+containers. The lifecycle suite exercises real child processes and files:
+success/failure, SIGTERM, SIGKILL recovery, concurrent-run exclusion, permission
+failure recovery, symlink boundaries, bounded output, verified-copy publication,
+and preserving/restoring the previous ISO/checksum when publication fails.
+All ten unprivileged lifecycle cases pass. The additional real tmpfs-mount case
+passes in a disposable privileged Debian container, confirming unmount occurs
+before removal.
+Synthetic worker payloads test file publication, not ISO bootability.
+
+Disposable Debian 13 container probes passed success, exit-code failure and
+SIGTERM cancellation with private root-created files. Each removed its container
+and host workspace. Existing containers/images/caches were not pruned. Staging
+and source checks pass; this host-only change does not rebuild the retained ISO
+or change installed disk/RAM measurements. A full ISO build and VM boot were not
+repeated for this tooling change. See [managed build/test usage](building.md).
+
 # labwc fork maintenance validation
 
 The Gitman maintenance fork preserves the upstream 0.9.7 commit and original
@@ -25,8 +53,7 @@ offline installer policy, package retention, compositor provenance, APT-cache
 budget and root ownership/sudo setuid checks.
 
 ISO SHA-256: `128fb9324f41a6934a9ab4751c970144ebba67bfe97dc8ad2fb043fe0b1f4efa`.
-The ISO is local and unpublished; public Alpha 5 and its release metadata are
-unchanged. Its six release artifacts are prepared separately from public
+This exact image is now Beta 1; historical Alpha 5 downloads remain unchanged. Its six release artifacts are prepared separately from public
 website release metadata.
 
 A fresh offline UEFI installation completed on a new 24 GiB virtual disk with
@@ -81,7 +108,7 @@ package list and PCManFM daemon mode from the default autostart. Build-time and
 final-image guards reject the removed utilities. Source checks and `build.sh
 --prepare` pass; staged configuration retains GVfs backends/FUSE, SSH/SFTP,
 Avahi and all firmware/microcode selections. The new build and fresh-install
-results are recorded above; Alpha 5 remains the published-image baseline.
+results are recorded above; Alpha 5 remains the comparison baseline.
 
 # Alpha 5 ISO validation
 
@@ -272,9 +299,11 @@ indexes or swap use were reported. The kernel is `6.12.118+deb13-amd64`.
 
 [Raw results](footprint.json) retain every sample, exact ISO checksum, filesystem
 usage, service state and process inventory, including the older baselines.
-The Alpha 5 digest matches [release.json](release.json); the measured ISO was not
+The Beta 1 digest matches [release.json](release.json); the measured ISO was not
 rebuilt or modified. Physical GPU/driver/RAM configurations can change results.
-The X11 comparison image is preserved locally as `dist/erdos-x11-dev.iso`.
+The X11 image was retained for the original comparison; old local ISOs and VM
+disks have since been removed under the latest-ISO-only storage policy. Raw
+measurements and exact image hashes remain in the tracked results.
 
 ## Reproduce the footprint measurement
 

@@ -6,10 +6,10 @@ controls, readable labels, keyboard focus, inline validation and Apply/Revert
 feedback are shared across the app. No extra UI libraries, packages or background
 services are added.
 
-The published Alpha 5 ISO still includes Overview Dock. The dock and its editor, nm-connection-editor and pulsemixer
-are removed in the local `dev-lean` ISO. PCManFM starts on demand. This image
-also includes the menu status rows described here; it is not published. The
-hosted Settings-only updater does not replace labwc.
+Beta 1 removes Overview Dock and its editor, nm-connection-editor and pulsemixer.
+PCManFM starts on demand. Clock and battery status are in the desktop menu.
+The ISO retains its tested `dev-lean` label; the hosted Settings-only updater
+does not replace labwc.
 
 ## Editing and feedback
 
@@ -55,7 +55,7 @@ keep their associations. Existing open apps are unaffected.
 
 ## Backgrounds and appearance
 
-Alpha 5 starts with the bundled Dark Glacier wallpaper. Choose Image in
+Beta 1 starts with the bundled Dark Glacier wallpaper. Choose Image in
 Settings to return to the bundled wallpaper after using a solid color.
 Select a custom image and Fill, Fit, Center or Tile. ErdOS validates and copies
 it into `~/.config/erdos/background-image`, so moving the original does not break

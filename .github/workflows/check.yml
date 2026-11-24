@@ -28,6 +28,8 @@ jobs:
           persist-credentials: false
       - name: Check source, docs and installer policy
         run: python3 scripts/check-project.py
+      - name: Check workspace cleanup and ISO preservation
+        run: ./scripts/run-test.sh python3 scripts/tests/test_workspaces.py
       - name: Compile the minimal pinned Wayland compositor
         run: ./scripts/build-helpers.sh /tmp/erdos-helpers
       - name: Stage the live-image configuration

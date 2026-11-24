@@ -1,4 +1,10 @@
-# Development
+# ErdOS 1 Beta 1 — 2026-11-24
+
+- Automatically clean build/test workspaces and owned processes/containers on
+  exit, retain bounded latest logs and keep only the latest verified local ISO.
+  Failed builds preserve that image; unrelated Docker/project data is untouched.
+- Add disposable Debian build/test wrappers and document the storage policy.
+  These are host tools only; no installed packages or runtime behavior change.
 
 - Establish a Gitman labwc maintenance fork with upstream history, focused ErdOS
   commits and a pinned export/check helper. Document deliberate upstream updates
@@ -8,7 +14,8 @@
 - Build and fresh-install test the local `dev-lean` ISO. Same-VM measurements:
   1.748 GiB installed and 353.2 MiB idle RAM, saving 2.6 MiB disk and 16.6 MiB RAM
   versus Alpha 5. Firefox is also updated to 161.0; about 0.45 MiB of disk saving
-  comes from that version change. Published Alpha 5 remains unchanged.
+  comes from that version change. Beta 1 publishes this exact tested image without rebuilding it; its embedded
+  version remains `dev-lean`.
 
 - Remove nm-connection-editor and pulsemixer; Settings retains normal Wi-Fi and
   sound controls, with nmcli available for advanced connection profiles.
@@ -22,7 +29,7 @@
   desktop menu, before Logout/Reboot/Power off. They open Date & Time and Power
   in the existing Settings window. Hide battery status when no system battery
   is available; refresh only when the menu opens. No new dependencies or daemon.
-- Published Alpha 5 ISO, benchmarks and hosted updater remain unchanged.
+- Older Alpha 5 downloads remain available. The hosted updater is unchanged.
 
 # ErdOS 1 Alpha 5 — 2026-11-23
 

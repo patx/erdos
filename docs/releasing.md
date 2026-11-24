@@ -3,19 +3,21 @@
 Repository: <https://github.com/patx/erdos>. Website:
 <https://patx.gitman.io/erdos/>. These instructions prepare artifacts locally;
 the release-packaging script does not commit, tag, push, upload or publish.
-The current public release is [ErdOS 1 Alpha 5](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.5).
+The current public release is [ErdOS 1 Beta 1](https://github.com/patx/erdos/releases/tag/v1.0.0-beta.1).
 Both source remotes use `main`: GitHub at the URL above and Gitman at
 <https://gitman.io/git/patx/erdos>.
 
-## Alpha 5: rebuilt ISO
+## Beta 1: tested image promoted unchanged
 
-Alpha 5 includes the native window overview, configurable dock, updated
-Settings, blue boot branding and Dark Glacier. Its embedded version is
-`1.0.0-alpha.5`. The [ISO](https://downloads.erd.sh/v1.0.0-alpha.5/erdos-amd64.iso)
-was built from source revision `a5779b4` and tested in BIOS and UEFI VMs.
-The ISO and five companion files were uploaded under `v1.0.0-alpha.5/` and
-read back from the public download host. See [validation](testing.md) for
-the boot-test scope and [release.json](release.json) for the image digest.
+Beta 1 publishes the tested November 24 lean image without rebuilding it.
+Its embedded version remains `dev-lean`; the public tag is `v1.0.0-beta.1`.
+The image was built from runtime source `60df297` plus that image label.
+The release source also contains subsequent host-only maintenance/cleanup tools.
+The image removes the overview dock and optional utilities, adds menu clock and
+battery status, and starts PCManFM on demand. Fresh offline UEFI installation
+and measurements are recorded in [validation](testing.md). Six immutable assets
+are served under `v1.0.0-beta.1/`; [release.json](release.json) identifies the bytes.
+Gitman hosts the source/tag and Pages site; GitHub hosts the prerelease notes.
 
 ## Source repository
 
@@ -37,9 +39,11 @@ Build on Debian 13 amd64 as described in [building.md](building.md), then comple
 its logs outside Git. The checkout tracks current development; choose a new
 version and tag when preparing a release. Keep published version directories immutable.
 
-The build writes the current image to `dist/erdos-amd64.iso`. The previous X11
-development ISO is retained locally as `dist/erdos-x11-dev.iso` for comparison;
-it is not a new release asset. After testing, run:
+The build retains only the latest local image at `dist/erdos-amd64.iso` and its
+checksum. Temporary build/test state and older local ISO copies are cleaned
+automatically. Release packaging below deliberately creates companion artifacts
+for publication; a later successful build discards stale standard companions.
+After testing, run:
 
 ```sh
 python3 scripts/prepare-release.py --iso dist/erdos-amd64.iso
@@ -68,12 +72,12 @@ Review and upload these assets to the versioned **Cloudflare R2** download direc
 
 The Standard-storage bucket is `erdos-releases`, served through
 <https://downloads.erd.sh/> with a minimum TLS version of 1.2. The current objects
-are under `v1.0.0-alpha.5/`; the ISO URL is
-<https://downloads.erd.sh/v1.0.0-alpha.5/erdos-amd64.iso>.
+are under `v1.0.0-beta.1/`; the ISO URL is
+<https://downloads.erd.sh/v1.0.0-beta.1/erdos-amd64.iso>.
 The website remains on Gitman Pages, and source code stays on both Git remotes.
 The zone rule `erdos_alpha2_public_downloads` skips Security Level and Browser
 Integrity Check only for GET/HEAD requests to the exact release download
-paths for Alpha 2 through Alpha 5, plus the five explicitly approved updater files.
+paths for Alpha 2 through Alpha 5 and Beta 1, plus the five explicitly approved updater files.
 Add each future version’s file paths to that rule before publishing its
 links; keep other hosts, paths and methods outside the exception.
 
@@ -159,4 +163,4 @@ reporting link in `SECURITY.md`.
 The landing page uses `docs/assets/og-image.png` for Open Graph and Twitter cards.
 Regenerate it with `python3 scripts/render-social-card.py` on a development host
 with Pillow and DejaVu Sans installed. The renderer uses the supplied logo and
-`docs/assets/live-window-overview.png`; its dependencies are not added to the ISO.
+`docs/assets/beta-desktop.png`; its dependencies are not added to the ISO.

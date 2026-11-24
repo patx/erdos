@@ -3,11 +3,11 @@
 A minimal **Debian 13 amd64** desktop using **labwc and Wayland**, with a small
 application set, keyboard navigation and touchpad gestures.
 
-**ErdOS 1 Alpha 5** introduces live window previews, a configurable overview dock,
-improved Settings controls, blue boot branding and the Dark Glacier wallpaper.
-[Download the amd64 ISO](https://downloads.erd.sh/v1.0.0-alpha.5/erdos-amd64.iso) ·
-[SHA-256](https://downloads.erd.sh/v1.0.0-alpha.5/erdos-amd64.iso.sha256) ·
-[Release notes](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.5).
+**ErdOS 1 Beta 1** keeps the live window overview, moves clock and battery
+status into the desktop menu, and starts PCManFM only when needed.
+[Download the amd64 ISO](https://downloads.erd.sh/v1.0.0-beta.1/erdos-amd64.iso) ·
+[SHA-256](https://downloads.erd.sh/v1.0.0-beta.1/erdos-amd64.iso.sha256) ·
+[Release notes](https://github.com/patx/erdos/releases/tag/v1.0.0-beta.1).
 This is an experimental prerelease; start in a VM. Secure Boot is not supported.
 
 [Website](https://patx.gitman.io/erdos/) · [User guide](https://patx.gitman.io/erdos/guide.html) ·
@@ -19,9 +19,9 @@ without reinstalling or replacing machine-specific drivers and settings.
 
 ## Desktop
 
-The local `dev-lean` ISO includes the dock removal, menu clock/battery and
-package/startup cleanup. Published Alpha 5 still includes the dock and is
-unchanged; the Settings-only hosted updater does not deliver these changes.
+Beta 1 publishes the tested `dev-lean` image unchanged. Its embedded version
+label remains `dev-lean`. The hosted Settings-only updater does not deliver
+the compositor and package changes in this release.
 
 - Floating windows and square dark decorations; no panel or overview dock.
 - Native labwc overview with live window previews and a blurred desktop snapshot.
@@ -96,8 +96,10 @@ sudo ./build.sh
 The build compiles pinned labwc 0.9.7 and statically linked wlroots 0.19.2, keeps
 build tools outside the image, and validates the finished ISO. Output is the
 current `dist/erdos-amd64.iso` and its checksum; successful builds replace
-that file. The previous X11 development image is preserved separately as
-`dist/erdos-x11-dev.iso` for comparison and testing. Details and limitations are in [building.md](docs/building.md).
+that file only after verification. Builds remove their temporary state and older
+local ErdOS ISOs automatically; failed builds keep the last verified image.
+Use `./scripts/build-in-docker.sh` for an automatically removed Debian build
+container. Details and test wrappers are in [building.md](docs/building.md).
 
 Test the live desktop and a disposable installation before using real disks.
 Fresh offline VM measurements on November 24, 2026
@@ -106,9 +108,9 @@ Fresh offline VM measurements on November 24, 2026
 | Build | Installed disk | Idle RAM |
 | --- | --- | --- |
 | ErdOS 1 Alpha 5 | 1.751 GiB | 369.8 MiB |
-| Lean development ISO | 1.748 GiB | 353.2 MiB |
+| ErdOS 1 Beta 1 | 1.748 GiB | 353.2 MiB |
 
-The development image saves 2.6 MiB of installed disk and 16.6 MiB of idle
+Beta 1 saves 2.6 MiB of installed disk and 16.6 MiB of idle
 RAM versus Alpha 5. Four packages were removed; Firefox also changed from
 160.0.1 to 161.0, contributing about 0.45 MiB of the disk saving.
 

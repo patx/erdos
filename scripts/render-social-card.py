@@ -31,7 +31,7 @@ text((64, 184), 'A minimal', 44, bold=True)
 text((64, 244), 'Linux desktop.', 44, bold=True)
 text((64, 338), 'Debian + Wayland', 24, '#b7d7f1')
 text((64, 550), 'patx.gitman.io/erdos', 18, '#a2a8ad')
-shot = Image.open(ROOT / 'docs/assets/live-window-overview.png').convert('RGB')
+shot = Image.open(ROOT / 'docs/assets/beta-desktop.png').convert('RGB')
 shot = shot.resize((590 * SCALE, round(590 * shot.height / shot.width) * SCALE), Image.Resampling.LANCZOS)
 x, y = 555 * SCALE, 158 * SCALE
 canvas.paste(shot, (x, y))
