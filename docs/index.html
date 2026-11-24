@@ -24,31 +24,44 @@
   <title>ErdOS — a minimal Linux desktop</title>
   <link rel="icon" href="assets/favicon.png?v=c4600b5be396" type="image/png">
   <link rel="stylesheet" href="assets/style.css?v=c4600b5be396">
-  <link rel="stylesheet" href="assets/home.css?v=desktop-gallery">
+  <link rel="stylesheet" href="assets/home.css?v=release-layout">
 </head>
 <body class="home">
   <a class="skip-link" href="#content">Skip to content</a>
   <header class="site-header shell">
     <a class="brand" href="./" aria-label="ErdOS home"><span class="wordmark"><img src="assets/erdos-logo.png?v=c4600b5be396" alt="ErdOS" width="1265" height="278"></span></a>
-    <nav aria-label="Main navigation"><a href="#screenshots">Screenshots</a><a href="guide.html">User Guide</a><a href="https://github.com/patx/erdos">Github</a></nav>
+    <nav aria-label="Main navigation"><a href="#screenshots">Screenshots</a><a href="guide.html">User guide</a></nav>
   </header>
   <main id="content">
     <section class="hero shell" aria-labelledby="hero-title">
       <div class="hero-intro">
-        <h1 id="hero-title">A minimal<br>Linux desktop.</h1>
-        <p>Alpha 4. Debian 13. Wayland.</p>
-        <a class="primary-link" href="https://downloads.erd.sh/v1.0.0-alpha.4/erdos-amd64.iso">Alpha 4 · amd64 ISO <span aria-hidden="true">↓</span></a>
+        <p class="release-label">ErdOS 1 Alpha 4</p>
+        <h1 id="hero-title">A minimal Linux desktop.</h1>
+        <p class="hero-description">Debian 13, labwc and Wayland with keyboard shortcuts, touchpad gestures and a small set of everyday apps.</p>
+        <div class="release-links">
+          <a class="primary-link" href="https://downloads.erd.sh/v1.0.0-alpha.4/erdos-amd64.iso">Download amd64 ISO</a>
+          <a href="https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.4">Release notes</a>
+        </div>
       </div>
-      <figure class="hero-figure">
-        <a href="assets/live-window-overview.png" aria-label="View the full-size live window overview screenshot">
-          <img class="hero-screenshot" src="assets/live-window-overview.png" alt="Live previews of Sakura, Twig and PCManFM above the ErdOS overview dock" width="1280" height="720" fetchpriority="high">
-        </a>
-        <figcaption>Live window overview and launcher dock · development build</figcaption>
-      </figure>
+      <aside class="release-details" aria-label="ErdOS at a glance">
+        <dl>
+          <div><dt>Base</dt><dd>Debian 13</dd></div>
+          <div><dt>Desktop</dt><dd>labwc on Wayland</dd></div>
+          <div><dt>Installed size</dt><dd>1.75 GiB</dd></div>
+          <div><dt>Idle RAM</dt><dd>355.4 MiB</dd></div>
+        </dl>
+        <a href="guide.html#footprint">Alpha 3 footprint benchmarks</a>
+      </aside>
     </section>
     <section class="screenshots-section shell" id="screenshots" aria-labelledby="screenshots-title">
-      <h2 id="screenshots-title">ErdOS in action</h2>
+      <h2 id="screenshots-title">Screenshots</h2>
       <div class="screenshot-grid">
+        <figure>
+          <a href="assets/live-window-overview.png" aria-label="View the full-size live window overview screenshot">
+            <img src="assets/live-window-overview.png" alt="Live previews of Sakura, Twig and PCManFM above the ErdOS overview dock" width="1280" height="720" fetchpriority="high">
+          </a>
+          <figcaption><strong>Live window overview</strong><span>Window thumbnails and launcher dock in the development build.</span></figcaption>
+        </figure>
         <figure>
           <a href="assets/overview-dock-settings.png" aria-label="View the full-size Overview Dock settings screenshot">
             <img src="assets/overview-dock-settings.png" alt="Overview Dock settings with a visibility toggle and controls to add, edit or reorder launchers" width="882" height="668">
@@ -70,7 +83,7 @@
       </div>
     </section>
     <section class="apps-section shell" id="apps" aria-labelledby="apps-title">
-      <div class="navigation-heading"><h2 id="apps-title">Included apps</h2><a href="guide.html#footprint">1.75 GiB installed · 355.4 MiB idle RAM ↗</a></div>
+      <h2 id="apps-title">Included apps</h2>
       <div class="app-list">
         <article class="app"><img class="app-icon" src="assets/apps/sakura.svg" alt="Sakura icon" width="80" height="80" loading="lazy"><h3><a href="https://www.pleyades.net/david/projects/sakura/">Sakura</a></h3><p>Terminal</p><div class="app-shortcut"><kbd>Super</kbd><span>+</span><kbd>Enter</kbd></div></article>
         <article class="app"><img class="app-icon" src="assets/apps/firefox.png" alt="Firefox logo" width="80" height="80" loading="lazy"><h3><a href="https://www.firefox.com/">Firefox</a></h3><p>Browser</p><div class="app-shortcut"><kbd>Super</kbd><span>+</span><kbd>B</kbd></div></article>
@@ -80,7 +93,7 @@
       </div>
     </section>
     <section class="shortcuts-section shell" aria-labelledby="keys-title">
-      <div class="navigation-heading"><h2 id="keys-title">Intuitive navigation</h2><a href="guide.html#shortcuts">All shortcuts &amp; gestures ↗</a></div>
+      <div class="navigation-heading"><h2 id="keys-title">Shortcuts and gestures</h2><a href="guide.html#shortcuts">Full shortcut reference</a></div>
       <div class="navigation-columns">
       <dl class="shortcut-list" aria-label="Window shortcuts">
         <div><dt>Desktop menu</dt><dd><kbd>Super</kbd> + <kbd>Space</kbd><span class="gesture-alt"><a href="guide.html#gestures">3-finger tap / click</a></span></dd></div>
@@ -95,9 +108,6 @@
         <div><dt>Switch workspaces</dt><dd>4 fingers left / right<span class="gesture-alt"> <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>1–9</kbd></span></dd></div>
       </dl>
       </div>
-    </section>
-    <section class="download-section shell" id="download" aria-labelledby="download-title">
-      <h2 id="download-title"><a href="https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.4">Download ErdOS <span aria-hidden="true">↗</span></a></h2>
     </section>
   </main>
   <footer class="site-footer shell"><p>Independent. Open source. Built on Debian.</p><nav aria-label="Footer navigation"><a href="https://github.com/patx/erdos">Source</a><a href="https://github.com/patx/erdos/issues">Issues</a><a href="assets/apps/credits.html">Icon credits</a></nav></footer>
