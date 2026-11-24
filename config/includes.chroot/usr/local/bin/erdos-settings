@@ -4,7 +4,10 @@
 import sys
 from pathlib import Path
 sys.dont_write_bytecode = True
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'lib/erdos'))
+settings_lib = Path(__file__).resolve().parent.parent / 'lib/erdos'
+if not (settings_lib / 'settings.py').is_file():
+    settings_lib = Path('/usr/local/lib/erdos')
+sys.path.insert(0, str(settings_lib))
 import settings as backend
 
 if '--apply-session' in sys.argv:
@@ -29,10 +32,19 @@ from gi.repository import Gtk, Gdk, Gio, GLib
 
 class Settings(Gtk.Application):
     def __init__(self):
-        super().__init__(application_id='org.erdos.Settings', flags=Gio.ApplicationFlags.FLAGS_NONE)
+        super().__init__(application_id='org.erdos.Settings',
+                         flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+        self.add_main_option('network', 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
+                             'Open the Network tab', None)
         self.window = None
         self.groups = []
         self.busy = False
+
+    def do_command_line(self, command_line):
+        self.activate()
+        if command_line.get_options_dict().contains('network'):
+            self.stack.set_visible_child_name('Network')
+        return 0
 
     def do_activate(self):
         if self.window:
@@ -439,7 +451,7 @@ class Settings(Gtk.Application):
         count = self.scale(page, 'Fixed workspace count', 1,32,prefs['workspace_count'])
         count.set_sensitive(not dynamic.get_active())
         dynamic.connect('notify::active',lambda *_: count.set_sensitive(not dynamic.get_active()))
-        super_key = self.toggle(page, 'Tap Super alone to show window thumbnails', prefs['super_overview'])
+        super_key = self.toggle(page, 'Tap Super to toggle the window overview', prefs['super_overview'])
         self.note(page, 'Dynamic mode keeps one spare after the last occupied or current workspace. Empty gaps keep their numbers; only trailing workspaces disappear. Fixed mode never removes a workspace containing windows or the current workspace.')
         def apply_workspaces():
             values = dict(dynamic_workspaces=dynamic.get_active(), workspace_count=count.get_value_as_int(), super_overview=super_key.get_active())
@@ -451,7 +463,7 @@ class Settings(Gtk.Application):
         self.note(page, 'Select a shortcut and choose Edit, or double-click it. Separate alternatives with a comma. Fn mode is controlled by your keyboard.')
         keyboard_source=backend.keyboard_source()
         model = Gtk.ListStore(str, str)
-        labels={'ShowMenu root-menu':'Desktop menu','ShowMenu client-list-combined-menu':'Workspaces menu','NextWindow':'Cycle windows forward','PreviousWindow':'Cycle windows backward','erdos-screenshot':'Take a screenshot','ErdosScreenshotWindow':'Screenshot focused window','erdos-screenshot region':'Screenshot selected area','Unmaximize':'Restore window','Maximize':'Maximize window','Iconify':'Minimize window','Close':'Close window', 'ErdosOverview':'Window thumbnails', 'ErdosPreviousWindow':'Previous window', 'ErdosNextWindow':'Next window', 'erdos-settings':'Settings', 'erdos-launch browser':'Default browser', 'erdos-launch files':'Default file manager', 'erdos-launch editor':'Default text editor', 'erdos-launch terminal':'Default terminal'}
+        labels={'ShowMenu root-menu':'Desktop menu','ShowMenu client-list-combined-menu':'Workspaces menu','NextWindow':'Cycle windows forward','PreviousWindow':'Cycle windows backward','erdos-screenshot':'Take a screenshot','ErdosScreenshotWindow':'Screenshot focused window','erdos-screenshot region':'Screenshot selected area','Unmaximize':'Restore window','Maximize':'Maximize window','Iconify':'Minimize window','Close':'Close window', 'ErdosOverview':'Window overview', 'ErdosPreviousWindow':'Previous window', 'ErdosNextWindow':'Next window', 'erdos-settings':'Settings', 'erdos-launch browser':'Default browser', 'erdos-launch files':'Default file manager', 'erdos-launch editor':'Default text editor', 'erdos-launch terminal':'Default terminal'}
         for key, action in backend.keyboard():
             description=labels.get(action,action)
             if action.startswith('GoToDesktop '): description='Switch to workspace '+action.split()[-1]
@@ -641,7 +653,7 @@ class Settings(Gtk.Application):
         parser = backend.gestures()
         self.note(page, 'One action per swipe. Lower distance triggers sooner; very short distances can trigger accidentally. The native thumbnail switcher has no decorative effects.')
         distance = self.scale(page, 'Swipe distance', 20, 1000, parser.getfloat('swipe','distance'), 10)
-        actions = [('none','Disabled'), ('overview-show','Show window thumbnails'), ('workspaces-menu','Show workspaces menu'), ('overview-hide','Close overview'),
+        actions = [('none','Disabled'), ('overview-show','Open overview'), ('workspaces-menu','Show workspaces menu'), ('overview-hide','Close overview'),
                    ('window-previous','Previous window'), ('window-next','Next window'),
                    ('workspace-previous','Previous workspace'), ('workspace-next','Next workspace')]
         choices = {}

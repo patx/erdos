@@ -36,8 +36,8 @@ summary { cursor: pointer; }
 .skip-link:focus { top: 8px; }
 .site-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-block: 40px 48px; }
 .brand { display: block; flex: none; }
-.wordmark { display: block; position: relative; width: 130px; height: 38px; overflow: hidden; }
-.wordmark img { position: absolute; width: 435px; max-width: none; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.wordmark { display: flex; align-items: center; width: 130px; height: 38px; padding: 6px 9px; border-radius: 5px; background: #f0edef; }
+.wordmark img { display: block; width: 100%; }
 .site-header nav, .site-footer nav { display: flex; flex-wrap: wrap; gap: 12px 20px; font-size: .875rem; }
 .site-header nav a { color: var(--muted); }
 main > section { margin-bottom: 42px; }
@@ -63,6 +63,5 @@ th { font-weight: 600; color: #f5f5f5; }
   .site-header { padding-block: 28px 36px; gap: 16px; align-items: flex-start; }
   .site-header nav { justify-content: flex-end; gap: 8px 16px; }
   .wordmark { width: 112px; height: 34px; }
-  .wordmark img { width: 375px; }
   .guide-content { font-size: .9375rem; }
 }

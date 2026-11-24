@@ -50,9 +50,6 @@
         <command>erdos-settings</command>
       </action>
     </keybind>
-    <keybind key="W-o">
-      <action name="ErdosOverview" />
-    </keybind>
     <keybind key="W-C-Left">
       <action name="ErdosPreviousWindow" />
     </keybind>

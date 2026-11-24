@@ -464,18 +464,27 @@ handle_cycle_view_key(struct server *server, struct keyinfo *keyinfo)
 			return true;
 		}
 		if (keyinfo->translated.syms[i] == XKB_KEY_Escape) {
-			/* Esc deactivates window switcher */
-			cycle_finish(server, /*switch_focus*/ false);
+			if (!server->cycle.overview) {
+				cycle_finish(server, /*switch_focus*/ false);
+			}
+			return true;
+		}
+		if (server->cycle.overview && keyinfo->translated.syms[i] == XKB_KEY_Tab
+				&& !(keyinfo->modifiers & ~WLR_MODIFIER_SHIFT)) {
+			cycle_step(server, keyinfo->modifiers & WLR_MODIFIER_SHIFT
+				? LAB_CYCLE_DIR_BACKWARD : LAB_CYCLE_DIR_FORWARD);
 			return true;
 		}
 		if (keyinfo->translated.syms[i] == XKB_KEY_Up
 				|| keyinfo->translated.syms[i] == XKB_KEY_Left) {
+			server->cycle.overview_arrow_used = server->cycle.overview;
 			/* Up/Left cycles the window backward */
 			cycle_step(server, LAB_CYCLE_DIR_BACKWARD);
 			return true;
 		}
 		if (keyinfo->translated.syms[i] == XKB_KEY_Down
 				|| keyinfo->translated.syms[i] == XKB_KEY_Right) {
+			server->cycle.overview_arrow_used = server->cycle.overview;
 			/* Down/Right cycles the window forward */
 			cycle_step(server, LAB_CYCLE_DIR_FORWARD);
 			return true;

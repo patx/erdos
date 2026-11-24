@@ -52,6 +52,8 @@ struct cycle_filter {
 };
 
 struct cycle_state {
+	bool overview;
+	bool overview_arrow_used;
 	struct view *selected_view;
 	struct wl_list views;
 	struct wl_list osd_outputs; /* struct cycle_osd_output.link */
@@ -67,6 +69,10 @@ struct cycle_osd_output {
 	struct wl_list link; /* struct cycle_state.osd_outputs */
 	struct output *output;
 	struct wl_listener tree_destroy;
+	struct wl_event_source *refresh;
+	struct wlr_box dock;
+	int dock_button_width;
+	int dock_button_count;
 
 	/* set by cycle_osd_impl->init() */
 	struct wl_list items; /* struct cycle_osd_item.link */
@@ -94,6 +100,9 @@ struct wlr_scene_node;
 void cycle_begin(struct server *server, enum lab_cycle_dir direction,
 	struct cycle_filter filter);
 
+void cycle_toggle_overview(struct server *server);
+void cycle_overview_click(struct server *server);
+
 /* Cycle the selected view in the window switcher */
 void cycle_step(struct server *server, enum lab_cycle_dir direction);
 
@@ -120,6 +129,19 @@ bool cycle_osd_field_is_valid(struct cycle_osd_field *field);
 void cycle_osd_field_free(struct cycle_osd_field *field);
 
 /* Internal API */
+void overview_dock_create(struct cycle_osd_output *osd_output,
+	const struct wlr_box *box);
+
+void overview_backdrop_create(struct cycle_osd_output *osd_output,
+	const struct wlr_box *box);
+
+struct overview_launcher {
+	const char *label;
+	const char *command;
+};
+
+extern const struct overview_launcher overview_launchers[];
+
 struct cycle_osd_item {
 	struct view *view;
 	struct wlr_scene_tree *tree;

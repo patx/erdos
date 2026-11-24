@@ -21,8 +21,8 @@ without reinstalling or replacing machine-specific drivers and settings.
 
 ## Desktop
 
-- Floating windows, square dark decorations, no panel, dock, shadows or animations.
-- Native labwc thumbnail switcher; no Skippy or separate overview application.
+- Floating windows and square dark decorations. The dock appears only in the window overview.
+- Native labwc overview with live window previews, a blurred desktop snapshot, and an app dock with Wi-Fi, a clock and battery status.
 - Dynamic workspaces with one spare, shared across monitors, plus a Workspaces menu.
 - One Python/GTK Settings window: defaults, input, shortcuts, menu, startup,
   displays, backgrounds, audio, networking, Bluetooth, battery and time.
@@ -42,8 +42,8 @@ without reinstalling or replacing machine-specific drivers and settings.
 | Super + B / E / T | Default browser / file manager / editor |
 | Super + I | Settings |
 | Super + Space / Menu | Desktop menu |
-| Super alone / Super + O | Persistent thumbnail window switcher |
-| Escape / arrows + Enter | Cancel / select in the switcher |
+| Tap Super | Open or close the live window overview |
+| Arrows + Enter | Select a window in the overview |
 | Super + Shift + O | Workspaces menu |
 | Super + Tab / Super + Shift + Tab | Cycle current-workspace windows |
 | Ctrl + Super + Left / Right | Previous / next window directly |
@@ -64,7 +64,7 @@ brightnessctl where supported. Fn mode is controlled by keyboard firmware.
 | Gesture | Action |
 | --- | --- |
 | Three-finger tap / click | Desktop menu, including over applications |
-| Three fingers up / down | Open / close thumbnail switcher |
+| Three fingers up / down | Open / close the live window overview |
 | Three fingers left / right | Previous / next window |
 | Four fingers left / right | Next workspace (right) / previous workspace (left) |
 | Four fingers up / down | Disabled by default; configurable |

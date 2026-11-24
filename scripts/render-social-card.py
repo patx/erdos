@@ -16,14 +16,16 @@ def text(position, value, size, color='#ffffff', bold=False):
     font = ImageFont.truetype(str(fonts / ('DejaVuSans-Bold.ttf' if bold else 'DejaVuSans.ttf')), size * SCALE)
     draw.text(tuple(int(v * SCALE) for v in position), value, font=font, fill=color, anchor='lt')
 
-logo = Image.open(ROOT / 'docs/assets/erdos-logo.png').convert('RGB')
-# Trim only the black canvas surrounding the supplied wordmark.
-logo = logo.crop(logo.point(lambda p: 255 if p > 50 else 0).getbbox())
+logo = Image.open(ROOT / 'docs/assets/erdos-logo.png').convert('RGBA')
 logo.thumbnail((250 * SCALE, 70 * SCALE), Image.Resampling.LANCZOS)
-canvas.paste(logo, (64 * SCALE, 55 * SCALE))
+x, y = 64 * SCALE, 55 * SCALE
+padding = 10 * SCALE
+draw.rounded_rectangle((x - padding, y - padding, x + logo.width + padding,
+                        y + logo.height + padding), radius=8 * SCALE, fill='#f0edef')
+canvas.paste(logo, (x, y), logo)
 text((64, 184), 'A minimal', 44, bold=True)
 text((64, 244), 'Linux desktop.', 44, bold=True)
-text((64, 338), 'ErdOS 1 Alpha 4', 24, '#1c9cff')
+text((64, 338), 'ErdOS 1 Alpha 4', 24, '#ff6884')
 text((64, 384), 'Debian 13 + Wayland', 20, '#a2a8ad')
 text((64, 550), 'patx.gitman.io/erdos', 18, '#a2a8ad')
 shot = Image.open(ROOT / 'docs/assets/labwc-thumbnails.png').convert('RGB')

@@ -153,6 +153,43 @@ handle_output_frame(struct wl_listener *listener, void *data)
 }
 
 static void
+handle_overview_source_destroy(struct wl_listener *listener, void *data)
+{
+	struct output *output = wl_container_of(listener, output, overview_source_destroy);
+	wl_list_remove(&listener->link);
+	output->overview_source = NULL;
+}
+
+static void
+handle_overview_output_commit(struct wl_listener *listener, void *data)
+{
+	struct output *output = wl_container_of(listener, output, overview_output_commit);
+	const struct wlr_output_event_commit *event = data;
+	if (!(event->state->committed & WLR_OUTPUT_STATE_BUFFER)) {
+		return;
+	}
+	struct cycle_osd_output *osd_output;
+	wl_list_for_each(osd_output, &output->server->cycle.osd_outputs, link) {
+		if (output->server->cycle.overview && osd_output->output == output) {
+			return;
+		}
+	}
+	if (output->overview_blur) {
+		wlr_buffer_drop(output->overview_blur);
+		output->overview_blur = NULL;
+	}
+	if (output->overview_source) {
+		wl_list_remove(&output->overview_source_destroy.link);
+	}
+	output->overview_source = event->state->buffer;
+	output->overview_source_transform = output->wlr_output->transform;
+	if (output->overview_source) {
+		wl_signal_add(&output->overview_source->events.destroy,
+			&output->overview_source_destroy);
+	}
+}
+
+static void
 handle_output_destroy(struct wl_listener *listener, void *data)
 {
 	struct output *output = wl_container_of(listener, output, destroy);
@@ -167,6 +204,13 @@ handle_output_destroy(struct wl_listener *listener, void *data)
 	wl_list_remove(&output->frame.link);
 	wl_list_remove(&output->destroy.link);
 	wl_list_remove(&output->request_state.link);
+	wl_list_remove(&output->overview_output_commit.link);
+	if (output->overview_source) {
+		wl_list_remove(&output->overview_source_destroy.link);
+	}
+	if (output->overview_blur) {
+		wlr_buffer_drop(output->overview_blur);
+	}
 	seat_output_layout_changed(seat);
 
 	for (size_t i = 0; i < ARRAY_SIZE(output->layer_tree); i++) {
@@ -531,6 +575,9 @@ handle_new_output(struct wl_listener *listener, void *data)
 
 	output->request_state.notify = handle_output_request_state;
 	wl_signal_add(&wlr_output->events.request_state, &output->request_state);
+	output->overview_source_destroy.notify = handle_overview_source_destroy;
+	output->overview_output_commit.notify = handle_overview_output_commit;
+	wl_signal_add(&wlr_output->events.commit, &output->overview_output_commit);
 
 	wl_list_init(&output->regions);
 

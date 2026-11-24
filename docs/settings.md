@@ -27,7 +27,7 @@ a rejected mode from a successful restore, and the display list refreshes afterw
 | Appearance | GTK theme, font, dark preference, desktop color and image backgrounds |
 | Default Programs | Terminal, browser, file manager and text editor |
 | Touchpad | Natural scrolling, tapping, clickfinger right-click and pointer speed |
-| Keyboard | Dynamic/fixed workspaces, Super-only thumbnails, shortcuts and custom commands |
+| Keyboard | Dynamic/fixed workspaces, Super-key overview, shortcuts and custom commands |
 | Menu | Edit/reorder menu entries; enable three-finger and Super + right-click triggers |
 | Startup Applications | Edit labwc login commands with syntax validation and backup |
 | Gestures | Swipe distance and configurable three/four-finger actions |
@@ -65,11 +65,18 @@ menus use the supplied dark labwc theme, square corners and no shadows.
 
 ## Keyboard and workspaces
 
-The native thumbnail switcher replaces Skippy. Super alone (on release), Super + O
-or three fingers up opens it across workspaces and outputs. It remains open after
-key/finger release. Click a thumbnail, or use arrows and Enter to select; Escape
-or three fingers down cancels without sending Escape to an ordinary application.
-Super + Tab / Super + Shift + Tab remains the ordinary current-workspace cycle.
+Tap Super or swipe three fingers up to open the live window overview on the
+display nearest the pointer. It shows windows across workspaces and outputs.
+Click a preview or use the arrow keys and Enter to select a window. A white glow
+marks the arrow-key selection. Tap Super again or swipe three fingers down to
+close the overview. Super + Tab / Super + Shift + Tab cycles current-workspace
+windows in the regular switcher.
+
+The opening desktop frame is blurred once. Window previews update while the
+overview is open. The dock launches the browser, file manager, terminal, and
+Settings. Wi-Fi opens the Network tab in the existing Settings app. The dock
+also shows local time in 12-hour format and the battery percentage, with a
+lightning bolt while charging.
 
 Dynamic workspaces retain one empty workspace after the last occupied or current
 workspace, including minimized windows. Empty gaps keep their numbers; only
@@ -130,7 +137,7 @@ input listener, input-group membership, extra device ACL or gesture daemon.
 
 | Gesture | Default |
 | --- | --- |
-| Three fingers up / down | Open / close thumbnail switcher |
+| Three fingers up / down | Open / close the live window overview |
 | Three fingers left / right | Previous / next window on current workspace |
 | Four fingers left / right | Next workspace (right) / previous workspace (left) |
 | Four fingers up / down | Disabled; configurable, including Workspaces menu |

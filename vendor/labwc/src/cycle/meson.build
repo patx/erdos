@@ -4,4 +4,6 @@ labwc_sources += files(
   'osd-field.c',
   'osd-scroll.c',
   'osd-thumbnail.c',
+  'overview-backdrop.c',
+  'overview-dock.c',
 )

@@ -7,12 +7,12 @@
   <meta name="theme-color" content="#000000">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'self'">
   <title>User guide — ErdOS</title>
-  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon.png" type="image/png">
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
   <a class="skip-link" href="#content">Skip to content</a>
-  <header class="site-header wrap"><a class="brand" href="./" aria-label="ErdOS home"><span class="wordmark"><img src="assets/erdos-logo.png" alt="ErdOS" width="2172" height="724"></span></a><nav aria-label="Main navigation"><a href="guide.html" aria-current="page">User Guide</a><a href="https://github.com/patx/erdos">Github</a></nav></header>
+  <header class="site-header wrap"><a class="brand" href="./" aria-label="ErdOS home"><span class="wordmark"><img src="assets/erdos-logo.png" alt="ErdOS" width="1265" height="278"></span></a><nav aria-label="Main navigation"><a href="guide.html" aria-current="page">User Guide</a><a href="https://github.com/patx/erdos">Github</a></nav></header>
   <main class="wrap guide-layout" id="content">
     <nav class="guide-nav" aria-label="On this page"><div><a href="#try">Try the live desktop</a><a href="#verify">Verify a download</a><a href="#install">Install to disk</a><a href="#desktop">Desktop and apps</a><a href="#footprint">Disk and RAM usage</a><a href="#settings">Settings</a><a href="#defaults">Default programs</a><a href="#background">Backgrounds</a><a href="#menu">Customize menu</a><a href="#shortcuts">Keyboard shortcuts</a><a href="#gestures">Touchpad gestures</a><a href="#monitors">Multiple monitors</a><a href="#troubleshooting">Troubleshooting</a></div></nav>
     <article class="guide-content">
@@ -30,7 +30,7 @@
         <p>A checksum detects changed bytes. An unsigned checksum does not prove a publisher’s identity.</p>
       </section>
       <section id="install"><h2>Install to disk</h2>
-        <p>Installation starts from <strong>Install ErdOS (offline)</strong> in the ISO’s boot menu. Reboot out of the live desktop to select it. The official Debian text installer copies the configured desktop and sets up accounts and GRUB.</p>
+        <p>Select <strong>Install ErdOS</strong> in the boot menu to start the offline installer. Reboot out of the live desktop to select it. The official Debian text installer copies the configured desktop and sets up accounts and GRUB.</p>
         <p>Choose language, keyboard, timezone, account details and partitioning. Installation runs entirely from the USB without Ethernet-driver, Wi-Fi, DHCP, NTP or mirror-download questions. Available firmware is retained for the installed desktop. Internet access is not needed to install; connect after the first boot. Specialized hardware may still need additional drivers.</p>
         <p>Your first installed account gets sudo access using its own password. There is no separate root-password question, package-selection screen or mirror-country/server/proxy selection. BIOS bootloader destination selection remains manual.</p>
         <h3>Replace the entire disk</h3>
@@ -48,7 +48,7 @@
       </section>
       <section id="desktop"><h2>Desktop and applications</h2>
         <p>Right-click the desktop for <strong>Terminal</strong>, <strong>Web Browser</strong>, <strong>File Manager</strong> and <strong>Text Editor</strong>. These use your selected defaults; initially Sakura, regular Firefox, PCManFM and Twig. The Applications submenu reads installed desktop entries when opened, so added or removed graphical applications appear without a polling daemon or APT hook. Command-line tools need a desktop entry to show there.</p>
-        <p>The desktop has no panel or tray. Open the labwc menu with a three-finger tap/click, Super+Space, the Menu key, desktop right-click or Super + right-click over an application. Use Super alone or Super+O for windows, and Super+Shift+O for the Workspaces menu. Settings provides sound, network, battery and time controls. labwc briefly shows its own popup when switching workspaces.</p>
+        <p>The dock appears in the window overview. Open the labwc menu with a three-finger tap/click, Super+Space, the Menu key, desktop right-click or Super + right-click over an application. Tap Super to toggle the live window overview, and use Super+Shift+O for the Workspaces menu. Settings provides sound, network, battery and time controls. labwc briefly shows its own popup when switching workspaces.</p>
         <ul><li><strong>Audio:</strong> open Settings → Sound to choose output/input devices, adjust volume or mute. Supported volume and mute keys also work.</li><li><strong>Networking:</strong> open Settings → Network to enable Wi-Fi, refresh networks, connect or manage saved connections. Advanced profiles are available through Advanced Network Configuration in Applications.</li><li><strong>Bluetooth:</strong> open Settings → Bluetooth to scan, pair and connect devices.</li><li><strong>Battery:</strong> open Settings → Power for charge, charging status and hardware-reported health.</li><li><strong>Clock:</strong> open Settings → Date &amp; Time for the current time, time zone and automatic synchronization status.</li><li><strong>Files:</strong> PCManFM handles USB mounting and network shares. Open <code>smb://server/share</code> for SMB; automatic Windows WS-Discovery browsing is not guaranteed. SFTP uses the SSH client.</li><li><strong>Text:</strong> Twig opens plain text and common source files by default. Mounted shares are exposed through GVfs FUSE for editor access.</li><li><strong>Touchpad:</strong> natural scrolling, two-finger scrolling and two-finger right-click are enabled on supported devices.</li></ul>
         <p>Network passwords are requested when needed; there is no bundled desktop keyring. Most manuals, package documentation and non-English translations are trimmed. Package copyright notices remain.</p>
         <p>The bottom of the right-click menu contains Logout, Reboot and Power off. Logout ends labwc and the tty1 login session, returning to the console login prompt.</p>
@@ -88,7 +88,7 @@
           <tr><td>Super + T</td><td>Open the default text editor (Twig initially)</td></tr>
           <tr><td>Super + Q / Alt + F4</td><td>Close focused window</td></tr>
           <tr><td>Super + H</td><td>Minimize</td></tr>
-          <tr><td>Super alone / Super + O / Escape</td><td>Open / dismiss the thumbnail switcher</td></tr>
+          <tr><td>Tap Super</td><td>Open or close the live window overview</td></tr>
           <tr><td>Super + Shift + O</td><td>Workspaces menu</td></tr>
           <tr><td>Super + Space / Menu</td><td>labwc menu</td></tr>
           <tr><td>Ctrl + Super + Left / Right</td><td>Cycle windows directly (gesture fallback)</td></tr>
@@ -116,13 +116,13 @@
         <p>The compositor handles deliberate swipes directly, once per gesture after the configured movement threshold. Small and ambiguous movements are ignored. There is no separate raw-input listener or gesture daemon.</p>
         <div class="table-wrap"><table><thead><tr><th scope="col">Gesture</th><th scope="col">Action</th></tr></thead><tbody>
           <tr><td>3-finger tap / click</td><td>Open the desktop menu, including over applications</td></tr>
-          <tr><td>3 fingers up / down</td><td>Open / close the native thumbnail switcher</td></tr>
+          <tr><td>3 fingers up / down</td><td>Open / close the live window overview</td></tr>
           <tr><td>3 fingers left / right</td><td>Previous / next window on the current workspace</td></tr>
           <tr><td>4 fingers left / right</td><td>Next / previous workspace, wrapping at the ends</td></tr>
           <tr><td>4 fingers up / down</td><td>Disabled by default; configurable in Settings</td></tr>
         </tbody></table></div>
-        <p>The thumbnail grid remains open after release. Click a thumbnail, or use arrows and Enter. Escape or three fingers down cancels. It includes windows across workspaces; minimized windows can use placeholders. Super alone or Super + O opens the same grid. Skippy and the graphical workspace overview are removed.</p>
-        <figure><img src="assets/labwc-thumbnails.png" width="1280" height="800" alt="Native labwc thumbnails for Twig, Sakura and ErdOS Settings" loading="lazy"><figcaption>The native thumbnail switcher in an installed Wayland session.</figcaption></figure>
+        <p>The overview shows live windows across workspaces. Click a window, or use the arrow keys and Enter. The arrow keys reveal a white selection glow. Tap Super again or swipe three fingers down to close the overview. The dock has app shortcuts, Wi-Fi settings, a 12-hour clock and battery status.</p>
+        <figure><img src="assets/labwc-thumbnails.png" width="1280" height="800" alt="Native labwc thumbnails for Twig, Sakura and ErdOS Settings" loading="lazy"><figcaption>The thumbnail switcher in the Alpha 4 release.</figcaption></figure>
         <p>Workspaces remain dynamic with one empty spare after the last occupied/current workspace. Empty gaps retain their numbers; only unused trailing spaces disappear. Use the Workspaces submenu or Super + Shift + O to see workspaces and their windows.</p>
         <p>Change swipes in Settings → Gestures. In Settings → Menu, independently toggle three-finger tap/click and Super + right-click. The touchpad option replaces middle-click; disabling it restores middle-click. Mouse middle-click, desktop right-click and Super + Space remain available. Hardware must support tapping/clickfinger as applicable.</p>
       </section>

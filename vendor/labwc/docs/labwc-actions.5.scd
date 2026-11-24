@@ -125,6 +125,12 @@ Actions are used in menus and keyboard/mouse bindings.
 	Resize and move the active window back to its untiled or unmaximized
 	position if it had been maximized or tiled to a direction or region.
 
+*<action name="ErdosOverview" />*
+	Toggle a full-screen overview on the output nearest the pointer. Click a
+	live preview or press Enter to focus its window. Use the arrow keys or
+	Tab to change the selection. Tap Super or swipe down to dismiss the
+	overview with the default ErdOS gesture settings.
+
 *<action name="NextWindow" workspace="current" output="all" identifier="all" />*++
 *<action name="PreviousWindow" workspace="current" output="all" identifier="all" />*
 	Cycle focus to next/previous window, respectively.

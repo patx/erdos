@@ -48,6 +48,7 @@ and development libraries are host-only dependencies, not live-image packages.
 | `config/includes.chroot/usr/local/lib/erdos/` | Settings, defaults and display confirmation |
 | `config/includes.chroot/etc/erdos/gestures.conf` | Default compositor swipe bindings |
 | `vendor/labwc/src/erdos.c` | Native gesture, switcher, Super-key and hotplug integration |
+| `vendor/labwc/src/cycle/` | Live overview, blurred backdrop, dock and regular window switcher |
 | `vendor/labwc/src/workspaces.c` | Event-driven safe spare-workspace handling |
 | `vendor/wlroots/` | Pinned compositor support library, statically linked |
 | `config/includes.installer/` | Offline installation defaults and signed APT setup |

@@ -63,6 +63,16 @@ Alpha 3 uses labwc/Wayland. Alpha 2 remains available as the older Openbox/X11
 release. The current local image identity is recorded in [release.json](release.json);
 Alpha 4 preparation reuses the tested Settings image without rebuilding.
 
+## Live overview source checks
+
+The live overview was exercised in an isolated Wayland session on Intel
+graphics. Tap Super to open and close it. Arrow keys show a white glow around
+the selected live preview, and clicking a preview focuses its window. The dock
+Wi-Fi button opens the Network tab and reuses the Settings window. Test
+three-finger swipes again on physical hardware when validating a new image.
+
+The checks below record the previously published Alpha 4 image.
+
 ## Completed source and compositor checks
 
 - Source syntax, local links, installer safety and public-file boundary pass.

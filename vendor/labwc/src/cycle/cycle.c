@@ -3,11 +3,13 @@
 #include "cycle.h"
 #include <assert.h>
 #include <wlr/types/wlr_scene.h>
+#include <wlr/types/wlr_cursor.h>
 #include <wlr/util/box.h>
 #include <wlr/util/log.h>
 #include "common/lab-scene-rect.h"
 #include "common/list.h"
 #include "common/mem.h"
+#include "common/spawn.h"
 #include "common/scene-helpers.h"
 #include "config/rcxml.h"
 #include "labwc.h"
@@ -56,7 +58,9 @@ static struct view *
 get_next_selected_view(struct server *server, enum lab_cycle_dir dir)
 {
 	struct cycle_state *cycle = &server->cycle;
-	assert(cycle->selected_view);
+	if (!cycle->selected_view) {
+		return NULL;
+	}
 	assert(!wl_list_empty(&server->cycle.views));
 
 	struct wl_list *link;
@@ -97,21 +101,30 @@ cycle_reinitialize(struct server *server)
 	struct view *selected_view_prev =
 		get_next_selected_view(server, LAB_CYCLE_DIR_BACKWARD);
 	struct cycle_filter filter = cycle->filter;
+	bool overview = cycle->overview;
+	bool overview_arrow_used = cycle->overview_arrow_used;
 
 	destroy_cycle(server);
+	cycle->overview = overview;
+	cycle->overview_arrow_used = overview_arrow_used;
 	if (init_cycle(server, filter)) {
 		/*
 		 * Preserve the selected view (or its previous view) if it's
 		 * still in the cycle list
 		 */
-		if (selected_view->cycle_link.next) {
+		if (!selected_view) {
+			if (!wl_list_empty(&cycle->views)) {
+				cycle->selected_view = get_first_view(&cycle->views);
+			}
+		} else if (selected_view->cycle_link.next) {
 			cycle->selected_view = selected_view;
 		} else if (selected_view_prev->cycle_link.next) {
 			cycle->selected_view = selected_view_prev;
 		} else {
-			/* should be unreachable */
-			wlr_log(WLR_ERROR, "could not find view to select");
-			cycle->selected_view = get_first_view(&server->cycle.views);
+			/* Both prior choices may disappear when a workspace changes. */
+			if (!wl_list_empty(&cycle->views)) {
+				cycle->selected_view = get_first_view(&cycle->views);
+			}
 		}
 		update_cycle(server);
 	} else {
@@ -164,6 +177,7 @@ cycle_begin(struct server *server, enum lab_cycle_dir direction,
 	}
 
 	if (!init_cycle(server, filter)) {
+		server->cycle.overview = false;
 		return;
 	}
 
@@ -171,12 +185,14 @@ cycle_begin(struct server *server, enum lab_cycle_dir direction,
 	if (active_view && active_view->cycle_link.next) {
 		/* Select the active view it's in the cycle list */
 		server->cycle.selected_view = active_view;
-	} else {
+	} else if (!wl_list_empty(&server->cycle.views)) {
 		/* Otherwise, select the first view in the cycle list */
 		server->cycle.selected_view = get_first_view(&server->cycle.views);
 	}
 	/* Pre-select the next view in the given direction */
-	server->cycle.selected_view = get_next_selected_view(server, direction);
+	if (direction != LAB_CYCLE_DIR_NONE) {
+		server->cycle.selected_view = get_next_selected_view(server, direction);
+	}
 
 	seat_focus_override_begin(&server->seat,
 		LAB_INPUT_STATE_CYCLE, LAB_CURSOR_DEFAULT);
@@ -184,6 +200,56 @@ cycle_begin(struct server *server, enum lab_cycle_dir direction,
 
 	/* Update cursor, in case it is within the area covered by OSD */
 	cursor_update_focus(server);
+}
+
+void
+cycle_toggle_overview(struct server *server)
+{
+	if (server->cycle.overview) {
+		cycle_finish(server, false);
+		return;
+	}
+	if (server->input_mode != LAB_INPUT_STATE_PASSTHROUGH) {
+		return;
+	}
+	server->cycle.overview = true;
+	cycle_begin(server, LAB_CYCLE_DIR_NONE, (struct cycle_filter) {
+		.workspace = CYCLE_WORKSPACE_ALL,
+		.output = CYCLE_OUTPUT_ALL,
+		.app_id = CYCLE_APP_ID_ALL,
+	});
+}
+
+const struct overview_launcher overview_launchers[] = {
+	{ "Browser", "erdos-launch browser" },
+	{ "Files", "erdos-launch files" },
+	{ "Terminal", "erdos-launch terminal" },
+	{ "Settings", "erdos-settings" },
+	{ "Wi-Fi", "erdos-wifi-picker" },
+	{ NULL, NULL },
+};
+
+void
+cycle_overview_click(struct server *server)
+{
+	struct wlr_cursor *cursor = server->seat.cursor;
+	const char *command = NULL;
+	struct cycle_osd_output *osd_output;
+	wl_list_for_each(osd_output, &server->cycle.osd_outputs, link) {
+		struct wlr_box *dock = &osd_output->dock;
+		if (wlr_box_contains_point(dock, cursor->x, cursor->y)) {
+			int index = (int)(cursor->x - dock->x) / osd_output->dock_button_width;
+			if (index >= osd_output->dock_button_count) {
+				return; /* Clock and battery are passive indicators. */
+			}
+			command = overview_launchers[index].command;
+			break;
+		}
+	}
+	cycle_finish(server, false);
+	if (command) {
+		spawn_async_no_shell(command);
+	}
 }
 
 void
@@ -255,8 +321,11 @@ preview_selected_view(struct view *view)
 }
 
 static struct cycle_osd_impl *
-get_osd_impl(void)
+get_osd_impl(struct server *server)
 {
+	if (server->cycle.overview) {
+		return &cycle_osd_thumbnail_impl;
+	}
 	switch (rc.window_switcher.osd.style) {
 	case CYCLE_OSD_STYLE_CLASSIC:
 		return &cycle_osd_classic_impl;
@@ -317,6 +386,9 @@ handle_osd_tree_destroy(struct wl_listener *listener, void *data)
 {
 	struct cycle_osd_output *osd_output =
 		wl_container_of(listener, osd_output, tree_destroy);
+	if (osd_output->refresh) {
+		wl_event_source_remove(osd_output->refresh);
+	}
 	struct cycle_osd_item *item, *tmp;
 	wl_list_for_each_safe(item, tmp, &osd_output->items, link) {
 		wl_list_remove(&item->link);
@@ -363,16 +435,16 @@ init_cycle(struct server *server, struct cycle_filter filter)
 			wl_list_append(&server->cycle.views, &view->cycle_link);
 		}
 	}
-	if (wl_list_empty(&server->cycle.views)) {
+	if (wl_list_empty(&server->cycle.views) && !server->cycle.overview) {
 		wlr_log(WLR_DEBUG, "no views to switch between");
 		return false;
 	}
 	server->cycle.filter = filter;
 
-	if (rc.window_switcher.osd.show) {
+	if (rc.window_switcher.osd.show || server->cycle.overview) {
 		/* Create OSD */
 		uint64_t osd_outputs = get_outputs_by_filter(server,
-				rc.window_switcher.osd.output_filter);
+				server->cycle.overview ? CYCLE_OUTPUT_CURSOR : rc.window_switcher.osd.output_filter);
 		struct output *output;
 		wl_list_for_each(output, &server->outputs, link) {
 			if (!(osd_outputs & output->id_bit)) {
@@ -387,7 +459,7 @@ init_cycle(struct server *server, struct cycle_filter filter)
 			osd_output->output = output;
 			wl_list_init(&osd_output->items);
 
-			get_osd_impl()->init(osd_output);
+			get_osd_impl(server)->init(osd_output);
 
 			osd_output->tree_destroy.notify = handle_osd_tree_destroy;
 			wl_signal_add(&osd_output->tree->node.events.destroy,
@@ -403,11 +475,15 @@ update_cycle(struct server *server)
 {
 	struct cycle_state *cycle = &server->cycle;
 
-	if (rc.window_switcher.osd.show) {
+	if (rc.window_switcher.osd.show || cycle->overview) {
 		struct cycle_osd_output *osd_output;
 		wl_list_for_each(osd_output, &cycle->osd_outputs, link) {
-			get_osd_impl()->update(osd_output);
+			get_osd_impl(server)->update(osd_output);
 		}
+	}
+
+	if (cycle->overview) {
+		return;
 	}
 
 	if (rc.window_switcher.preview) {

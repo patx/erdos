@@ -39,6 +39,9 @@ view_impl_map(struct view *view)
 
 	wlr_log(WLR_DEBUG, "[map] identifier=%s, title=%s",
 		view->app_id, view->title);
+	if (view->server->cycle.overview) {
+		cycle_reinitialize(view->server);
+	}
 }
 
 void
@@ -66,6 +69,9 @@ view_impl_unmap(struct view *view)
 	if (view->foreign_toplevel) {
 		foreign_toplevel_destroy(view->foreign_toplevel);
 		view->foreign_toplevel = NULL;
+	}
+	if (server->cycle.overview) {
+		cycle_reinitialize(server);
 	}
 }
 

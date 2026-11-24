@@ -1192,7 +1192,8 @@ run_action(struct view *view, struct server *server, struct action *action,
 		break;
 	}
 	case ACTION_TYPE_ERDOS_OVERVIEW:
-		erdos_action(server,"overview-show"); break;
+		erdos_action(server, server->cycle.overview ? "overview-hide" : "overview-show");
+		break;
 	case ACTION_TYPE_ERDOS_NEXT:
 		erdos_action(server,"window-next"); break;
 	case ACTION_TYPE_ERDOS_PREVIOUS:
@@ -1662,9 +1663,9 @@ actions_run(struct view *activator, struct server *server,
 	wl_list_for_each(action, actions, link) {
 		if (server->input_mode == LAB_INPUT_STATE_CYCLE
 				&& action->type != ACTION_TYPE_NEXT_WINDOW
-				&& action->type != ACTION_TYPE_PREVIOUS_WINDOW) {
-			wlr_log(WLR_INFO, "Only NextWindow or PreviousWindow "
-				"actions are accepted while window switching.");
+				&& action->type != ACTION_TYPE_PREVIOUS_WINDOW
+				&& !(server->cycle.overview && action->type == ACTION_TYPE_ERDOS_OVERVIEW)) {
+			wlr_log(WLR_INFO, "Action is unavailable while window switching.");
 			continue;
 		}
 

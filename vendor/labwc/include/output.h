@@ -28,6 +28,13 @@ struct output {
 	struct wl_listener frame;
 	struct wl_listener request_state;
 
+	/* The latest desktop frame is observed without locking a swapchain buffer. */
+	struct wlr_buffer *overview_source;
+	struct wlr_buffer *overview_blur;
+	enum wl_output_transform overview_source_transform;
+	struct wl_listener overview_source_destroy;
+	struct wl_listener overview_output_commit;
+
 	/*
 	 * Unique power-of-two ID used in bitsets such as view->outputs.
 	 * (This assumes there are never more than 64 outputs connected

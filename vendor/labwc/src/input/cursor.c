@@ -1235,8 +1235,13 @@ cursor_process_button_release(struct seat *seat, uint32_t button,
 		return notify;
 	}
 	if (server->input_mode == LAB_INPUT_STATE_CYCLE) {
+		if (server->cycle.overview && button != BTN_LEFT) {
+			return notify;
+		}
 		if (ctx.type == LAB_NODE_CYCLE_OSD_ITEM) {
 			cycle_on_cursor_release(server, ctx.node);
+		} else if (server->cycle.overview) {
+			cycle_overview_click(server);
 		}
 		return notify;
 	}

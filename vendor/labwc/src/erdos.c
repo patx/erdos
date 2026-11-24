@@ -79,8 +79,7 @@ void erdos_action(struct server *server,const char *name) {
     if(server->session_lock_manager->locked) return;
     if(!strcmp(name,"overview-show")) {
         if(server->input_mode!=LAB_INPUT_STATE_PASSTHROUGH) return;
-        struct cycle_filter filter={CYCLE_WORKSPACE_ALL,CYCLE_OUTPUT_ALL,CYCLE_APP_ID_ALL};
-        cycle_begin(server,LAB_CYCLE_DIR_NONE,filter);
+        cycle_toggle_overview(server);
         persistent=server->input_mode==LAB_INPUT_STATE_CYCLE;
     } else if(!strcmp(name,"overview-hide")) {
         if(server->input_mode==LAB_INPUT_STATE_CYCLE) cycle_finish(server,false);
@@ -111,7 +110,8 @@ void erdos_key(struct server *server,struct wlr_keyboard *keyboard,uint32_t key,
             super_candidate=keyboard && keyboard->num_keycodes==1 ? key+1 : 0;
         } else super_candidate=0;
     } else if(key+1==super_candidate) {
-        super_candidate=0; erdos_action(server,"overview-show");
+        super_candidate=0;
+        erdos_action(server,server->cycle.overview?"overview-hide":"overview-show");
     }
 }
 void erdos_swipe_begin(struct server *server,unsigned count) {
