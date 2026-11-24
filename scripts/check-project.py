@@ -2,6 +2,7 @@
 """Source-only checks: syntax, local documentation links and installer safety."""
 import ast
 import datetime
+import hashlib
 from html.parser import HTMLParser
 import json
 from pathlib import Path
@@ -92,6 +93,26 @@ def main():
             text = path.read_text()
             if re.search(r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----', text):
                 raise ValueError(f'Private key in public source: {relative}')
+
+    # The maintained fork is the source of compositor changes. Check its pin
+    # offline so ordinary builds need neither another clone nor network access.
+    fork = json.loads((ROOT / 'vendor/labwc-fork.json').read_text())
+    if fork.get('schema') != 1:
+        raise ValueError('Invalid labwc fork pin schema')
+    for field in ('fork_commit', 'upstream_commit'):
+        if not re.fullmatch(r'[a-f0-9]{40}', fork[field]):
+            raise ValueError(f'Invalid labwc fork pin: {field}')
+    note = dict(line.split(': ', 1) for line in (ROOT / 'vendor/labwc/UPSTREAM').read_text().splitlines()
+                if ': ' in line)
+    if note['Commit'] != fork['upstream_commit'] or note['Version'] != fork['upstream_version']:
+        raise ValueError('labwc UPSTREAM note differs from the recorded fork base')
+    digest = hashlib.sha256()
+    source = ROOT / 'vendor/labwc'
+    for path in sorted(source.rglob('*')):
+        if path.is_file():
+            digest.update(str(path.relative_to(source)).encode() + b'\0' + path.read_bytes())
+    if digest.hexdigest() != fork['vendor_tree_sha256']:
+        raise ValueError('Vendored labwc differs from its fork pin; see docs/upstream-labwc.md')
 
     preseed = ROOT / 'config/includes.installer/preseed.cfg'
     settings = {}

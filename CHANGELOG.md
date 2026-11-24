@@ -1,5 +1,10 @@
 # Development
 
+- Establish a Gitman labwc maintenance fork with upstream history, focused ErdOS
+  commits and a pinned export/check helper. Document deliberate upstream updates
+  and add an offline vendor-integrity check. Keep labwc 0.9.7, wlroots 0.19.2 and
+  every byte of the existing vendored compositor source unchanged.
+
 - Build and fresh-install test the local `dev-lean` ISO. Same-VM measurements:
   1.748 GiB installed and 353.2 MiB idle RAM, saving 2.6 MiB disk and 16.6 MiB RAM
   versus Alpha 5. Firefox is also updated to 161.0; about 0.45 MiB of disk saving

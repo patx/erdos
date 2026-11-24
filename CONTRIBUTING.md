@@ -37,6 +37,14 @@ follow [testing.md](docs/testing.md) and report the actual checks performed.
 Avoid tests that only repeat configuration values; prefer the affected behavior
 in a disposable VM.
 
+## Compositor changes
+
+Develop compositor changes in the [labwc maintenance fork](https://gitman.io/patx/labwc-erdos)
+and import a reviewed commit, rather than letting the vendored copy diverge.
+The [upstream maintenance guide](docs/upstream-labwc.md) documents focused commits,
+GitHub fetching, source pins, imports and upgrade validation. Ordinary builds
+remain offline with respect to compositor sources and need no submodule clone.
+
 ## Website
 
 `docs/` is a plain HTML/CSS site. It has no package manager, framework,

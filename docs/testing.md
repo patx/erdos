@@ -1,3 +1,21 @@
+# labwc fork maintenance validation
+
+The Gitman maintenance fork preserves the upstream 0.9.7 commit and original
+history, with seven focused feature commits plus a maintenance note. Its tagged
+commit exports byte-for-byte to the existing vendored source after the documented
+hosting/ignore-file exclusions. `vendor/labwc/UPSTREAM` remains ErdOS-owned and
+unchanged. labwc 0.9.7 and wlroots 0.19.2 are not upgraded; the runtime source
+hash remains `245829a403fab0f5f8c91943280c6b20e157567c325f14eac156a29eebc5eb46`.
+No compositor or ISO rebuild was performed for this source-maintenance setup.
+
+The real export helper is exercised in an isolated copy: read-only check leaves
+source and metadata untouched; importing the current committed tag round-trips
+all bytes; an unexported local C edit is rejected without overwrite; an incorrect
+upstream version is rejected before mutation. The live vendored tree still
+matches its pin. Source syntax, links, offline pin integrity and installer checks
+pass. Remote refs confirm Gitman's `main`, clean `upstream-base` and peeled tag
+match the recorded commits. See [upstream maintenance](upstream-labwc.md).
+
 # Lean development ISO — 2026-11-24
 
 Rebuilt the current checkout (`60df297` plus the `dev-lean` image label) from

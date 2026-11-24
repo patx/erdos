@@ -38,6 +38,15 @@ ISO is intentionally retained as `dist/erdos-x11-dev.iso`.
 for the optional existing-install updater. Compiler headers, Meson, Ninja, hwdata
 and development libraries are host-only dependencies, not live-image packages.
 
+## Upstream compositor maintenance
+
+Our [Gitman maintenance fork](https://gitman.io/patx/labwc-erdos) retains the
+original GitHub history and focused ErdOS commits. The build uses the exact
+vendored snapshot pinned in [labwc-fork.json](../vendor/labwc-fork.json).
+See [upstream-labwc.md](upstream-labwc.md) for fetch-only GitHub setup, source
+checks, deliberate merges, safe imports and validation. Establishing the fork
+did not upgrade labwc or wlroots or change the current runtime source.
+
 ## Configuration map
 
 | Source | Purpose |

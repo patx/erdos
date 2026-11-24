@@ -12,7 +12,7 @@ This is an experimental prerelease; start in a VM. Secure Boot is not supported.
 
 [Website](https://patx.gitman.io/erdos/) · [User guide](https://patx.gitman.io/erdos/guide.html) ·
 [Build instructions](docs/building.md) · [Settings](docs/settings.md) ·
-[Validation](docs/testing.md)
+[Validation](docs/testing.md) · [Compositor maintenance](docs/upstream-labwc.md)
 
 Existing Alpha 3 installations can use the [desktop updater](docs/updates.md)
 without reinstalling or replacing machine-specific drivers and settings.
