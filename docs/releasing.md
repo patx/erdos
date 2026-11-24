@@ -17,26 +17,6 @@ The ISO and five companion files were uploaded under `v1.0.0-alpha.5/` and
 read back from the public download host. See [validation](testing.md) for
 the boot-test scope and [release.json](release.json) for the image digest.
 
-## Alpha 4: reuse the tested ISO
-
-Alpha 4 uses the existing Settings image unchanged, SHA-256
-`3d979dd9d0c79233d657d5a65d9d140899d083c50db40077c1edc7affe7031e7`.
-It is 1,160,970,240 bytes and retains its internal `dev-settings` version label.
-Do not rebuild or patch this image just to change its public release name.
-Prepare its source/checksum companions and external release label with:
-
-```sh
-python3 scripts/prepare-release.py --iso dist/erdos-amd64.iso --version 1.0.0-alpha.4 --date 2026-11-22
-```
-
-`image_version` records the internal label separately from `version`. This command
-verifies and packages the existing ISO; it does not generate a new filesystem.
-The image and five companion artifacts are published under `v1.0.0-alpha.4/`.
-All six public downloads were read back and matched their local SHA-256 hashes.
-The GitHub prerelease targets source revision `90d00e4`; older release objects
-remain unchanged. The temporary scoped upload Worker was removed after verification.
-The updater is hosted separately and also works on Alpha 3; see [updates.md](updates.md).
-
 ## Source repository
 
 Commit source, documentation, licenses, branding and the pinned third-party sources.
@@ -87,9 +67,9 @@ Review and upload these assets to the versioned **Cloudflare R2** download direc
 ## Cloudflare R2 downloads
 
 The Standard-storage bucket is `erdos-releases`, served through
-<https://downloads.erd.sh/> with a minimum TLS version of 1.2. The Alpha 4 objects
-are under `v1.0.0-alpha.4/`; the ISO URL is
-<https://downloads.erd.sh/v1.0.0-alpha.4/erdos-amd64.iso>.
+<https://downloads.erd.sh/> with a minimum TLS version of 1.2. The current objects
+are under `v1.0.0-alpha.5/`; the ISO URL is
+<https://downloads.erd.sh/v1.0.0-alpha.5/erdos-amd64.iso>.
 The website remains on Gitman Pages, and source code stays on both Git remotes.
 The zone rule `erdos_alpha2_public_downloads` skips Security Level and Browser
 Integrity Check only for GET/HEAD requests to the exact release download

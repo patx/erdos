@@ -1,6 +1,6 @@
 # Contributing to ErdOS
 
-ErdOS aims for a small installed Debian/Openbox system with useful defaults.
+ErdOS aims for a small installed Debian/labwc system with useful defaults.
 Prefer existing libraries, event-driven helpers, and Debian packages. Explain
 any extra installed dependencies and their size before adding a service or UI.
 
@@ -30,7 +30,7 @@ On Debian 13 amd64, also install the compiler prerequisites from
 ./build.sh --prepare
 ```
 
-The source CI runs these checks and compiles the native helpers and physics-free
+The source CI runs these checks and compiles the pinned compositor and native live
 overview; it does not claim to build or boot-test an ISO. For changes affecting
 the installer or runtime,
 follow [testing.md](docs/testing.md) and report the actual checks performed.

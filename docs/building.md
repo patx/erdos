@@ -93,12 +93,12 @@ describe the package/repository and live-build mechanisms.
 
 ## Existing installations
 
-Build the compositor on Debian 13, extract the project on the installed system,
-and run `./scripts/update-desktop.sh` as the normal desktop user. It backs up
-configuration, installs dependencies and the new session, and leaves the active
-X server/window manager running until logout. Existing default-app preferences
-and user files are retained. This is a desktop updater, not a disk installer.
-Verify the Wayland session before separately removing old system desktop packages.
+The [hosted desktop updater](updates.md) preserves user configuration and
+machine-specific fixes. Its current bundle targets the older Alpha 3 compositor;
+it does not install the Alpha 5 compositor or migrate an X11 installation.
+`scripts/update-desktop.sh` is a compatibility entry point for that same updater,
+not a package installer or a way to install the latest checkout. Use the tested
+ISO for a fresh installation of the current release.
 
 Builds follow current signed package repositories and are not bit-for-bit
 reproducible. A checksum detects corruption; it is not a signature or a hardware

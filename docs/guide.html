@@ -54,10 +54,10 @@
         <p>The bottom of the right-click menu contains Logout, Reboot and Power off. Logout ends labwc and the tty1 login session, returning to the console login prompt.</p>
       </section>
       <section id="footprint"><h2>Disk and RAM usage</h2>
-        <p>Fresh offline installations of the previous X11 development image and final Wayland candidate, tested in the same VM configuration:</p>
-        <table><thead><tr><th>Build</th><th>Installed disk</th><th>Idle RAM</th></tr></thead><tbody><tr><td>Previous X11 dev</td><td>1.814 GiB</td><td>361.8 MiB</td></tr><tr><td>Wayland candidate (Alpha 3)</td><td>1.750 GiB</td><td>355.4 MiB</td></tr></tbody></table>
-        <p>UEFI, 2 vCPUs, 2 GiB RAM, 24 GiB install disk and 1280×800 software-rendered display. No network adapter, package updates or app windows before measurement. Disk counts root and EFI used blocks, excluding swap. RAM is MemTotal minus MemAvailable: five samples 10 seconds apart after a two-minute settle. Hardware and graphics drivers change these results.</p>
-        <p>Measured on the final Wayland candidate and the preserved X11 development baseline. Alpha 3 changes only the candidate’s release label. These are Alpha 3 baseline measurements; Alpha 5 has not been remeasured. <a href="footprint.json">Raw samples, ISO checksums and method</a> · <a href="testing.md">Validation and limitations</a>.</p>
+        <p>Measured on a fresh offline installation of the published Alpha 5 ISO on November 24, 2026:</p>
+        <table><thead><tr><th>Build</th><th>Installed disk</th><th>Idle RAM</th></tr></thead><tbody><tr><td>ErdOS 1 Alpha 5</td><td>1.751 GiB</td><td>369.8 MiB</td></tr></tbody></table>
+        <p>UEFI, 2 vCPUs, 2 GiB RAM, 24 GiB install disk and 1280×800 software-rendered display. The default desktop and wallpaper are active; the overview is closed. No network adapter, package updates or app windows before measurement. Disk counts root and EFI used blocks, excluding swap. RAM is MemTotal minus MemAvailable: five samples 10 seconds apart after a two-minute settle. Hardware and graphics drivers change these results.</p>
+        <p><a href="footprint.json">Raw samples, ISO checksum and earlier baselines</a> · <a href="testing.md#reproduce-the-footprint-measurement">Measurement method and validation</a>.</p>
       </section>
       <section id="settings"><h2>Settings</h2>
         <figure><img src="assets/overview-dock-settings.png?v=glacier" width="1280" height="720" alt="Alpha 5 Settings app showing Overview Dock controls" loading="lazy"></figure>

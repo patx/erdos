@@ -10,14 +10,17 @@ the Cloudflare download host.
 A BIOS VM showed the blue boot logo and reached the offline installer's
 language selection. A UEFI VM logged in to the Wayland live session, displayed
 Dark Glacier as the default wallpaper, and opened the live overview dock and
-Appearance settings. These checks covered VM boot and live use. Full disk
-installation and physical hardware testing were outside this Alpha 5 run.
+Appearance settings. A later benchmark run on November 24, 2026 downloaded the
+published ISO, verified SHA-256 against `release.json`, completed a fresh offline
+UEFI install and booted the installed disk with no ISO attached. Console login
+started labwc with Dark Glacier; the fresh account also successfully authorized
+sudo. Physical hardware testing remains separate from these VM checks.
 
-# Current development checks
+# Overview and Settings checks
 
-The configurable overview dock is newer than the published Alpha 4 image. Source
-syntax, documentation links and compositor compilation pass. No package-list
-changes or new dependencies were introduced.
+Alpha 5 includes the configurable overview dock. Before the ISO build, source
+syntax, documentation links and compositor compilation passed. The dock and
+Settings work added no package dependencies.
 
 A non-root, 1080p headless Wayland session tests the real Settings UI together
 with the compiled compositor. It covers defaults, Apply/Revert, selected-row
@@ -28,9 +31,9 @@ All fourteen sections are visited; labeled input accessibility, progress feedbac
 small-window scrolling and native Adwaita dark/light rendering are checked.
 An isolated settings-backend check covers malformed commands, launcher limits,
 configuration round trips, backups and rejection of concurrent external edits.
-No ISO rebuild, fresh install or physical input/GPU certification was performed
-for this development change. Hardware-dependent service checks below belong to
-prior release validation, not this headless run.
+These headless checks cover the UI and compositor, not physical input or GPU
+behavior. The Alpha 5 image checks and fresh-install benchmark are recorded
+separately.
 
 # Alpha 4 validation
 
@@ -105,7 +108,8 @@ the selected live preview, and clicking a preview focuses its window. The dock
 Wi-Fi button opens the Network tab and reuses the Settings window. Test
 three-finger swipes again on physical hardware when validating a new image.
 
-The checks below record the previously published Alpha 4 image.
+The remaining historical checks below describe Alpha 3/4, unless explicitly
+marked Alpha 5. They do not certify every feature on the current ISO.
 
 ## Completed source and compositor checks
 
@@ -157,23 +161,57 @@ Bluetooth, brightness, suspend/resume and monitor hotplug on the new image.
 Shared-workspace behavior and output controls also need multi-monitor hardware
 coverage. Alongside-OS partitioning and Secure Boot are not certified.
 
-## Footprint comparison
+## Current footprint and earlier baselines
 
-| Build | Installed disk | Idle RAM |
-| --- | --- | --- |
-| Previous X11 dev | 1.814 GiB | 361.8 MiB |
-| Wayland candidate (Alpha 3) | 1.750 GiB | 355.4 MiB |
+| Build | Installed disk | Idle RAM | Measured |
+| --- | --- | --- | --- |
+| ErdOS 1 Alpha 5 | 1.751 GiB | 369.8 MiB | 2026-11-24 |
+| Wayland candidate (Alpha 3) | 1.750 GiB | 355.4 MiB | 2026-11-21 |
+| Previous X11 dev | 1.814 GiB | 361.8 MiB | 2026-11-21 |
 
-Both are fresh offline installations with identical VM settings and default
-services. The desktop is active, with no application windows opened before
-measurement. Two console shells, the serial getty and the Python sampler are
-included identically. RAM uses five samples after 120 seconds; disk excludes
-swap. Both report no cached APT package indexes and no swap use.
+Each is a fresh offline installation using UEFI, 2 vCPUs, 2 GiB RAM, a 24 GiB
+install disk, an untouched 12 GiB spare and a 1280×800 virtio software-rendered
+display. QEMU 10.0.13 uses KVM and the host CPU. No network/Bluetooth adapters,
+package updates or application windows are present. The desktop stays active on
+tty1 with its default background and the overview closed. Two console shells,
+the serial getty and Python sampler are included. Alpha 5's serial getty was
+started temporarily to match the previous setup; no persistent service policy
+was changed.
 
-[Raw results](footprint.json) identify each exact ISO, VM hardware, per-sample
-memory values, used root/EFI blocks and service state. The X11 ISO is preserved
-as `dist/erdos-x11-dev.iso`. Physical GPU/driver measurements can differ from
-this software-rendered VM.
+RAM is MemTotal minus MemAvailable, not summed process RSS. All five Alpha 5
+samples were 387,764,224 bytes after a 120-second settle, 10 seconds apart.
+Disk is root plus EFI used filesystem blocks: 1,879,633,920 + 311,296 bytes,
+excluding swap, filesystem free space and the spare disk. No cached APT package
+indexes or swap use were reported. The kernel is `6.12.118+deb13-amd64`.
+
+[Raw results](footprint.json) retain every sample, exact ISO checksum, filesystem
+usage, service state and process inventory, including the older baselines.
+The Alpha 5 digest matches [release.json](release.json); the measured ISO was not
+rebuilt or modified. Physical GPU/driver/RAM configurations can change results.
+The X11 comparison image is preserved locally as `dist/erdos-x11-dev.iso`.
+
+## Reproduce the footprint measurement
+
+Install the ISO offline into a disposable VM configured as above. Remove the
+installer media, boot the installed disk and log in normally on tty1. Leave the
+default desktop running without opening applications or the overview. Do not
+run `apt update`, install packages or clear caches to improve the result.
+
+Copy [measure-footprint.py](../scripts/measure-footprint.py) from this checkout
+into the guest. Run it as the normal user from a separate virtual console,
+then return the foreground display to the desktop while it samples:
+
+```sh
+python3 measure-footprint.py > footprint.json
+```
+
+It takes about 160 seconds, reads system state using Python's standard library
+and existing system tools, and writes JSON. It requires no packages, root access
+or background service. The reference run used the serial console for collection
+and an additional idle tty2 shell; extra consoles and the sampler contribute to
+RAM. Record the ISO checksum and VM details with each result. Copying the script
+and output into the installed filesystem adds a few blocks, unlike the serial
+stdin/output used in the reference run.
 
 There is no screen locker bundled. Debian power policy remains unchanged;
 no charging or idle-sleep daemon was added.

@@ -94,17 +94,19 @@ that file. The previous X11 development image is preserved separately as
 `dist/erdos-x11-dev.iso` for comparison and testing. Details and limitations are in [building.md](docs/building.md).
 
 Test the live desktop and a disposable installation before using real disks.
-Fresh offline VM comparison (2 vCPUs, 2 GiB RAM, 1280×800, software rendering):
+Fresh offline VM measurement of the published Alpha 5 ISO on November 24, 2026
+(2 vCPUs, 2 GiB RAM, 1280×800, software rendering):
 
 | Build | Installed disk | Idle RAM |
 | --- | --- | --- |
-| Previous X11 dev | 1.814 GiB | 361.8 MiB |
-| Wayland candidate (Alpha 3) | 1.750 GiB | 355.4 MiB |
+| ErdOS 1 Alpha 5 | 1.751 GiB | 369.8 MiB |
 
 Disk includes root and EFI, excludes swap. RAM is the median of five
-MemTotal-minus-MemAvailable samples after a two-minute settle. Hardware results
-will differ. These measurements describe the Alpha 3 baseline; Alpha 5 has not been remeasured. Alpha 3 updates only the measured candidate’s release label. [Raw measurements](docs/footprint.json) include both ISO checksums;
-[validation](docs/testing.md) records completed checks and hardware-test limits.
+MemTotal-minus-MemAvailable samples after a two-minute settle, with the default
+wallpaper active, overview closed and no app windows. Hardware results will
+differ. [Raw measurements](docs/footprint.json) include the exact ISO checksum
+and earlier baselines; [validation](docs/testing.md) explains how to reproduce
+this measurement and records hardware-test limits.
 
 ErdOS's own code is MIT-licensed. Vendored compositor/library/application sources
 retain their licenses; see [THIRD_PARTY.md](THIRD_PARTY.md). Older versions live in
