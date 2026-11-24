@@ -36,8 +36,9 @@ summary { cursor: pointer; }
 .skip-link:focus { top: 8px; }
 .site-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-block: 40px 48px; }
 .brand { display: block; flex: none; }
-.wordmark { display: flex; align-items: center; width: 130px; height: 38px; padding: 6px 9px; border-radius: 5px; background: #f0edef; }
-.wordmark img { display: block; width: 100%; }
+.wordmark { display: flex; align-items: center; width: 130px; height: 38px; }
+/* Lighten the lettering and shift the inverted red accents from cyan to blue. */
+.wordmark img { display: block; width: 100%; filter: invert(1) hue-rotate(32deg); }
 .site-header nav, .site-footer nav { display: flex; flex-wrap: wrap; gap: 12px 20px; font-size: .875rem; }
 .site-header nav a { color: var(--muted); }
 main > section { margin-bottom: 42px; }
