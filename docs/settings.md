@@ -30,7 +30,7 @@ a rejected mode from a successful restore, and the display list refreshes afterw
 
 | Section | Controls |
 | --- | --- |
-| Appearance | GTK theme, font, dark preference, desktop color and image backgrounds |
+| Appearance | GTK theme, font, dark preference, labwc and GTK 3 accents, desktop color and image backgrounds |
 | Default Programs | Terminal, browser, file manager and text editor |
 | Touchpad | Natural scrolling, tapping, clickfinger right-click and pointer speed |
 | Keyboard | Dynamic/fixed workspaces, Super-key overview, shortcuts and custom commands |
@@ -70,6 +70,17 @@ own saved theme can override this preference; ErdOS does not forcibly recolor
 websites. See [Firefox website appearance](https://support.mozilla.org/en-US/kb/change-website-appearance-settings-firefox)
 for its browser-level options. Other GTK changes may require reopening an already running application. Windows and
 menus use the supplied dark labwc theme, square corners and no shadows.
+
+**Desktop accent** sets the highlight in the labwc desktop menu.
+**Application accent** sets selection and control highlights in GTK 3 apps
+such as PCManFM. Use **Use the desktop accent for GTK 3 apps** to share one
+color. Turn off a custom accent to return to the theme default. Reopen GTK 3
+apps after applying the change.
+
+For further customization, [labwc-tweaks](https://github.com/labwc/labwc-tweaks)
+is the upstream graphical tool for labwc themes and compositor settings.
+[nwg-look](https://github.com/nwg-piotr/nwg-look) provides additional GTK 3
+appearance controls, including icon and cursor themes. Both are optional tools.
 
 ## Keyboard and workspaces
 

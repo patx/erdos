@@ -234,7 +234,10 @@ def save_accents(desktop, applications, shared=False):
                 rules = (
                     f'@define-color theme_selected_bg_color {color};\n'
                     f'@define-color theme_selected_fg_color {foreground};\n'
-                    'menu menuitem:hover, .view:selected {\n'
+                    'menu menuitem:hover, row:selected, .view:selected,\n'
+                    'iconview cell:selected, treeview.view:selected, text selection,\n'
+                    'switch:checked, check:checked, radio:checked, scale highlight,\n'
+                    'progressbar progress, button.suggested-action {\n'
                     '  background-image: none;\n'
                     '  background-color: @theme_selected_bg_color;\n'
                     '  color: @theme_selected_fg_color;\n'
