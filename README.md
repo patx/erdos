@@ -3,13 +3,11 @@
 A minimal **Debian 13 amd64** desktop using **labwc and Wayland**, with a small
 application set, keyboard navigation and touchpad gestures.
 
-**ErdOS 1 Alpha 4** polishes the Settings app and fixes system dark-mode
-integration. It uses the exact ISO already tested in a VM and on hardware;
-release preparation does not rebuild it. The hosted desktop updater brings these
-changes to existing Alpha 3 installs while preserving machine-specific fixes.
-[Download the amd64 ISO](https://downloads.erd.sh/v1.0.0-alpha.4/erdos-amd64.iso) ·
-[SHA-256](https://downloads.erd.sh/v1.0.0-alpha.4/erdos-amd64.iso.sha256) ·
-[Release notes](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.4).
+**ErdOS 1 Alpha 5** introduces live window previews, a configurable overview dock,
+improved Settings controls, blue boot branding and the Dark Glacier wallpaper.
+[Download the amd64 ISO](https://downloads.erd.sh/v1.0.0-alpha.5/erdos-amd64.iso) ·
+[SHA-256](https://downloads.erd.sh/v1.0.0-alpha.5/erdos-amd64.iso.sha256) ·
+[Release notes](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.5).
 This is an experimental prerelease; start in a VM. Secure Boot is not supported.
 
 [Website](https://patx.gitman.io/erdos/) · [User guide](https://patx.gitman.io/erdos/guide.html) ·
@@ -21,10 +19,8 @@ without reinstalling or replacing machine-specific drivers and settings.
 
 ## Desktop
 
-This checkout includes unreleased live-overview and Overview Dock settings work.
-The published Alpha 4 ISO and current hosted updater retain the previous window
-switcher. The fourteen-section Settings app continues to use the existing GTK
-runtime with no additional dependencies.
+Alpha 5 includes the live overview and fourteen-section GTK Settings app. The
+Alpha 4 ISO and hosted Alpha 3 desktop updater use the previous window switcher.
 
 - Floating windows and square dark decorations. The dock appears only in the window overview.
 - Native labwc overview with live window previews, a blurred desktop snapshot, and an app dock with Wi-Fi, a clock and battery status.
@@ -107,7 +103,7 @@ Fresh offline VM comparison (2 vCPUs, 2 GiB RAM, 1280×800, software rendering):
 
 Disk includes root and EFI, excludes swap. RAM is the median of five
 MemTotal-minus-MemAvailable samples after a two-minute settle. Hardware results
-will differ. These measurements describe the Alpha 3 baseline; Alpha 4 has not been remeasured. Alpha 3 updates only the measured candidate’s release label. [Raw measurements](docs/footprint.json) include both ISO checksums;
+will differ. These measurements describe the Alpha 3 baseline; Alpha 5 has not been remeasured. Alpha 3 updates only the measured candidate’s release label. [Raw measurements](docs/footprint.json) include both ISO checksums;
 [validation](docs/testing.md) records completed checks and hardware-test limits.
 
 ErdOS's own code is MIT-licensed. Vendored compositor/library/application sources

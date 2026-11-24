@@ -1,4 +1,4 @@
-# ErdOS 1 Alpha 5 — release candidate
+# ErdOS 1 Alpha 5 — 2026-11-23
 
 - Add an Overview Dock tab: hide/show the dock, add/edit/remove/reorder launchers,
   choose installed applications and toggle launcher names, clock and battery.

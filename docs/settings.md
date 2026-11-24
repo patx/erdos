@@ -1,14 +1,12 @@
 # ErdOS Settings
 
-Open **Settings** from the desktop menu or **Super + I**. The current development
-checkout has fourteen sections in one Python/GTK window, including **Overview
+Open **Settings** from the desktop menu or **Super + I**. Alpha 5 has fourteen sections in one Python/GTK window, including **Overview
 Dock**. Native theme colors, grouped controls, readable labels, keyboard focus,
 inline validation and Apply/Revert feedback are shared across the app. No extra
 UI libraries, packages or background services are added.
 
-The published Alpha 4 ISO still has the earlier thirteen-section interface and
-thumbnail switcher. The live overview, dock and changes below require a new build;
-they are not delivered by the current hosted Settings-only updater.
+The Alpha 4 ISO and hosted Settings-only updater retain the earlier
+thirteen-section interface and thumbnail switcher.
 
 ## Editing and feedback
 
@@ -55,7 +53,7 @@ keep their associations. Existing open apps are unaffected.
 
 ## Backgrounds and appearance
 
-New development images start with the bundled blue wallpaper. Choose Image in
+Alpha 5 starts with the bundled Dark Glacier wallpaper. Choose Image in
 Settings to return to the bundled wallpaper after using a solid color.
 Select a custom image and Fill, Fit, Center or Tile. ErdOS validates and copies
 it into `~/.config/erdos/background-image`, so moving the original does not break

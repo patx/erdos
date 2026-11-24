@@ -1,3 +1,18 @@
+# Alpha 5 ISO validation
+
+The Alpha 5 amd64 ISO was rebuilt from source revision `a5779b4` in a Debian 13
+KVM guest. The image verifier matched the embedded desktop and installer files
+against source, checked the compositor provenance, and confirmed retention of
+the required packages. All six release files, including the checksum
+manifest, were prepared from that image and matched the files read back from
+the Cloudflare download host.
+
+A BIOS VM showed the blue boot logo and reached the offline installer's
+language selection. A UEFI VM logged in to the Wayland live session, displayed
+Dark Glacier as the default wallpaper, and opened the live overview dock and
+Appearance settings. These checks covered VM boot and live use. Full disk
+installation and physical hardware testing were outside this Alpha 5 run.
+
 # Current development checks
 
 The configurable overview dock is newer than the published Alpha 4 image. Source

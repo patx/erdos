@@ -3,19 +3,19 @@
 Repository: <https://github.com/patx/erdos>. Website:
 <https://patx.gitman.io/erdos/>. These instructions prepare artifacts locally;
 the release-packaging script does not commit, tag, push, upload or publish.
-The current public release is [ErdOS 1 Alpha 4](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.4).
+The current public release is [ErdOS 1 Alpha 5](https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.5).
 Both source remotes use `main`: GitHub at the URL above and Gitman at
 <https://gitman.io/git/patx/erdos>.
 
-## Alpha 5 release candidate
+## Alpha 5: rebuilt ISO
 
-Alpha 5 uses a new ISO with the native window overview, configurable dock,
-updated Settings, blue boot branding and the Dark Glacier wallpaper. Build the
-source revision whose embedded version is `1.0.0-alpha.5`. Verify that exact
-image and check BIOS and UEFI boot before preparing its download artifacts.
-Upload the artifacts under `v1.0.0-alpha.5/` after validation. Switch the website
-download and release links once the hosted files and GitHub prerelease are
-available.
+Alpha 5 includes the native window overview, configurable dock, updated
+Settings, blue boot branding and Dark Glacier. Its embedded version is
+`1.0.0-alpha.5`. The [ISO](https://downloads.erd.sh/v1.0.0-alpha.5/erdos-amd64.iso)
+was built from source revision `a5779b4` and tested in BIOS and UEFI VMs.
+The ISO and five companion files were uploaded under `v1.0.0-alpha.5/` and
+read back from the public download host. See [validation](testing.md) for
+the boot-test scope and [release.json](release.json) for the image digest.
 
 ## Alpha 4: reuse the tested ISO
 
@@ -93,7 +93,7 @@ are under `v1.0.0-alpha.4/`; the ISO URL is
 The website remains on Gitman Pages, and source code stays on both Git remotes.
 The zone rule `erdos_alpha2_public_downloads` skips Security Level and Browser
 Integrity Check only for GET/HEAD requests to the exact release download
-paths for Alpha 2, Alpha 3 and Alpha 4, plus the five explicitly approved updater files.
+paths for Alpha 2 through Alpha 5, plus the five explicitly approved updater files.
 Add each future version’s file paths to that rule before publishing its
 links; keep other hosts, paths and methods outside the exception.
 

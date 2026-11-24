@@ -4,7 +4,7 @@
 Development-only requirements: Pillow and DejaVu Sans fonts.
 """
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 ROOT = Path(__file__).resolve().parents[1]
 SCALE = 2
@@ -17,15 +17,19 @@ def text(position, value, size, color='#ffffff', bold=False):
     draw.text(tuple(int(v * SCALE) for v in position), value, font=font, fill=color, anchor='lt')
 
 logo = Image.open(ROOT / 'docs/assets/erdos-logo.png').convert('RGBA')
+alpha = logo.getchannel('A')
+logo = ImageOps.invert(logo.convert('RGB')).convert('RGB', (
+    .81, 0, .19, 0,
+    .20, .80, 0, 0,
+    0, 0, 1, 0,
+))
+logo.putalpha(alpha)
 logo.thumbnail((250 * SCALE, 70 * SCALE), Image.Resampling.LANCZOS)
 x, y = 64 * SCALE, 55 * SCALE
-padding = 10 * SCALE
-draw.rounded_rectangle((x - padding, y - padding, x + logo.width + padding,
-                        y + logo.height + padding), radius=8 * SCALE, fill='#f0edef')
 canvas.paste(logo, (x, y), logo)
 text((64, 184), 'A minimal', 44, bold=True)
 text((64, 244), 'Linux desktop.', 44, bold=True)
-text((64, 338), 'ErdOS 1 Alpha 4', 24, '#ff6884')
+text((64, 338), 'ErdOS 1 Alpha 5', 24, '#b7d7f1')
 text((64, 384), 'Debian 13 + Wayland', 20, '#a2a8ad')
 text((64, 550), 'patx.gitman.io/erdos', 18, '#a2a8ad')
 shot = Image.open(ROOT / 'docs/assets/live-window-overview.png').convert('RGB')
