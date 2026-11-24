@@ -82,7 +82,7 @@ class Network:
         button = Gtk.Button(label='Refresh status', halign=Gtk.Align.START)
         button.connect('clicked', lambda *_: self.operation(lambda: None, 'Refreshing network status…', lambda info: 'Network status refreshed.'))
         page.pack_start(button, False, False, 0)
-        self.app.note(page, 'Wi-Fi connection and internet access are shown separately. Leave the password empty for an open or saved network. Enterprise Wi-Fi and advanced profiles use Network Connections in Applications.')
+        self.app.note(page, 'Wi-Fi connection and internet access are shown separately. Leave the password empty for an open or saved network. Use nmcli in Terminal for enterprise Wi-Fi and advanced profiles.')
         self.ready = True
         self.update(info)
 

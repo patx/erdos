@@ -70,8 +70,8 @@ def verify_image(iso):
         extract(iso, '/live/filesystem.packages', temporary / 'packages')
         packages = (temporary / 'packages').read_bytes()
         installed = {line.split()[0].split(':')[0] for line in packages.decode().splitlines() if line.strip()}
-        if {'chromium', 'firefox-esr', 'openbox', 'xserver-xorg-core', 'scrot', 'hsetroot'} & installed:
-            raise ValueError('ISO contains a replaced browser or legacy X11 desktop component')
+        if {'chromium', 'firefox-esr', 'openbox', 'xserver-xorg-core', 'scrot', 'hsetroot', 'nm-connection-editor', 'pulsemixer'} & installed:
+            raise ValueError('ISO contains a removed utility, replaced browser or legacy X11 desktop component')
         if missing := CORE - installed:
             raise ValueError(f'ISO package manifest is missing required packages: {sorted(missing)}')
         removals = run('xorriso', '-indev', str(iso), '-find', '/live', '-name', 'filesystem.packages-remove')

@@ -17,7 +17,15 @@ exclusion of peripheral batteries are exercised across repeated menu openings.
 Rendered menus were reviewed with and without a system battery. Values refresh
 on opening, with no status timer or subprocess. These checks do not certify a
 physical laptop battery, touchpad or GPU. Source syntax, documentation links and
-installer-policy checks pass. No package dependencies were changed.
+installer-policy checks pass. The menu/dock work added no package dependencies.
+
+A subsequent source cleanup removes nm-connection-editor and pulsemixer from the
+package list and PCManFM daemon mode from the default autostart. Build-time and
+final-image guards reject the removed utilities. Source checks and `build.sh
+--prepare` pass; staged configuration retains GVfs backends/FUSE, SSH/SFTP,
+Avahi and all firmware/microcode selections. This cleanup has not had an ISO
+build, fresh-install test or new RAM measurement. The Alpha 5 measurements below
+remain the published-image baseline.
 
 # Alpha 5 ISO validation
 

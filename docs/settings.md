@@ -6,9 +6,9 @@ controls, readable labels, keyboard focus, inline validation and Apply/Revert
 feedback are shared across the app. No extra UI libraries, packages or background
 services are added.
 
-The published Alpha 5 ISO still includes Overview Dock. The dock and its editor
-are removed in the current checkout; the menu status rows described here need
-a new ISO build. The hosted Settings-only updater does not replace labwc.
+The published Alpha 5 ISO still includes Overview Dock. The dock and its editor, nm-connection-editor and pulsemixer
+are removed in the current checkout. PCManFM starts on demand. These changes and
+the menu status rows described here need a new ISO build. The hosted Settings-only updater does not replace labwc.
 
 ## Editing and feedback
 
@@ -150,6 +150,12 @@ Save checks shell syntax without executing commands and keeps
 `autostart.previous`. Changes run at the next login. Reload asks before discarding
 unsaved changes; conflicting external edits require a reload before saving.
 
+The default startup file no longer runs `pcmanfm --daemon-mode &`. Launch the
+file manager through the menu or Super + E when needed. USB mounting and SMB/SFTP
+support remain installed; automatic mounting runs while PCManFM is open. Existing
+custom startup files are preserved. To adopt this behavior on an older profile,
+remove its `pcmanfm --daemon-mode &` line here and log out and back in.
+
 ## Gestures
 
 A deliberate swipe triggers once when its distance and direction thresholds are
@@ -186,8 +192,9 @@ backlight controls do not imply DDC brightness support for external monitors.
 
 NetworkManager provides current connection state and saved profiles. Wi-Fi
 connection and internet reachability are shown separately. Network changes update
-the visible controls via D-Bus events. Advanced profiles remain available through
-Advanced Network Configuration. Bluetooth uses BlueZ and its existing authorization agent;
+the visible controls via D-Bus events. Advanced profiles use `nmcli` in Terminal;
+there is no bundled nm-connection-editor. Volume controls and media keys use
+WirePlumber directly, so pulsemixer is not needed. Bluetooth uses BlueZ and its existing authorization agent;
 Sound uses PipeWire/WirePlumber. Choosing an audio device loads its own volume
 and mute state before Apply is available. **Refresh devices** picks up newly
 connected devices without reopening Settings; apply or revert outstanding audio

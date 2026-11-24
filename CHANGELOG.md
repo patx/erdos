@@ -1,5 +1,11 @@
 # Development
 
+- Remove nm-connection-editor and pulsemixer; Settings retains normal Wi-Fi and
+  sound controls, with nmcli available for advanced connection profiles.
+- Launch PCManFM only on demand rather than starting its daemon at login. Keep
+  USB mounting, GVfs network backends, share discovery and SSH/SFTP transport.
+  Automatic removable-drive mounting now requires an open file manager.
+
 - Remove the overview dock, its renderer/status timer, launch helper and Settings
   tab. Keep the native live window overview and give its grid the freed space.
 - Add a clickable 12-hour clock and battery percentage below Settings in the

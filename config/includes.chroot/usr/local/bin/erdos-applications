@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 os.environ.setdefault("XDG_CURRENT_DESKTOP", "labwc")
 from gi.repository import Gio
 
-# Hide desktop-shell launchers; connection editing remains available in Applications.
+# Hide desktop-shell launchers; show other installed applications automatically.
 HIDDEN_ENTRIES = {
     "nm-applet.desktop",
     "pcmanfm-desktop-pref.desktop", "tint2.desktop",

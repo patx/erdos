@@ -5,4 +5,3 @@ export XDG_SESSION_TYPE=wayland
 dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP XDG_SESSION_TYPE
 erdos-settings --apply-session
 lxpolkit &
-pcmanfm --daemon-mode &

@@ -30,8 +30,11 @@ build and are not delivered by the Settings-only hosted updater.
   displays, backgrounds, audio, networking, Bluetooth, battery and time.
 - **Sakura**, **Firefox** (regular Mozilla release), **PCManFM** with USB/network
   support, and **Twig**. Menu entries and launch shortcuts follow selected defaults.
+  PCManFM starts on demand; open it to browse or mount removable drives.
 - Clickable 12-hour clock and battery status in the desktop menu open Date & Time
   and Power. Values refresh when the menu opens; no status daemon or timer.
+- Settings handles Wi-Fi and audio. Use `nmcli` for advanced networking; the
+  separate connection editor and terminal mixer are not included.
 - Console login starts labwc. Logout returns to a clear login prompt.
 - Debian's text installer works offline, sets signed APT sources and grants the
   first account sudo. Disk selection and erase/write approval stay manual.

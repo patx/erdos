@@ -68,7 +68,6 @@ adwaita-icon-theme
 librsvg2-common
 # Networking and graphical authorization
 network-manager
-nm-connection-editor
 lxpolkit
 polkitd
 wpasupplicant
@@ -80,7 +79,6 @@ pipewire-audio
 pipewire-bin
 wireplumber
 rtkit
-pulsemixer
 # Small hardware-key backlight control and its unprivileged access rules.
 brightnessctl
 brightness-udev
