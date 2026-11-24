@@ -433,6 +433,50 @@ class Settings(Gtk.Application):
                 GLib.idle_add(saved)
             return job
         self.button(page, 'Apply appearance', apply)
+        self.accent_controls(page)
+
+    def accent_controls(self, page):
+        desktop, applications, linked = backend.accents()
+        self.note(page, 'Set the desktop menu highlight and the selection color in GTK 3 apps such as PCManFM.')
+        desktop_custom = self.toggle(page, 'Custom desktop accent (labwc)', desktop is not None)
+        desktop_color = Gdk.RGBA()
+        desktop_color.parse(desktop or '#3584e4')
+        desktop_picker = self.row(page, 'Desktop accent', Gtk.ColorButton(rgba=desktop_color))
+        shared = self.toggle(page, 'Use the desktop accent for GTK 3 apps', linked)
+        apps_custom = self.toggle(page, 'Custom application accent (GTK 3)', applications is not None)
+        apps_color = Gdk.RGBA()
+        apps_color.parse(applications or '#3584e4')
+        apps_picker = self.row(page, 'Application accent', Gtk.ColorButton(rgba=apps_color))
+
+        def refresh(*_):
+            desktop_picker.set_sensitive(desktop_custom.get_active())
+            apps_custom.set_sensitive(not shared.get_active())
+            apps_picker.set_sensitive(not shared.get_active() and apps_custom.get_active())
+
+        for control in (desktop_custom, shared, apps_custom):
+            control.connect('notify::active', refresh)
+        refresh()
+        self.note(page, 'Turn off a custom accent to use the theme default. Reopen GTK 3 apps after applying.')
+
+        def selected_color(toggle, picker):
+            if not toggle.get_active():
+                return None
+            rgba = picker.get_rgba()
+            return '#%02x%02x%02x' % tuple(round(channel * 255)
+                                           for channel in (rgba.red, rgba.green, rgba.blue))
+
+        def apply():
+            desktop = selected_color(desktop_custom, desktop_picker)
+            applications = selected_color(apps_custom, apps_picker)
+            linked = shared.get_active()
+
+            def job():
+                backend.save_accents(desktop, applications, linked)
+                return 'Accents saved. Reopen GTK 3 apps to see the change.'
+            return job
+
+        self.button(page, 'Apply accents', apply)
+
 
     def default_programs(self, page):
         import default_apps

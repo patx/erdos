@@ -182,6 +182,92 @@ def appearance(theme, font, dark, color, image=False, layout='fill', source=None
     set_color_scheme(dark)
 
 
+def accent_files():
+    return (CONFIG / 'labwc/themerc-override', CONFIG / 'gtk-3.0/gtk.css')
+
+
+def accent_block(path):
+    source = path.read_text() if path.exists() else ''
+    if path.name == 'gtk.css':
+        begin, end = '/* ErdOS accent begin */', '/* ErdOS accent end */'
+    else:
+        begin, end = '# ErdOS accent begin', '# ErdOS accent end'
+    pattern = re.compile(r'^' + re.escape(begin) + r'\n(.*?)^' + re.escape(end) + r'(?:\n|$)', re.M | re.S)
+    return source, pattern, begin, end
+
+
+def accents():
+    colors = []
+    shared = False
+    for path in accent_files():
+        source, pattern, _, _ = accent_block(path)
+        block = pattern.search(source)
+        color = re.search(r'#[0-9a-fA-F]{6}', block[1]) if block else None
+        colors.append(color[0].lower() if color else None)
+        if path.name == 'gtk.css' and block:
+            shared = block[1].startswith('/* Follow the desktop accent */\n')
+    return (*colors, shared)
+
+
+def accent_foreground(color):
+    rgb = [int(color[index:index + 2], 16) / 255 for index in (1, 3, 5)]
+    linear = [value / 12.92 if value <= 0.04045 else ((value + 0.055) / 1.055) ** 2.4
+              for value in rgb]
+    luminance = sum(value * weight for value, weight in zip(linear, (0.2126, 0.7152, 0.0722)))
+    return '#000000' if luminance >= 0.179 else '#ffffff'
+
+
+def save_accents(desktop, applications, shared=False):
+    if shared:
+        applications = desktop
+    for color in (desktop, applications):
+        if color is not None and not re.fullmatch(r'#[0-9a-fA-F]{6}', color):
+            raise ValueError('Choose a valid accent color.')
+    changes = []
+    for path, color in zip(accent_files(), (desktop, applications)):
+        source, pattern, begin, end = accent_block(path)
+        updated = pattern.sub('', source)
+        rules = ''
+        if color:
+            foreground = accent_foreground(color)
+            if path.name == 'gtk.css':
+                rules = (
+                    f'@define-color theme_selected_bg_color {color};\n'
+                    f'@define-color theme_selected_fg_color {foreground};\n'
+                    'menu menuitem:hover, .view:selected {\n'
+                    '  background-image: none;\n'
+                    '  background-color: @theme_selected_bg_color;\n'
+                    '  color: @theme_selected_fg_color;\n'
+                    '}\n'
+                )
+            else:
+                rules = (f'menu.items.active.bg.color: {color}\n'
+                         f'menu.items.active.text.color: {foreground}\n')
+        if path.name == 'gtk.css' and shared:
+            rules = '/* Follow the desktop accent */\n' + rules
+        if rules:
+            if updated and not updated.endswith('\n'):
+                updated += '\n'
+            updated += f'{begin}\n{rules}{end}\n'
+        if updated != source:
+            changes.append((path, source if path.exists() else None, updated))
+
+    written = []
+    try:
+        for path, previous, updated in changes:
+            write(path, updated)
+            written.append((path, previous))
+        if any(path.name == 'themerc-override' for path, _, _ in changes):
+            run('labwc', '--reconfigure')
+    except Exception:
+        for path, previous in reversed(written):
+            if previous is None:
+                path.unlink(missing_ok=True)
+            else:
+                write(path, previous)
+        raise
+
+
 def keyboard():
     path = CONFIG / 'labwc/rc.xml'
     tree = ET.parse(path)
