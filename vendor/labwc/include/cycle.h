@@ -73,6 +73,7 @@ struct cycle_osd_output {
 	struct wlr_box dock;
 	int dock_button_width;
 	int dock_button_count;
+	char *dock_commands[12];
 
 	/* set by cycle_osd_impl->init() */
 	struct wl_list items; /* struct cycle_osd_item.link */
@@ -129,18 +130,11 @@ bool cycle_osd_field_is_valid(struct cycle_osd_field *field);
 void cycle_osd_field_free(struct cycle_osd_field *field);
 
 /* Internal API */
-void overview_dock_create(struct cycle_osd_output *osd_output,
+bool overview_dock_create(struct cycle_osd_output *osd_output,
 	const struct wlr_box *box);
 
 void overview_backdrop_create(struct cycle_osd_output *osd_output,
 	const struct wlr_box *box);
-
-struct overview_launcher {
-	const char *label;
-	const char *command;
-};
-
-extern const struct overview_launcher overview_launchers[];
 
 struct cycle_osd_item {
 	struct view *view;

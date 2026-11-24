@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 #include <glib.h>
+#include <string.h>
 #include <wlr/types/wlr_scene.h>
 #include "buffer.h"
 #include "common/macros.h"
@@ -74,6 +75,21 @@ draw_dock_icon(cairo_t *cr, int index, double x)
 		cairo_line_to(cr, 0, 0);
 		cairo_line_to(cr, 4, 3);
 		break;
+	case 6: /* editor */
+		cairo_move_to(cr, -8, 9);
+		cairo_line_to(cr, -6, 3);
+		cairo_line_to(cr, 6, -9);
+		cairo_line_to(cr, 10, -5);
+		cairo_line_to(cr, -2, 7);
+		cairo_close_path(cr);
+		break;
+	default: /* application */
+		for (int row = 0; row < 2; ++row) {
+			for (int col = 0; col < 2; ++col) {
+				cairo_rectangle(cr, -9 + col * 11, -9 + row * 11, 7, 7);
+			}
+		}
+		break;
 	}
 	cairo_stroke(cr);
 	cairo_restore(cr);
@@ -88,6 +104,7 @@ struct dock_status {
 	struct wlr_scene_buffer *battery_icon;
 	int cell_width;
 	int clock_index;
+	int battery_index;
 	float scale;
 	char clock_text[32];
 	int capacity;
@@ -190,18 +207,18 @@ refresh_dock_status(void *data)
 	if (time) {
 		g_strstrip(time);
 	}
-	if (time && !g_str_equal(time, status->clock_text)) {
+	if (status->clock && time && !g_str_equal(time, status->clock_text)) {
 		g_strlcpy(status->clock_text, time, sizeof(status->clock_text));
 		position_label(status->clock, time, status->clock_index, status->cell_width);
 	}
 	bool charging = false;
-	int capacity = battery_capacity(&charging);
-	if (capacity != status->capacity || charging != status->charging) {
+	int capacity = status->battery ? battery_capacity(&charging) : -1;
+	if (status->battery && (capacity != status->capacity || charging != status->charging)) {
 		status->capacity = capacity;
 		status->charging = charging;
 		g_autofree char *label = capacity >= 0 ? g_strdup_printf("%d%%", capacity) : NULL;
 		position_label(status->battery, label ? label : "No battery",
-			status->clock_index + 1, status->cell_width);
+			status->battery_index, status->cell_width);
 		update_battery_icon(status);
 	}
 	if (status->timer) {
@@ -221,50 +238,119 @@ destroy_dock_status(struct wl_listener *listener, void *data)
 	free(status);
 }
 
-void
+static bool
+dock_boolean(GKeyFile *file, const char *key)
+{
+	GError *error = NULL;
+	bool value = g_key_file_get_boolean(file, "dock", key, &error);
+	if (error) {
+		g_error_free(error);
+		return true;
+	}
+	return value;
+}
+
+static int
+dock_icon(const char *name)
+{
+	static const char *names[] = {
+		"browser", "files", "terminal", "settings", "wifi", "clock", "editor"
+	};
+	for (size_t i = 0; i < sizeof(names) / sizeof(*names); ++i) {
+		if (g_strcmp0(name, names[i]) == 0) {
+			return i;
+		}
+	}
+	return 7;
+}
+
+bool
 overview_dock_create(struct cycle_osd_output *osd_output, const struct wlr_box *output_box)
 {
+	static const char *defaults[][3] = {
+		{ "Browser", "erdos-launch browser", "browser" },
+		{ "Files", "erdos-launch files", "files" },
+		{ "Terminal", "erdos-launch terminal", "terminal" },
+		{ "Settings", "erdos-settings", "settings" },
+		{ "Wi-Fi", "erdos-wifi-picker", "wifi" },
+	};
 	struct server *server = osd_output->output->server;
-	int count = 0;
-	while (overview_launchers[count].command) {
-		++count;
+	g_autoptr(GKeyFile) file = g_key_file_new();
+	g_autofree char *path = g_build_filename(g_get_user_config_dir(), "erdos", "dock.ini", NULL);
+	bool configured = g_key_file_load_from_file(file, path, G_KEY_FILE_NONE, NULL);
+	if (configured && !dock_boolean(file, "enabled")) {
+		return false;
 	}
-	int slots = count + 2;
+	bool labels = dock_boolean(file, "show_labels");
+	bool clock = dock_boolean(file, "show_clock");
+	bool battery = dock_boolean(file, "show_battery");
+	int requested = configured && g_key_file_has_key(file, "dock", "count", NULL)
+		? CLAMP(g_key_file_get_integer(file, "dock", "count", NULL), 0, 12) : 5;
+	char *names[12] = {0};
+	int icons[12] = {0};
+	int count = 0;
+	for (int i = 0; i < requested; ++i) {
+		g_autofree char *group = g_strdup_printf("launcher%d", i);
+		char *label, *command;
+		g_autofree char *icon = NULL;
+		if (!configured || !g_key_file_has_key(file, "dock", "count", NULL)) {
+			label = g_strdup(defaults[i][0]);
+			command = g_strdup(defaults[i][1]);
+			icon = g_strdup(defaults[i][2]);
+		} else {
+			label = g_key_file_get_string(file, group, "label", NULL);
+			command = g_key_file_get_string(file, group, "command", NULL);
+			icon = g_key_file_get_string(file, group, "icon", NULL);
+		}
+		g_auto(GStrv) argv = NULL;
+		if (!label || !*label || strlen(label) > 256 || !command || !*command
+				|| strlen(command) > 4096 || !g_utf8_validate(command, -1, NULL)
+				|| g_utf8_strlen(command, -1) > 1024
+				|| !g_shell_parse_argv(command, NULL, &argv, NULL) || !argv || !argv[0] || !*argv[0]) {
+			g_free(label);
+			g_free(command);
+			continue;
+		}
+		names[count] = label;
+		icons[count] = dock_icon(icon);
+		osd_output->dock_commands[count++] = command;
+	}
+	osd_output->dock_button_count = count;
+	int slots = count + clock + battery;
+	if (!slots) {
+		return false;
+	}
 	int width = MIN(88, MAX(1, (output_box->width - 24) / slots));
-	int height = 70;
+	int height = labels || clock || battery ? 70 : 46;
 	int dock_x = (output_box->width - slots * width) / 2;
 	int dock_y = output_box->height - height - 22;
 	osd_output->dock = (struct wlr_box) {
-		.x = output_box->x + dock_x,
-		.y = output_box->y + dock_y,
-		.width = slots * width,
-		.height = height,
+		.x = output_box->x + dock_x, .y = output_box->y + dock_y,
+		.width = slots * width, .height = height,
 	};
 	osd_output->dock_button_width = width;
-	osd_output->dock_button_count = count;
 	struct wlr_scene_tree *dock = wlr_scene_tree_create(osd_output->tree);
 	wlr_scene_node_set_position(&dock->node, dock_x, dock_y);
 	int dock_width = slots * width;
 	struct lab_data_buffer *panel = buffer_create_cairo(
 		dock_width, height, osd_output->output->wlr_output->scale);
 	cairo_t *cr = cairo_create(panel->surface);
-	double r = MIN(18, dock_width / 2.);
-	cairo_arc(cr, dock_width - r - 1, r + 1, r, -G_PI / 2, 0);
-	cairo_arc(cr, dock_width - r - 1, height - r - 1, r, 0, G_PI / 2);
-	cairo_arc(cr, r + 1, height - r - 1, r, G_PI / 2, G_PI);
-	cairo_arc(cr, r + 1, r + 1, r, G_PI, 3 * G_PI / 2);
+	double radius = MIN(18, dock_width / 2.);
+	cairo_arc(cr, dock_width - radius - 1, radius + 1, radius, -G_PI / 2, 0);
+	cairo_arc(cr, dock_width - radius - 1, height - radius - 1, radius, 0, G_PI / 2);
+	cairo_arc(cr, radius + 1, height - radius - 1, radius, G_PI / 2, G_PI);
+	cairo_arc(cr, radius + 1, radius + 1, radius, G_PI, 3 * G_PI / 2);
 	cairo_close_path(cr);
 	cairo_set_source_rgba(cr, .09, .105, .14, .96);
 	cairo_fill_preserve(cr);
 	cairo_set_source_rgba(cr, .45, .51, .62, .45);
 	cairo_set_line_width(cr, 1);
 	cairo_stroke(cr);
-	cairo_set_source_rgba(cr, .45, .51, .62, .3);
-	cairo_move_to(cr, (count - 1) * width, 11);
-	cairo_line_to(cr, (count - 1) * width, height - 11);
-	cairo_stroke(cr);
-	for (int i = 0; i <= count; ++i) {
-		draw_dock_icon(cr, i, (i + .5) * width);
+	for (int i = 0; i < count; ++i) {
+		draw_dock_icon(cr, icons[i], (i + .5) * width);
+	}
+	if (clock) {
+		draw_dock_icon(cr, 5, (count + .5) * width);
 	}
 	cairo_destroy(cr);
 	cairo_surface_flush(panel->surface);
@@ -272,22 +358,33 @@ overview_dock_create(struct cycle_osd_output *osd_output, const struct wlr_box *
 	wlr_scene_buffer_set_dest_size(panel_node, dock_width, height);
 	wlr_buffer_drop(&panel->base);
 	for (int i = 0; i < count; ++i) {
-		struct scaled_font_buffer *label = scaled_font_buffer_create(dock);
-		position_label(label, overview_launchers[i].label, i, width);
+		if (labels) {
+			position_label(scaled_font_buffer_create(dock), names[i], i, width);
+		}
+		g_free(names[i]);
+	}
+	if (!clock && !battery) {
+		return true; /* No status widgets means no status timer or battery reads. */
 	}
 	struct dock_status *status = znew(*status);
-	status->capacity = -2; /* Force the first update, including on desktops. */
+	status->capacity = -2;
 	status->cell_width = width;
 	status->clock_index = count;
+	status->battery_index = count + clock;
 	status->scale = osd_output->output->wlr_output->scale;
-	status->clock = scaled_font_buffer_create(dock);
-	status->battery = scaled_font_buffer_create(dock);
-	status->battery_icon = wlr_scene_buffer_create(dock, NULL);
-	wlr_scene_node_set_position(&status->battery_icon->node,
-		(count + 1) * width + (width - 30) / 2, 10);
+	if (clock) {
+		status->clock = scaled_font_buffer_create(dock);
+	}
+	if (battery) {
+		status->battery = scaled_font_buffer_create(dock);
+		status->battery_icon = wlr_scene_buffer_create(dock, NULL);
+		wlr_scene_node_set_position(&status->battery_icon->node,
+			status->battery_index * width + (width - 30) / 2, 10);
+	}
 	status->destroy.notify = destroy_dock_status;
 	wl_signal_add(&dock->node.events.destroy, &status->destroy);
 	status->timer = wl_event_loop_add_timer(
 		wl_display_get_event_loop(server->wl_display), refresh_dock_status, status);
 	refresh_dock_status(status);
+	return true;
 }

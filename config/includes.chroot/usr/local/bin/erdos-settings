@@ -61,6 +61,7 @@ class Settings(Gtk.Application):
         self.stack.set_hexpand(True)
         sidebar = Gtk.StackSidebar(stack=self.stack)
         sidebar.set_size_request(175, -1)
+        sidebar.get_accessible().set_name('Settings sections')
         body.pack_start(sidebar, False, False, 0)
         body.pack_start(self.stack, True, True, 0)
         self.status = Gtk.Label(xalign=0, wrap=True, selectable=True)
@@ -68,7 +69,10 @@ class Settings(Gtk.Application):
         self.status.set_margin_top(10); self.status.set_margin_bottom(10)
         outer.pack_start(body, True, True, 0)
         self.feedback = Gtk.InfoBar(show_close_button=True)
-        self.feedback.get_content_area().add(self.status)
+        self.progress = Gtk.Spinner(valign=Gtk.Align.CENTER)
+        self.progress.set_no_show_all(True)
+        self.feedback.get_content_area().pack_start(self.progress, False, False, 0)
+        self.feedback.get_content_area().pack_start(self.status, True, True, 0)
         self.feedback.connect('response', lambda *_: self.feedback.hide())
         self.feedback.set_no_show_all(True)
         outer.pack_start(self.feedback, False, False, 0)
@@ -85,13 +89,14 @@ class Settings(Gtk.Application):
         self.trial_process = None
         self.trial_timer = None
         self.window.add(outer)
-        for name in ('Appearance', 'Default Programs', 'Touchpad', 'Keyboard', 'Menu', 'Startup Applications', 'Gestures', 'Displays', 'Sound', 'Network', 'Bluetooth', 'Power', 'Date & Time'):
+        for name in ('Appearance', 'Default Programs', 'Touchpad', 'Keyboard', 'Overview Dock', 'Menu', 'Startup Applications', 'Gestures', 'Displays', 'Sound', 'Network', 'Bluetooth', 'Power', 'Date & Time'):
             page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
             page.set_border_width(28)
             title = Gtk.Label(xalign=0); title.set_markup(f'<span size="x-large" weight="bold">{GLib.markup_escape_text(name)}</span>')
             page.pack_start(title, False, False, 0)
-            scroll = Gtk.ScrolledWindow(); scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+            scroll = Gtk.ScrolledWindow(); scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
             scroll.add(page); self.stack.add_titled(scroll, name, name)
+            scroll.get_accessible().set_name(name + ' settings')
             try:
                 getattr(self, name.lower().replace(' & ', '_').replace(' ', '_'))(page)
             except Exception as error:
@@ -102,7 +107,6 @@ class Settings(Gtk.Application):
     def note(self, page, text):
         label = Gtk.Label(label=text, xalign=0, wrap=True)
         label.set_max_width_chars(62)
-        label.get_style_context().add_class('dim-label')
         if len(text) > 190:
             details = Gtk.Expander(label='More information')
             label.set_margin_top(8)
@@ -125,6 +129,9 @@ class Settings(Gtk.Application):
         box.set_border_width(12)
         label = Gtk.Label(label=title, xalign=0, wrap=True)
         label.set_max_width_chars(32)
+        label.set_mnemonic_widget(widget)
+        widget.get_accessible().set_name(title)
+        if isinstance(widget, Gtk.Entry): widget.set_width_chars(22)
         widget.set_valign(Gtk.Align.CENTER)
         box.pack_start(label, True, True, 0)
         box.pack_end(widget, False, False, 0)
@@ -174,7 +181,7 @@ class Settings(Gtk.Application):
 
     def group_update(self, group, *_):
         dirty = self.group_values(group) != group['saved']
-        group['hint'].set_text('Unsaved changes' if dirty else '')
+        group['hint'].set_markup('<b>Unsaved changes</b>' if dirty else '')
         group['apply'].set_sensitive(dirty and not self.busy and group.get('available',lambda:True)())
         group['revert'].set_sensitive(dirty and not self.busy)
 
@@ -236,7 +243,6 @@ class Settings(Gtk.Application):
             group={'page':page,'controls':controls,'apply':button,'hint':Gtk.Label(xalign=0),'revert':Gtk.Button(label='Revert')}
             group['saved']=self.group_values(group)
             self.groups.append(group)
-            group['hint'].get_style_context().add_class('dim-label')
             bar=Gtk.Box(spacing=8)
             bar.pack_start(group['hint'],True,True,0)
             bar.pack_end(button,False,False,0)
@@ -263,8 +269,11 @@ class Settings(Gtk.Application):
         button.connect('clicked', lambda *_: self.perform(action, group=group))
         return button
 
-    def report(self, message, error=False):
+    def report(self, message, error=False, busy=False):
         self.status.set_text(message)
+        self.status.get_accessible().set_description(message)
+        self.progress.start() if busy else self.progress.stop()
+        self.progress.set_visible(busy)
         self.feedback.set_message_type(Gtk.MessageType.ERROR if error else Gtk.MessageType.INFO)
         self.status.show()
         self.feedback.get_content_area().show()
@@ -298,7 +307,7 @@ class Settings(Gtk.Application):
         self.busy=True; self.hold()
         if group: group['page'].set_sensitive(False)
         for g in self.groups: self.group_update(g)
-        self.report(pending)
+        self.report(pending, busy=True)
         def worker():
             try:
                 result=job()
@@ -321,6 +330,17 @@ class Settings(Gtk.Application):
             return False
         threading.Thread(target=worker,daemon=True).start()
 
+    def selection_actions(self, tree, actions):
+        tree.get_accessible().set_name('Editable settings list')
+        def update(*_):
+            model, row = tree.get_selection().get_selected()
+            index = model.get_path(row).get_indices()[0] if row is not None else -1
+            for button, step in actions:
+                button.set_sensitive(index >= 0 and (step is None or 0 <= index + step < len(model)))
+        tree.get_selection().connect('changed', update)
+        for signal in ('row-inserted', 'row-deleted', 'rows-reordered'): tree.get_model().connect(signal, update)
+        update()
+
     def edit_fields(self, title, fields, commit):
         dialog=Gtk.Dialog(title=title,transient_for=self.window,modal=True)
         dialog.add_buttons('Cancel',Gtk.ResponseType.CANCEL,'Save',Gtk.ResponseType.OK)
@@ -328,8 +348,10 @@ class Settings(Gtk.Application):
         box=dialog.get_content_area(); box.set_border_width(18); box.set_spacing(12)
         entries=[]
         for label,value in fields:
-            box.pack_start(Gtk.Label(label=label,xalign=0),False,False,0)
-            entry=Gtk.Entry(text=value,activates_default=True); entry.set_width_chars(42)
+            entry=Gtk.Entry(text=value,activates_default=True); entry.set_width_chars(32)
+            caption=Gtk.Label(label=label,xalign=0); caption.set_mnemonic_widget(entry)
+            entry.get_accessible().set_name(label)
+            box.pack_start(caption,False,False,0)
             box.pack_start(entry,False,False,0); entries.append(entry)
         dialog.show_all()
         if dialog.run()==Gtk.ResponseType.OK: commit([e.get_text() for e in entries])
@@ -488,6 +510,7 @@ class Settings(Gtk.Application):
             if row is not None:
                 self.edit_fields('Edit shortcut',[('Shortcut',backend.shortcut_label(rows[row][0]))],lambda values: rows.set_value(row,0,backend.shortcut_value(values[0])))
         edit=Gtk.Button(label='Edit selected shortcut',halign=Gtk.Align.START); edit.connect('clicked',edit_selected); page.pack_start(edit,False,False,0)
+        self.selection_actions(tree, [(edit, None)])
         self.note(page, 'Custom shortcuts: add a key combination and the command to launch. Double-click either field to edit. Commands run as your user when you press the shortcut.')
         custom = Gtk.ListStore(str, str)
         for key, command in backend.custom_keyboard():
@@ -525,6 +548,7 @@ class Settings(Gtk.Application):
                 rows.set_value(row,0,backend.shortcut_value(values[0])); rows.set_value(row,1,values[1])
             self.edit_fields('Edit custom shortcut',[('Shortcut',backend.shortcut_label(rows[row][0])),('Command',rows[row][1])],commit)
         edit=Gtk.Button(label='Edit selected'); edit.connect('clicked',edit_custom)
+        self.selection_actions(custom_tree, [(edit, None), (remove, None)])
         controls.pack_start(edit,False,False,0)
         controls.pack_start(add, False, False, 0)
         controls.pack_start(remove, False, False, 0)
@@ -539,6 +563,121 @@ class Settings(Gtk.Application):
                 keyboard_source=backend.keyboard_source()
             return job
         self.button(page, 'Apply shortcuts', apply)
+
+    def overview_dock(self, page):
+        source, options, items = backend.dock_settings()
+        enabled = self.toggle(page, 'Show dock in overview', options['enabled'])
+        self.note(page, 'Apply your changes, then reopen the overview.')
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        page.pack_start(content, True, True, 0)
+        flags = {'enabled': enabled}
+        display = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        display_options = Gtk.Expander(label='Display options')
+        display_options.add(display)
+        for key, label in [('show_labels', 'Show launcher names'), ('show_clock', 'Show clock'), ('show_battery', 'Show battery status')]:
+            flags[key] = self.toggle(display, label, options[key])
+        self.note(display, 'Default-program launchers follow your selected apps. Commands run as your user without a shell. Hiding the dock keeps window previews available.')
+        model = Gtk.ListStore(str, str, str)
+        for item in items: model.append(item)
+        tree = Gtk.TreeView(model=model)
+        for index, title in enumerate(('Name', 'Command')):
+            cell = Gtk.CellRendererText(); cell.set_property('ellipsize', 3)
+            column = Gtk.TreeViewColumn(title, cell, text=index)
+            column.set_min_width(130 if index == 0 else 220)
+            column.set_expand(index == 1); column.set_resizable(True)
+            tree.append_column(column)
+        scroll = Gtk.ScrolledWindow(); scroll.set_min_content_height(180); scroll.add(tree)
+        content.pack_start(scroll, True, True, 0)
+        def edit_item(add=False):
+            rows, row = tree.get_selection().get_selected()
+            if not add and row is None: return
+            if add and len(model) >= 12:
+                self.report('Dock supports up to 12 launchers.', error=True); return
+            dialog = Gtk.Dialog(title='Add launcher' if add else 'Edit launcher', transient_for=self.window, modal=True)
+            dialog.add_buttons('Cancel', Gtk.ResponseType.CANCEL, 'Add' if add else 'Save', Gtk.ResponseType.OK)
+            dialog.set_default_size(440, -1)
+            fields = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10); fields.set_border_width(16)
+            dialog.get_content_area().add(fields)
+            presets = Gtk.ComboBoxText()
+            for i, item in enumerate(backend.DOCK_PRESETS): presets.append(str(i), item[0] + (' (default program)' if item[1].startswith('erdos-launch ') else ''))
+            presets.append('custom', 'Custom command')
+            name, command = Gtk.Entry(), Gtk.Entry()
+            icons = Gtk.ComboBoxText()
+            for icon in backend.DOCK_ICONS: icons.append(icon, icon.replace('wifi', 'Wi-Fi').title())
+            error_label = Gtk.Label(xalign=0, wrap=True)
+            error_label.get_style_context().add_class('error')
+            for label, widget in [('Launcher', presets), ('Name', name), ('Command', command), ('Icon', icons)]:
+                caption = Gtk.Label(label=label, xalign=0); caption.set_mnemonic_widget(widget)
+                widget.get_accessible().set_name(label)
+                fields.pack_start(caption, False, False, 0)
+                fields.pack_start(widget, False, False, 0)
+            choose_app = Gtk.Button(label='Choose installed application…', halign=Gtk.Align.START)
+            def installed(*_):
+                chooser = Gtk.AppChooserDialog(content_type='application/octet-stream', transient_for=dialog, modal=True)
+                chooser.get_widget().set_show_all(True)
+                if chooser.run() == Gtk.ResponseType.OK:
+                    app = chooser.get_app_info()
+                    filename = app.get_filename() if app and isinstance(app, Gio.DesktopAppInfo) else None
+                    if filename:
+                        presets.set_active_id('custom'); name.set_text(app.get_display_name())
+                        command.set_text('gio launch ' + GLib.shell_quote(filename)); icons.set_active_id('application')
+                chooser.destroy()
+            choose_app.connect('clicked', installed)
+            fields.pack_start(choose_app, False, False, 0)
+            fields.pack_start(error_label, False, False, 0)
+            for entry in (name, command): entry.set_activates_default(True)
+            dialog.set_default_response(Gtk.ResponseType.OK)
+            def choose(*_):
+                selected = presets.get_active_id()
+                if selected and selected != 'custom':
+                    label, text, icon = backend.DOCK_PRESETS[int(selected)]
+                    name.set_text(label); command.set_text(text); icons.set_active_id(icon)
+            presets.connect('changed', choose)
+            presets.set_active_id('0' if add else 'custom')
+            if not add:
+                name.set_text(rows[row][0]); command.set_text(rows[row][1]); icons.set_active_id(rows[row][2])
+            if icons.get_active_id() is None: icons.set_active_id('application')
+            dialog.show_all()
+            while dialog.run() == Gtk.ResponseType.OK:
+                try: values = backend.validate_dock_item(name.get_text(), command.get_text(), icons.get_active_id())
+                except ValueError as error: error_label.set_text(str(error)); continue
+                if add:
+                    added = model.append(values); tree.get_selection().select_iter(added)
+                else:
+                    for index, value in enumerate(values): rows.set_value(row, index, value)
+                break
+            dialog.destroy()
+        def remove():
+            _, row = tree.get_selection().get_selected()
+            if row is not None: model.remove(row)
+        def move(direction):
+            _, row = tree.get_selection().get_selected()
+            if row is not None:
+                index = model.get_path(row).get_indices()[0] + direction
+                if 0 <= index < len(model): model.swap(row, model.get_iter(Gtk.TreePath.new_from_indices([index])))
+        buttons = Gtk.Box(spacing=8)
+        selection = []
+        for label, callback in [('Add', lambda: edit_item(True)), ('Edit', edit_item), ('Remove', remove), ('Up', lambda: move(-1)), ('Down', lambda: move(1))]:
+            button = Gtk.Button(label=label); button.connect('clicked', lambda _, callback=callback: callback())
+            buttons.pack_start(button, False, False, 0)
+            if label != 'Add': selection.append((button, {'Up': -1, 'Down': 1}.get(label)))
+        self.selection_actions(tree, selection)
+        tree.get_accessible().set_name('Overview dock launchers')
+        content.pack_start(buttons, False, False, 0)
+        content.pack_start(display_options, False, False, 0)
+        tree.connect('row-activated', lambda *_: edit_item())
+        content.set_sensitive(enabled.get_active())
+        enabled.connect('notify::active', lambda *_: content.set_sensitive(enabled.get_active()))
+        def apply():
+            values = {key: widget.get_active() for key, widget in flags.items()}
+            entries = [tuple(row) for row in model]
+            def job():
+                nonlocal source
+                message = backend.save_dock(source, values, entries)
+                source = backend.dock_source()
+                return message
+            return job
+        self.button(page, 'Apply overview dock', apply)
 
     def menu(self, page):
         prefs = backend.preferences()
@@ -593,11 +732,14 @@ class Settings(Gtk.Application):
                 index = model.get_path(row).get_indices()[0] + direction
                 if 0 <= index < len(model):
                     model.swap(row, model.get_iter(Gtk.TreePath.new_from_indices([index])))
+        selection = []
         for title, callback in [('Edit',edit_item), ('Add', lambda: add('Command')), ('Separator', lambda: add('Separator')),
                                 ('Delete', remove), ('Up', lambda: move(-1)), ('Down', lambda: move(1))]:
             button = Gtk.Button(label=title)
             button.connect('clicked', lambda _, callback=callback: callback())
             controls.pack_start(button, False, False, 0)
+            if title in ('Edit', 'Delete', 'Up', 'Down'): selection.append((button, {'Up': -1, 'Down': 1}.get(title)))
+        self.selection_actions(tree, selection)
         page.pack_start(controls, False, False, 0)
         def apply():
             values = [tuple(row) for row in model]

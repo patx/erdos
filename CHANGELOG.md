@@ -1,3 +1,16 @@
+# Development — overview dock controls and Settings accessibility
+
+- Add an Overview Dock tab: hide/show the dock, add/edit/remove/reorder launchers,
+  choose installed applications and toggle launcher names, clock and battery.
+- Keep default-program roles dynamic, preserve custom quoted arguments, and apply
+  dock edits the next time the overview opens without a daemon or restart.
+- Use native GTK layout, readable theme text, accessible input labels, keyboard
+  focus, selected-row actions, progress feedback and inline validation throughout
+  Settings. No packages, UI framework or background service are added.
+- Keep the website's red wordmark, favicon and social preview references current
+  with asset versioning so browsers can refresh cached branding.
+- Published Alpha 4 artifacts and the hosted updater remain unchanged.
+
 # ErdOS 1 Alpha 4 — 2026-11-22
 
 ## Settings and installed-system updates

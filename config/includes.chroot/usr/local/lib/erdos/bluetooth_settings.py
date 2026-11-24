@@ -186,7 +186,7 @@ class Bluetooth:
     def operation(self, path, interface, method, parameters=None, done=None):
         self.busy = True
         self.render_state()
-        self.app.report('Working…')
+        self.app.report('Updating Bluetooth…', busy=True)
         def finish(reply=None, error=None):
             self.busy = False
             self.app.report(self.app.error_text(error) if error else 'Bluetooth updated.', error=bool(error))
@@ -312,6 +312,9 @@ class Bluetooth:
         dialog.get_content_area().pack_start(label, True, True, 16)
         entry = Gtk.Entry() if entry_method else None
         if entry:
+            label.set_mnemonic_widget(entry)
+            entry.get_accessible().set_name('Bluetooth passkey' if method == 'RequestPasskey' else 'Bluetooth PIN')
+            entry.set_activates_default(True)
             entry.set_max_length(6 if method == 'RequestPasskey' else 16)
             dialog.get_content_area().pack_start(entry, False, False, 8)
         if display:

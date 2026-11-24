@@ -44,6 +44,81 @@ def write(path, content):
         Path(name).unlink(missing_ok=True)
 
 
+DOCK_ICONS = ('browser', 'files', 'terminal', 'settings', 'wifi', 'editor', 'application')
+DOCK_PRESETS = (
+    ('Browser', 'erdos-launch browser', 'browser'),
+    ('Files', 'erdos-launch files', 'files'),
+    ('Terminal', 'erdos-launch terminal', 'terminal'),
+    ('Settings', 'erdos-settings', 'settings'),
+    ('Wi-Fi', 'erdos-wifi-picker', 'wifi'),
+    ('Text Editor', 'erdos-launch editor', 'editor'),
+)
+DOCK_OPTIONS = ('enabled', 'show_labels', 'show_clock', 'show_battery')
+
+
+def dock_source():
+    path = CONFIG / 'erdos/dock.ini'
+    return path.read_text() if path.exists() else None
+
+
+def dock_settings():
+    source = dock_source()
+    options = dict.fromkeys(DOCK_OPTIONS, True)
+    items = list(DOCK_PRESETS[:5])
+    if source is not None:
+        from gi.repository import GLib
+        parser = GLib.KeyFile()
+        parser.load_from_data(source, len(source.encode()), GLib.KeyFileFlags.NONE)
+        keys = set(parser.get_keys('dock')[0]) if parser.has_group('dock') else set()
+        for key in DOCK_OPTIONS:
+            if key in keys: options[key] = parser.get_boolean('dock', key)
+        if 'count' in keys:
+            count = parser.get_integer('dock', 'count')
+            if not 0 <= count <= 12:
+                raise ValueError('Dock supports up to 12 launchers.')
+            items = [tuple(parser.get_string('launcher' + str(index), key)
+                           for key in ('label', 'command', 'icon')) for index in range(count)]
+    return source, options, items
+
+
+def validate_dock_item(label, command, icon):
+    label, command = label.strip(), command.strip()
+    if not label or len(label) > 64 or any(c in label for c in '\r\n\0'):
+        raise ValueError('Use a launcher name between 1 and 64 characters on one line.')
+    if not command or len(command) > 1024 or any(c in command for c in '\r\n\0'):
+        raise ValueError('Use a command between 1 and 1024 characters on one line.')
+    if icon not in DOCK_ICONS:
+        raise ValueError('Choose a supported launcher icon.')
+    # Match the compositor's GLib argument parsing; no shell is started.
+    from gi.repository import GLib
+    try:
+        valid, argv = GLib.shell_parse_argv(command)
+    except GLib.Error as error:
+        raise ValueError('Check command quoting: ' + error.message) from error
+    if not valid or not argv or not argv[0]:
+        raise ValueError('Enter the application command to launch.')
+    return label, command, icon
+
+
+def save_dock(source, options, items):
+    if set(options) != set(DOCK_OPTIONS) or any(type(v) is not bool for v in options.values()):
+        raise ValueError('Invalid dock options.')
+    if len(items) > 12:
+        raise ValueError('Dock supports up to 12 launchers.')
+    items = [validate_dock_item(*item) for item in items]
+    if dock_source() != source:
+        raise ValueError('Dock configuration changed outside Settings. Reopen Settings before saving.')
+    from gi.repository import GLib
+    parser = GLib.KeyFile()
+    for key, value in options.items(): parser.set_boolean('dock', key, value)
+    parser.set_integer('dock', 'count', len(items))
+    for index, item in enumerate(items):
+        for key, value in zip(('label', 'command', 'icon'), item):
+            parser.set_string('launcher' + str(index), key, value)
+    write(CONFIG / 'erdos/dock.ini', parser.to_data()[0])
+    return 'Dock saved. Changes appear the next time you open the overview.'
+
+
 def preferences():
     return {**DEFAULTS, **(json.loads(PREFERENCES.read_text()) if PREFERENCES.exists() else {})}
 

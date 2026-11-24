@@ -419,13 +419,14 @@ create_overview(struct cycle_osd_output *osd_output)
 	wlr_output_layout_get_box(server->output_layout, output->wlr_output, &box);
 	wlr_scene_node_set_position(&osd_output->tree->node, box.x, box.y);
 	overview_backdrop_create(osd_output, &box);
+	bool dock_visible = overview_dock_create(osd_output, &box);
 
 	int count = wl_list_length(&server->cycle.views);
 	if (count) {
 		const int gap = 16;
 		const int margin = 36;
 		int usable_width = MAX(1, box.width - margin * 2);
-		int usable_height = MAX(1, box.height - 115 - margin * 2);
+		int usable_height = MAX(1, box.height - (dock_visible ? 115 : 0) - margin * 2);
 		int max_columns = MAX(1, MIN(5, usable_width / 228));
 		int columns = MIN(max_columns, MAX(1, ceil(sqrt(count *
 			(double)usable_width / usable_height * .65))));
@@ -476,7 +477,6 @@ create_overview(struct cycle_osd_output *osd_output)
 		wlr_scene_node_set_position(&label->scene_buffer->node,
 			(box.width - label->width) / 2, (box.height - label->height) / 2);
 	}
-	overview_dock_create(osd_output, &box);
 }
 
 static void

@@ -72,6 +72,7 @@ class Network:
         self.connect = Gtk.Button(label='Connect to selected network', halign=Gtk.Align.START)
         self.connect.connect('clicked', self.connect_network)
         page.pack_start(self.connect, False, False, 0)
+        self.password.connect('activate', lambda *_: self.connect_network() if self.connect.get_sensitive() else None)
         self.saved = self.app.choice(page, 'Saved Wi-Fi connection', [])
         self.saved_connect = Gtk.Button(label='Connect saved network', halign=Gtk.Align.START)
         self.saved_connect.connect('clicked', self.connect_saved)

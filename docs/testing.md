@@ -1,3 +1,22 @@
+# Current development checks
+
+The configurable overview dock is newer than the published Alpha 4 image. Source
+syntax, documentation links and compositor compilation pass. No package-list
+changes or new dependencies were introduced.
+
+A non-root, 1080p headless Wayland session tests the real Settings UI together
+with the compiled compositor. It covers defaults, Apply/Revert, selected-row
+sensitivity, the native installed-app chooser and cancel behavior, actual reordered
+custom-launcher clicks with quoted percent/backslash/Unicode arguments, hiding the
+dock and removing its hit targets, passive clock-only layouts and empty docks.
+All fourteen sections are visited; labeled input accessibility, progress feedback,
+small-window scrolling and native Adwaita dark/light rendering are checked.
+An isolated settings-backend check covers malformed commands, launcher limits,
+configuration round trips, backups and rejection of concurrent external edits.
+No ISO rebuild, fresh install or physical input/GPU certification was performed
+for this development change. Hardware-dependent service checks below belong to
+prior release validation, not this headless run.
+
 # Alpha 4 validation
 
 ## Settings polish and desktop updater

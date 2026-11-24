@@ -220,20 +220,11 @@ cycle_toggle_overview(struct server *server)
 	});
 }
 
-const struct overview_launcher overview_launchers[] = {
-	{ "Browser", "erdos-launch browser" },
-	{ "Files", "erdos-launch files" },
-	{ "Terminal", "erdos-launch terminal" },
-	{ "Settings", "erdos-settings" },
-	{ "Wi-Fi", "erdos-wifi-picker" },
-	{ NULL, NULL },
-};
-
 void
 cycle_overview_click(struct server *server)
 {
 	struct wlr_cursor *cursor = server->seat.cursor;
-	const char *command = NULL;
+	char *command = NULL;
 	struct cycle_osd_output *osd_output;
 	wl_list_for_each(osd_output, &server->cycle.osd_outputs, link) {
 		struct wlr_box *dock = &osd_output->dock;
@@ -242,13 +233,14 @@ cycle_overview_click(struct server *server)
 			if (index >= osd_output->dock_button_count) {
 				return; /* Clock and battery are passive indicators. */
 			}
-			command = overview_launchers[index].command;
+			command = xstrdup(osd_output->dock_commands[index]);
 			break;
 		}
 	}
 	cycle_finish(server, false);
 	if (command) {
 		spawn_async_no_shell(command);
+		free(command);
 	}
 }
 
@@ -396,6 +388,9 @@ handle_osd_tree_destroy(struct wl_listener *listener, void *data)
 	}
 	wl_list_remove(&osd_output->tree_destroy.link);
 	wl_list_remove(&osd_output->link);
+	for (int i = 0; i < osd_output->dock_button_count; ++i) {
+		free(osd_output->dock_commands[i]);
+	}
 	free(osd_output);
 }
 

@@ -21,6 +21,11 @@ without reinstalling or replacing machine-specific drivers and settings.
 
 ## Desktop
 
+This checkout includes unreleased live-overview and Overview Dock settings work.
+The published Alpha 4 ISO and current hosted updater retain the previous window
+switcher. The fourteen-section Settings app continues to use the existing GTK
+runtime with no additional dependencies.
+
 - Floating windows and square dark decorations. The dock appears only in the window overview.
 - Native labwc overview with live window previews, a blurred desktop snapshot, and an app dock with Wi-Fi, a clock and battery status.
 - Dynamic workspaces with one spare, shared across monitors, plus a Workspaces menu.

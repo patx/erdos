@@ -7,17 +7,17 @@
   <meta name="theme-color" content="#000000">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'self'">
   <title>User guide — ErdOS</title>
-  <link rel="icon" href="assets/favicon.png" type="image/png">
-  <link rel="stylesheet" href="assets/style.css">
+  <link rel="icon" href="assets/favicon.png?v=c4600b5be396" type="image/png">
+  <link rel="stylesheet" href="assets/style.css?v=c4600b5be396">
 </head>
 <body>
   <a class="skip-link" href="#content">Skip to content</a>
-  <header class="site-header wrap"><a class="brand" href="./" aria-label="ErdOS home"><span class="wordmark"><img src="assets/erdos-logo.png" alt="ErdOS" width="1265" height="278"></span></a><nav aria-label="Main navigation"><a href="guide.html" aria-current="page">User Guide</a><a href="https://github.com/patx/erdos">Github</a></nav></header>
+  <header class="site-header wrap"><a class="brand" href="./" aria-label="ErdOS home"><span class="wordmark"><img src="assets/erdos-logo.png?v=c4600b5be396" alt="ErdOS" width="1265" height="278"></span></a><nav aria-label="Main navigation"><a href="guide.html" aria-current="page">User Guide</a><a href="https://github.com/patx/erdos">Github</a></nav></header>
   <main class="wrap guide-layout" id="content">
     <nav class="guide-nav" aria-label="On this page"><div><a href="#try">Try the live desktop</a><a href="#verify">Verify a download</a><a href="#install">Install to disk</a><a href="#desktop">Desktop and apps</a><a href="#footprint">Disk and RAM usage</a><a href="#settings">Settings</a><a href="#defaults">Default programs</a><a href="#background">Backgrounds</a><a href="#menu">Customize menu</a><a href="#shortcuts">Keyboard shortcuts</a><a href="#gestures">Touchpad gestures</a><a href="#monitors">Multiple monitors</a><a href="#troubleshooting">Troubleshooting</a></div></nav>
     <article class="guide-content">
       <h1>User guide</h1>
-      <p class="intro">This guide covers ErdOS with labwc/Wayland. Alpha 4 includes the refreshed Settings interface and system dark-mode integration. This is an experimental prerelease: start in a VM and keep backups before installing on real disks.</p>
+      <p class="intro">This guide describes the current labwc/Wayland development checkout. The live overview and configurable dock are newer than the published Alpha 4 ISO; Alpha 4 still uses the earlier thumbnail switcher. This is an experimental prerelease: start in a VM and keep backups before installing on real disks.</p>
       <section id="try"><h2>Try the live desktop</h2>
         <ol><li>Download the <a href="https://downloads.erd.sh/v1.0.0-alpha.4/erdos-amd64.iso">Alpha 4 amd64 ISO</a> and its <a href="https://downloads.erd.sh/v1.0.0-alpha.4/erdos-amd64.iso.sha256">SHA-256 checksum</a>, or <a href="building.md">build from source</a>. See <a href="https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.4">release notes</a> and <a href="#verify">verify the download</a>.</li><li>Attach the ISO to a VM, or use an image writer to write it to a USB device. Writing an image erases that USB device; copying the ISO file onto a formatted drive is not the same operation. Debian documents <a href="https://www.debian.org/releases/trixie/amd64/ch04s03.en.html">USB installation media</a>.</li><li>Use a 64-bit Intel/AMD system and disable Secure Boot. Choose <strong>Try ErdOS</strong> in the boot menu.</li><li>At the console, log in as <code>user</code> with password <code>live</code>. labwc starts automatically on tty1.</li></ol>
         <p>The public live account has sudo access. There is no SSH server, graphical login manager or configured persistence. Live-session changes disappear on reboot. Other virtual consoles stay in text mode.</p>
@@ -61,8 +61,8 @@
       </section>
       <section id="settings"><h2>Settings</h2>
         <figure><img src="assets/settings-development.png" width="1280" height="720" alt="Alpha 4 Settings app with a native sidebar and grouped Appearance controls" loading="lazy"><figcaption>Settings in Alpha 4: native sidebar, grouped controls and Apply/Revert feedback.</figcaption></figure>
-        <p>Press <strong>Super + I</strong> or choose Settings in the menu. Appearance, Default Programs, Touchpad, Keyboard, Menu, Startup Applications, Gestures, Displays, Sound, Network, Bluetooth, Power and Date &amp; Time share one GTK window.</p>
-        <p>In Alpha 4, grouped controls use Apply/Revert, editors show readable shortcuts and menu entries, and closing protects unsaved edits. Network and Bluetooth keep their own action buttons. Pending changes finish before Settings exits; no permanent Settings service is added. <a href="settings.md">All controls and persistence details</a>.</p>
+        <p>Press <strong>Super + I</strong> or choose Settings in the menu. Appearance, Default Programs, Touchpad, Keyboard, Overview Dock, Menu, Startup Applications, Gestures, Displays, Sound, Network, Bluetooth, Power and Date &amp; Time share one GTK window.</p>
+        <p>Grouped controls use Apply/Revert, editors show readable shortcuts and menu entries, and closing protects unsaved edits. Network and Bluetooth keep their own action buttons. Pending changes finish before Settings exits; no permanent Settings service is added. In the development build, Overview Dock can hide the entire dock, edit/reorder launchers and toggle labels, clock and battery. Apply changes, then reopen the overview. <a href="settings.md">All controls and persistence details</a>.</p>
         <p>Power displays battery information and keeps Debian defaults. Date &amp; Time shows the clock, time zones and synchronization status. Displays has resolution confirmation and rollback. Startup Applications edits <code>~/.config/labwc/autostart</code>, checks shell syntax and keeps a previous-version backup. Changes run at the next login.</p>
       </section>
       <section id="defaults"><h2>Default programs</h2>
@@ -71,7 +71,7 @@
       </section>
       <section id="background"><h2>Backgrounds</h2>
         <p>In Settings → Appearance, choose the light/dark preference, a solid desktop color, or an image with Fill, Fit, Center or Tile. Firefox and supporting sites follow the system preference when their own theme settings allow it. Apply validates and copies the image into your own configuration. Moving the original file does not break it.</p>
-        <p>Remove image and Apply restores the solid color and deletes only the private copy. Swaybg is the single background process. There are no decorative effects, shadows, blur, panels or docks.</p>
+        <p>Remove image and Apply restores the solid color and deletes only the private copy. Swaybg is the single background process. The desktop background stays static. In development builds the overview adds its own snapshot blur and optional dock only while open.</p>
       </section>
       <section id="menu"><h2>Customize the right-click menu</h2>
         <p>Open Settings → Menu. Double-click a name or command to edit it. Use Add item, Add separator, Delete, Move up and Move down, then Apply menu. Changes take effect immediately and persist for your user.</p>
