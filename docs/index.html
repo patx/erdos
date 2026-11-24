@@ -24,62 +24,77 @@
   <title>ErdOS — a minimal Linux desktop</title>
   <link rel="icon" href="assets/favicon.png?v=c4600b5be396" type="image/png">
   <link rel="stylesheet" href="assets/style.css?v=c4600b5be396">
-  <link rel="stylesheet" href="assets/home.css?v=release-layout">
+  <link rel="stylesheet" href="assets/home.css?v=desktop-hero">
 </head>
 <body class="home">
   <a class="skip-link" href="#content">Skip to content</a>
   <header class="site-header shell">
     <a class="brand" href="./" aria-label="ErdOS home"><span class="wordmark"><img src="assets/erdos-logo.png?v=c4600b5be396" alt="ErdOS" width="1265" height="278"></span></a>
-    <nav aria-label="Main navigation"><a href="#screenshots">Screenshots</a><a href="guide.html">User guide</a></nav>
+    <nav aria-label="Main navigation"><a href="#features">Features</a><a href="#screenshots">Screenshots</a><a href="guide.html">User guide</a><a href="#download">Download</a></nav>
   </header>
   <main id="content">
-    <section class="hero shell" aria-labelledby="hero-title">
-      <div class="hero-intro">
-        <p class="release-label">ErdOS 1 Alpha 4</p>
-        <h1 id="hero-title">A minimal Linux desktop.</h1>
-        <p class="hero-description">Debian 13, labwc and Wayland with keyboard shortcuts, touchpad gestures and a small set of everyday apps.</p>
-        <div class="release-links">
-          <a class="primary-link" href="https://downloads.erd.sh/v1.0.0-alpha.4/erdos-amd64.iso">Download amd64 ISO</a>
-          <a href="https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.4">Release notes</a>
+    <section class="hero-band" id="download" aria-labelledby="hero-title">
+      <div class="hero shell">
+        <div class="hero-intro">
+          <p class="release-label">ErdOS 1 Alpha 4</p>
+          <h1 id="hero-title">A minimal Linux desktop.</h1>
+          <p class="hero-description">Debian 13, labwc and Wayland with keyboard shortcuts, touchpad gestures and a small set of everyday apps.</p>
+          <div class="release-links">
+            <a class="primary-link" href="https://downloads.erd.sh/v1.0.0-alpha.4/erdos-amd64.iso">Download amd64 ISO</a>
+            <a href="https://github.com/patx/erdos/releases/tag/v1.0.0-alpha.4">Release notes</a>
+          </div>
         </div>
-      </div>
-      <aside class="release-details" aria-label="ErdOS at a glance">
-        <dl>
-          <div><dt>Base</dt><dd>Debian 13</dd></div>
-          <div><dt>Desktop</dt><dd>labwc on Wayland</dd></div>
-          <div><dt>Installed size</dt><dd>1.75 GiB</dd></div>
-          <div><dt>Idle RAM</dt><dd>355.4 MiB</dd></div>
-        </dl>
-        <a href="guide.html#footprint">Alpha 3 footprint benchmarks</a>
-      </aside>
-    </section>
-    <section class="screenshots-section shell" id="screenshots" aria-labelledby="screenshots-title">
-      <h2 id="screenshots-title">Screenshots</h2>
-      <div class="screenshot-grid">
-        <figure>
+        <figure class="hero-preview">
           <a href="assets/live-window-overview.png" aria-label="View the full-size live window overview screenshot">
-            <img src="assets/live-window-overview.png" alt="Live previews of Sakura, Twig and PCManFM above the ErdOS overview dock" width="1280" height="720" fetchpriority="high">
+            <img src="assets/live-window-overview.png" alt="Live thumbnails of Sakura, Twig and PCManFM above the ErdOS overview dock" width="1280" height="720" fetchpriority="high">
           </a>
-          <figcaption><strong>Live window overview</strong><span>Window thumbnails and launcher dock in the development build.</span></figcaption>
+          <figcaption>Window overview · development build</figcaption>
         </figure>
-        <figure>
-          <a href="assets/overview-dock-settings.png" aria-label="View the full-size Overview Dock settings screenshot">
-            <img src="assets/overview-dock-settings.png" alt="Overview Dock settings with a visibility toggle and controls to add, edit or reorder launchers" width="882" height="668">
-          </a>
-          <figcaption><strong>Overview Dock</strong><span>Choose which launchers appear and in what order. Available in the development build.</span></figcaption>
-        </figure>
-        <figure>
-          <a href="assets/tiled-apps.png" aria-label="View the full-size tiled windows screenshot">
-            <img src="assets/tiled-apps.png" alt="Twig editing a Markdown file on the left and PCManFM showing its project folder on the right" width="1280" height="720">
-          </a>
-          <figcaption><strong>Tiled windows</strong><span>Use Super + ← or → to work side by side.</span></figcaption>
-        </figure>
-        <figure>
-          <a href="assets/desktop-menu.png" aria-label="View the full-size desktop menu screenshot">
-            <img src="assets/desktop-menu.png" alt="ErdOS desktop menu open beside the file manager and editor, with shortcuts to apps, workspaces and Settings" width="1280" height="720">
-          </a>
-          <figcaption><strong>Desktop menu</strong><span>Open apps, switch workspaces or find Settings with Super + Space.</span></figcaption>
-        </figure>
+      </div>
+    </section>
+    <section class="features-band" id="features" aria-labelledby="features-title">
+      <div class="shell section-layout">
+        <div>
+          <h2 id="features-title">The ErdOS desktop</h2>
+          <p>A small Debian system for everyday work, with the tools to make the desktop your own.</p>
+        </div>
+        <dl class="feature-grid">
+          <div><dt>Debian 13</dt><dd>Uses Debian’s package repositories and includes an offline installer.</dd></div>
+          <div><dt>labwc on Wayland</dt><dd>Tile windows, switch workspaces and bring up window thumbnails from the keyboard or touchpad.</dd></div>
+          <div><dt>Native Settings</dt><dd>Manage displays, networking, Bluetooth and startup apps in one GTK window.</dd></div>
+          <div><dt>Small footprint</dt><dd>1.75 GiB installed and 355.4 MiB idle RAM in the <a href="guide.html#footprint">Alpha 3 benchmarks</a>.</dd></div>
+        </dl>
+      </div>
+    </section>
+    <section class="screenshots-section" id="screenshots" aria-labelledby="screenshots-title">
+      <div class="shell section-layout">
+        <h2 id="screenshots-title">Screenshots</h2>
+        <div class="screenshot-grid">
+          <figure>
+            <a href="assets/live-window-overview.png" aria-label="View the full-size live window overview screenshot">
+              <img src="assets/live-window-overview.png" alt="Live previews of Sakura, Twig and PCManFM above the ErdOS overview dock" width="1280" height="720">
+            </a>
+            <figcaption><strong>Live window overview</strong><span>Window thumbnails and launcher dock in the development build.</span></figcaption>
+          </figure>
+          <figure>
+            <a href="assets/overview-dock-settings.png" aria-label="View the full-size Overview Dock settings screenshot">
+              <img src="assets/overview-dock-settings.png" alt="Overview Dock settings with a visibility toggle and controls to add, edit or reorder launchers" width="882" height="668">
+            </a>
+            <figcaption><strong>Overview Dock</strong><span>Choose which launchers appear and in what order. Available in the development build.</span></figcaption>
+          </figure>
+          <figure>
+            <a href="assets/tiled-apps.png" aria-label="View the full-size tiled windows screenshot">
+              <img src="assets/tiled-apps.png" alt="Twig editing a Markdown file on the left and PCManFM showing its project folder on the right" width="1280" height="720">
+            </a>
+            <figcaption><strong>Tiled windows</strong><span>Use Super + ← or → to work side by side.</span></figcaption>
+          </figure>
+          <figure>
+            <a href="assets/desktop-menu.png" aria-label="View the full-size desktop menu screenshot">
+              <img src="assets/desktop-menu.png" alt="ErdOS desktop menu open beside the file manager and editor, with shortcuts to apps, workspaces and Settings" width="1280" height="720">
+            </a>
+            <figcaption><strong>Desktop menu</strong><span>Open apps, switch workspaces or find Settings with Super + Space.</span></figcaption>
+          </figure>
+        </div>
       </div>
     </section>
     <section class="apps-section shell" id="apps" aria-labelledby="apps-title">
