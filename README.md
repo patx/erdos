@@ -4,7 +4,9 @@ A minimal **Debian 13 amd64** desktop using **labwc and Wayland**, with a small
 application set, keyboard navigation and touchpad gestures.
 
 **ErdOS 1 Beta 2** adds signed APT updates for ErdOS components, expanded
-Settings controls and component version information in About.
+Settings controls, component version information in About, a blue starfield
+wallpaper and configurable title-bar buttons with a single close button on the left
+by default.
 [Download the amd64 ISO](https://downloads.erd.sh/v1.0.0-beta.2/erdos-amd64.iso) ·
 [SHA-256](https://downloads.erd.sh/v1.0.0-beta.2/erdos-amd64.iso.sha256) ·
 [Release notes](https://github.com/patx/erdos/releases/tag/v1.0.0-beta.2).
@@ -24,13 +26,21 @@ fixes. The old Alpha 3 bundle updater is frozen for its original baseline.
 Settings includes cursor controls, keyboard repeat/Caps Lock options, touchpad
 input suppression, monitor enable/disable, interactive APT maintenance and About.
 New profiles show only a close button on the left. Appearance can change its
-position and optionally show minimize/maximize buttons. Super+Tab uses upstream thumbnail sizes. These reuse existing tools;
-no updater daemon, locker or idle listener is added. Screen locking remains an
-[optional user install](docs/guide.html#optional-locking).
+position and optionally show minimize/maximize buttons. Super+Tab uses labwc’s
+unmodified 300×250 thumbnail defaults. These reuse existing tools;
+no updater daemon, locker or idle listener is added.
+
+The [user guide](docs/guide.html#limitations) explains the minimal defaults and
+their limitations, with optional setup and removal instructions for
+[additional apps](docs/guide.html#extra-apps), a [Wayland panel](docs/guide.html#panels),
+[screen locking and idle handling](docs/guide.html#optional-locking), and a
+[graphical login screen](docs/guide.html#login-screen). None is added by default.
+Suspend and lid-close do not lock the desktop. Live USB changes are not persistent.
 
 ## Desktop
 
 - Floating windows and square dark decorations; no panel or overview dock.
+- Blue starfield wallpaper, with custom images or a solid color in Appearance.
 - Native labwc overview with live window previews and a blurred desktop snapshot.
 - Dynamic workspaces with one spare, shared across monitors, plus a Workspaces menu.
 - One Python/GTK Settings window: defaults, input, shortcuts, menu, startup,
@@ -109,6 +119,12 @@ Use `./scripts/build-in-docker.sh` for an automatically removed Debian build
 container. Details and test wrappers are in [building.md](docs/building.md).
 
 Test the live desktop and a disposable installation before using real disks.
+Beta 2 passed a fresh offline UEFI VM installation, installed-system sudo and
+desktop startup checks, and signed APT refresh against Debian, Mozilla and ErdOS.
+Initial user-reported testing on an ASUS L203MA and a MacBook has also been
+positive; broader hardware testing is ongoing.
+
+The following are historical Alpha 5/Beta 1 measurements, **not Beta 2 results**.
 Fresh offline VM measurements on November 24, 2026
 (2 vCPUs, 2 GiB RAM, 1280×800, software rendering):
 
