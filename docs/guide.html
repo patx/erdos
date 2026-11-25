@@ -14,10 +14,22 @@
   <a class="skip-link" href="#content">Skip to content</a>
   <header class="site-header wrap"><a class="brand" href="./" aria-label="ErdOS home"><span class="wordmark"><img src="assets/erdos-logo.png?v=c4600b5be396" alt="ErdOS" width="1265" height="278"></span></a><nav aria-label="Main navigation"><a href="guide.html" aria-current="page">User Guide</a><a href="https://github.com/patx/erdos">Github</a></nav></header>
   <main class="wrap guide-layout" id="content">
-    <nav class="guide-nav" aria-label="On this page"><div><a href="#try">Try the live desktop</a><a href="#verify">Verify a download</a><a href="#install">Install to disk</a><a href="#desktop">Desktop and apps</a><a href="#footprint">Disk and RAM usage</a><a href="#settings">Settings</a><a href="updates.md">System updates</a><a href="#optional-locking">Optional locking</a><a href="#defaults">Default programs</a><a href="#background">Backgrounds</a><a href="#menu">Customize menu</a><a href="#shortcuts">Keyboard shortcuts</a><a href="#gestures">Touchpad gestures</a><a href="#monitors">Multiple monitors</a><a href="#troubleshooting">Troubleshooting</a></div></nav>
+    <nav class="guide-nav" aria-label="On this page"><div><a href="#limitations">Defaults and limitations</a><a href="#try">Try the live desktop</a><a href="#verify">Verify a download</a><a href="#install">Install to disk</a><a href="#desktop">Desktop and apps</a><a href="#footprint">Disk and RAM usage</a><a href="#settings">Settings</a><a href="updates.md">System updates</a><a href="#extra-apps">Install more apps</a><a href="#panels">Add a panel</a><a href="#optional-locking">Optional locking</a><a href="#login-screen">Add a login screen</a><a href="#defaults">Default programs</a><a href="#background">Backgrounds</a><a href="#menu">Customize menu</a><a href="#shortcuts">Keyboard shortcuts</a><a href="#gestures">Touchpad gestures</a><a href="#monitors">Multiple monitors</a><a href="#troubleshooting">Troubleshooting</a></div></nav>
     <article class="guide-content">
       <h1>User guide</h1>
       <p class="intro">ErdOS 1 Beta 2 adds signed component updates, expanded Settings controls and version information in About. It keeps the window-only overview, menu clock and battery, and on-demand PCManFM. This is a beta prerelease: start in a VM and keep backups before installing on real disks. The image identifies itself as <code>1.0.0-beta.2</code>.</p>
+      <section id="limitations"><h2>What the minimal install leaves out</h2>
+        <p>ErdOS provides a small desktop, not a full desktop environment. These are deliberate defaults you can change:</p>
+        <ul>
+          <li><strong>No screen lock or idle daemon.</strong> There is no automatic inactivity lock, and closing the lid or suspending does not lock your session. Anyone with physical access can use it after wake. Debian’s logind handles power events; Settings → Power reports battery information rather than configuring separate plugged-in/battery policies. <a href="#optional-locking">Add locking and idle handling</a>.</li>
+          <li><strong>No panel, dock or notification history.</strong> Use the menu for clock/battery, Settings for status controls and Super for the window overview. <a href="#panels">Add an optional panel</a> if you want an always-visible taskbar or tray; a panel does not itself add a notification daemon.</li>
+          <li><strong>No graphical login screen.</strong> Log in at the console on tty1; Logout returns there. <a href="#login-screen">Add a graphical greeter</a> if preferred.</li>
+          <li><strong>A small application set.</strong> No office suite, printer setup utility or SSH server is preinstalled. There is no desktop password keyring, and removable-drive automounting runs only while PCManFM is open. <a href="#extra-apps">Install the apps and services you need</a>.</li>
+          <li><strong>Trimmed documentation and translations.</strong> Most packaged manuals and non-English translations are excluded. <a href="#troubleshooting">Restore them</a> before reinstalling the relevant packages.</li>
+          <li><strong>Hardware and compatibility limits.</strong> This amd64 beta requires Secure Boot to be disabled. Common firmware is included, but some devices need additional drivers. XWayland runs many legacy apps; X11-only panels, global input tools and screen lockers cannot provide equivalent control over the whole Wayland desktop. Live USB changes are not persistent, and Windows/macOS dual-boot setups have not been validated.</li>
+        </ul>
+        <p>Optional packages are ordinary Debian packages, not part of the default footprint. Panels, greeters and background services add their own disk and RAM use. The published measurements cover the default system, not a customized installation.</p>
+      </section>
       <section id="try"><h2>Try the live desktop</h2>
         <ol><li>Download the <a href="https://downloads.erd.sh/v1.0.0-beta.2/erdos-amd64.iso">Beta 2 amd64 ISO</a> and its <a href="https://downloads.erd.sh/v1.0.0-beta.2/erdos-amd64.iso.sha256">SHA-256 checksum</a>, or <a href="building.md">build from source</a>. See <a href="https://github.com/patx/erdos/releases/tag/v1.0.0-beta.2">release notes</a> and <a href="#verify">verify the download</a>.</li><li>Attach the ISO to a VM, or use an image writer to write it to a USB device. Writing an image erases that USB device; copying the ISO file onto a formatted drive is not the same operation. Debian documents <a href="https://www.debian.org/releases/trixie/amd64/ch04s03.en.html">USB installation media</a>.</li><li>Use a 64-bit Intel/AMD system and disable Secure Boot. Choose <strong>Try ErdOS</strong> in the boot menu.</li><li>At the console, log in as <code>user</code> with password <code>live</code>. labwc starts automatically on tty1.</li></ol>
         <p>The public live account has sudo access. There is no SSH server, graphical login manager or configured persistence. Live-session changes disappear on reboot. Other virtual consoles stay in text mode.</p>
@@ -54,16 +66,16 @@
         <p>The bottom of the right-click menu contains Logout, Reboot and Power off. Logout ends labwc and the tty1 login session, returning to the console login prompt.</p>
       </section>
       <section id="footprint"><h2>Disk and RAM usage</h2>
-        <p>Fresh offline installations measured on November 24, 2026. Beta 1 uses the same measured image:</p>
+        <p>Fresh offline installations measured on November 24, 2026. These are historical Alpha 5/Beta 1 results, not a new Beta 2 measurement:</p>
         <table><thead><tr><th>Build</th><th>Installed disk</th><th>Idle RAM</th></tr></thead><tbody><tr><td>ErdOS 1 Alpha 5</td><td>1.751 GiB</td><td>369.8 MiB</td></tr><tr><td>ErdOS 1 Beta 1</td><td>1.748 GiB</td><td>353.2 MiB</td></tr></tbody></table>
         <p>UEFI, 2 vCPUs, 2 GiB RAM, 24 GiB install disk and 1280×800 software-rendered display. The default desktop and wallpaper are active; the overview is closed. No network adapter, package updates or app windows before measurement. Disk counts root and EFI used blocks, excluding swap. RAM is MemTotal minus MemAvailable: five samples 10 seconds apart after a two-minute settle. Hardware and graphics drivers change these results.</p>
         <p>Beta 1 saves 2.6 MiB of installed disk and 16.6 MiB of idle RAM. Four packages were removed. Firefox also changed from 160.0.1 to 161.0; its smaller files account for about 0.45 MiB of the disk saving.</p>
         <p><a href="footprint.json">Raw samples, ISO checksums and earlier baselines</a> · <a href="testing.md#reproduce-the-footprint-measurement">Measurement method and validation</a>.</p>
       </section>
       <section id="settings"><h2>Settings</h2>
-        <p>Development package-managed builds receive signed ErdOS component updates through APT. Supported older builds need a checked migration; see <a href="updates.md">update setup</a>. About distinguishes the base image from installed component versions. No extra updater daemon is installed.</p>
+        <p>Beta 2 receives signed ErdOS component updates through APT. Supported older builds need a checked migration; see <a href="updates.md">update setup</a>. About distinguishes the base image from installed component versions. No extra updater daemon is installed.</p>
         <p>Beta 2 adds cursor theme/size, keyboard repeat and Caps Lock mapping, touchpad disable options, monitor enable/disable, Software maintenance and About. New profiles show only a close button on the left; Appearance offers Left/Right and optional minimize/maximize buttons. Existing layouts are preserved. These controls reuse existing dependencies; no updater daemon, locker or idle listener is added.</p>
-        <p>Press <strong>Super + I</strong> or choose Settings in the menu. Appearance, Default Programs, Touchpad, Keyboard, Menu, Startup Applications, Gestures, Displays, Sound, Network, Bluetooth, Power and Date &amp; Time share one GTK window.</p>
+        <p>Press <strong>Super + I</strong> or choose Settings in the menu. Appearance, Default Programs, Touchpad, Mouse, Keyboard, Menu, Startup Applications, Gestures, Displays, Sound, Network, Bluetooth, Power, Date &amp; Time, Software and About share one GTK window.</p>
         <p>Grouped controls use Apply/Revert, editors show readable shortcuts and menu entries, and closing protects unsaved edits. Network and Bluetooth keep their own action buttons. Pending changes finish before Settings exits; no permanent Settings service is added. <a href="settings.md">All controls and persistence details</a>.</p>
         <p>Power displays battery information and keeps Debian defaults. Date &amp; Time shows the clock, time zones and synchronization status. Displays has resolution confirmation and rollback. Startup Applications edits <code>~/.config/labwc/autostart</code>, checks shell syntax and keeps a previous-version backup. Changes run at the next login.</p>
       </section>
@@ -72,23 +84,94 @@
         <p>Browser, folder and plain-text choices share the normal desktop associations, so a default browser chosen elsewhere is honored too. Terminal selection is per user, with the system terminal as fallback. Other file types retain their own associations. <a href="settings.md#default-programs">Details</a>.</p>
       </section>
       <section id="background"><h2>Backgrounds</h2>
-        <p>Dark Glacier is the default wallpaper. In Settings → Appearance, choose the light/dark preference, a solid desktop color, or an image with Fill, Fit, Center or Tile. Firefox and supporting sites follow the system preference when their own theme settings allow it. Apply validates and copies a custom image into your own configuration. Moving the original file does not break it.</p>
+        <p>A blue starfield is the default wallpaper. In Settings → Appearance, choose the light/dark preference, a solid desktop color, or an image with Fill, Fit, Center or Tile. Firefox and supporting sites follow the system preference when their own theme settings allow it. Apply validates and copies a custom image into your own configuration. Moving the original file does not break it.</p>
         <p>Remove image and Apply restores the solid color and deletes only the private copy. Swaybg is the single background process. The desktop background stays static. The overview adds its own snapshot blur only while open; there is no dock.</p>
       </section>
       <section id="menu"><h2>Customize the right-click menu</h2>
         <p>Open Settings → Menu. Double-click a name or command to edit it. Use Add item, Add separator, Delete, Move up and Move down, then Apply menu. Changes take effect immediately and persist for your user.</p>
-        <p>Applications still updates automatically as apps are installed or removed. Existing submenu contents and built-in actions are preserved when renamed or moved. Super + I opens Settings even if its menu entry is removed. The previous menu is backed up as <code>~/.config/openbox/menu.xml.previous</code>.</p>
+        <p>Applications still updates automatically as apps are installed or removed. Existing submenu contents and built-in actions are preserved when renamed or moved. Super + I opens Settings even if its menu entry is removed. The previous menu is backed up as <code>~/.config/labwc/menu.xml.previous</code>.</p>
         <p>In Settings → Keyboard, Add shortcut creates a custom key combination and command. Double-click either field, then Apply shortcuts. Remove selected deletes a custom binding when applied. Conflicts with other shortcuts are rejected. Use W for Super, C for Ctrl, A for Alt and S for Shift; for example, <code>W-p</code> with command <code>pcmanfm</code>.</p>
+      </section>
+      <section id="extra-apps"><h2>Install more apps</h2>
+        <p>Use these instructions on an installed system with an internet connection. Packages installed in the live session disappear on reboot. Settings → Software provides interactive APT maintenance; Terminal gives you the full package tools:</p>
+        <pre><code>sudo apt update
+apt search mousepad
+apt show mousepad
+sudo apt install --no-install-recommends mousepad</code></pre>
+        <p>Mousepad is just an example. Replace its package name with your choice. Read APT’s download size, installed-size estimate and dependency list before confirming. <code>--no-install-recommends</code> still installs required dependencies; some optional features need additional packages.</p>
+        <table><thead><tr><th>Optional addition</th><th>Debian package</th></tr></thead><tbody>
+          <tr><td>Another text editor</td><td><code>mousepad</code></td></tr>
+          <tr><td>PDF/document viewer</td><td><code>evince</code></td></tr>
+          <tr><td>Video/audio player</td><td><code>mpv</code></td></tr>
+          <tr><td>Archive manager</td><td><code>file-roller</code></td></tr>
+          <tr><td>Graphical package manager</td><td><code>synaptic</code></td></tr>
+          <tr><td>Advanced audio routing controls</td><td><code>pavucontrol</code></td></tr>
+        </tbody></table>
+        <p>Graphical apps with desktop entries appear in Applications when you reopen the menu. Choose replacements in Settings → Default Programs; the main menu and default-app keyboard shortcuts follow that selection. Use Settings → Menu for custom launch commands and Settings → Keyboard for extra shortcuts.</p>
+        <p>To remove the example editor, run <code>sudo apt remove mousepad</code>. Review <code>sudo apt autoremove --purge</code> separately before confirming: it can remove dependencies no longer marked as needed. Do not remove ErdOS components, firmware or drivers just because an unfamiliar package looks unnecessary.</p>
+        <p><a href="https://www.debian.org/doc/manuals/debian-reference/ch02.en.html">Debian’s package-management guide</a> covers additional repositories, package selection and troubleshooting.</p>
+      </section>
+      <section id="panels"><h2>Add a panel</h2>
+        <p>Waybar is an optional Wayland panel. The example below adds application buttons and a 12-hour clock, without starting separate network or sound applets:</p>
+        <pre><code>sudo apt install --no-install-recommends waybar
+mkdir -p ~/.config/waybar</code></pre>
+        <p>Create <code>~/.config/waybar/config</code> with this content. Back up that file first if you already have a Waybar configuration.</p>
+        <pre><code>{
+  "layer": "top",
+  "position": "top",
+  "modules-left": ["wlr/taskbar"],
+  "modules-right": ["clock"],
+  "wlr/taskbar": {
+    "format": "{icon}",
+    "on-click": "activate"
+  },
+  "clock": {
+    "format": "{:%I:%M %p}",
+    "tooltip-format": "{:%A, %B %d, %Y}",
+    "on-click": "erdos-settings --time"
+  }
+}</code></pre>
+        <p>Run <code>waybar</code> in Terminal to try it; Ctrl+C stops that test. To start it each login, append <code>waybar &amp;</code> in Settings → Startup Applications, then log out and back in. Keep the existing startup commands and use only one Waybar instance.</p>
+        <p>Waybar supports optional network, battery, tray and other modules. Use its <code>wlr/taskbar</code> module with labwc; Sway-specific modules such as <code>sway/workspaces</code> require Sway. X11 panels such as tint2 do not provide a native Wayland taskbar. <a href="https://manpages.debian.org/trixie/waybar/waybar.5.en.html">Waybar configuration</a> · <a href="https://manpages.debian.org/trixie/waybar/waybar-wlr-taskbar.5.en.html">Taskbar module</a> · <a href="https://manpages.debian.org/trixie/waybar/waybar-clock.5.en.html">Clock module</a>.</p>
+        <p>To undo this, remove your Waybar startup line and log out. Optionally run <code>sudo apt remove waybar</code>; your personal configuration remains unless you delete it.</p>
       </section>
       <section id="optional-locking"><h2>Optional screen locking</h2>
         <p>ErdOS does not bundle a screen locker or idle daemon. The desktop stays unlocked after suspend. If you want locking, install Debian’s optional packages yourself:</p>
         <pre><code>sudo apt update
 sudo apt install --no-install-recommends swaylock swayidle</code></pre>
-        <p>First test <code>swaylock -f -c 202326</code> in Terminal. Enter your account password to unlock; the live USB account password is <code>live</code>. In Settings → Keyboard, add a custom shortcut such as Super+L with that command.</p>
+        <p>First test <code>swaylock -f -c 202326</code> in Terminal on your installed system. Enter your account password to unlock. The live USB account has the publicly known password <code>live</code>, so locking it does not provide private authentication. In Settings → Keyboard, add a custom shortcut <code>W-l</code> (Super+L) with that command. Use a Wayland-compatible locker; an X11 locker cannot secure the whole labwc session.</p>
         <p>For locking before sleep and on logind lock requests, add this line in Settings → Startup Applications, then log out and back in:</p>
         <pre><code>swayidle -w before-sleep 'swaylock -f -c 202326' lock 'swaylock -f -c 202326' &amp;</code></pre>
         <p>Use only one swayidle instance. Debian documents <code>-w</code> with swaylock’s <code>-f</code> so the sleep hook waits for the lock to be acquired. Test lid-close/resume on your hardware. This listener does not change Debian’s suspend policy or add an inactivity timer. To disable it later, remove the startup line and log out.</p>
         <p>Optional idle locking: add <code>timeout 600 'swaylock -f -c 202326'</code> to the same command for a ten-minute idle timeout. <a href="https://manpages.debian.org/trixie/swayidle/swayidle.1.en.html">swayidle manual</a> · <a href="https://manpages.debian.org/trixie/swaylock/swaylock.1.en.html">swaylock manual</a>.</p>
+        <p>That complete command would be:</p>
+        <pre><code>swayidle -w timeout 600 'swaylock -f -c 202326' before-sleep 'swaylock -f -c 202326' lock 'swaylock -f -c 202326' &amp;</code></pre>
+        <p>This locks after ten minutes; it does not automatically suspend or add battery charge limits. Manual sleep is available with <code>systemctl suspend</code>. For different lid/power-button behavior, consult <a href="https://manpages.debian.org/trixie/systemd/logind.conf.5.en.html">logind configuration</a>; do not disable lid handling if you rely on it to suspend.</p>
+        <p>To remove locking, delete its startup line and custom shortcut, then log out before optionally running <code>sudo apt remove swaylock swayidle</code>. Removing packages while leaving startup commands behind causes login errors.</p>
+      </section>
+      <section id="login-screen"><h2>Add a graphical login screen</h2>
+        <p>This optional setup uses greetd with GTK-based gtkgreet and Cage, which runs only the greeter. After authentication, your normal labwc desktop starts. It adds packages and a system service; it is not a screen locker. Follow this on an installed system, not the live USB, and save your work before rebooting.</p>
+        <pre><code>sudo apt update
+sudo apt install --no-install-recommends greetd gtkgreet cage
+sudo cp -a /etc/greetd/config.toml /etc/greetd/config.toml.before-erdos</code></pre>
+        <p>Keep the backup; do not overwrite it if repeating the setup. Use <code>sudoedit /etc/greetd/config.toml</code> and replace its contents with:</p>
+        <pre><code>[terminal]
+vt = 7
+
+[general]
+source_profile = false
+
+[default_session]
+command = "cage -s -- gtkgreet -c labwc"
+user = "_greetd"</code></pre>
+        <p>VT7 matches Debian’s greetd service. Disabling profile sourcing prevents ErdOS’s tty1 auto-start rule from intercepting the greeter’s session command; your profile stays unchanged. Cage permits switching to another console with Ctrl+Alt+F2. The greeter command offers labwc directly, without needing to install a second desktop environment.</p>
+        <pre><code>sudo systemctl enable greetd.service
+sudo systemctl set-default graphical.target</code></pre>
+        <p>Reboot when ready. Do not start a second labwc session from tty1 while already signed in through the greeter. Logout should return to the graphical greeter. An already-installed display manager must be disabled before enabling this one; do not run two login managers together.</p>
+        <p>If the screen fails to appear, press Ctrl+Alt+F2 and log in at the text console. To return to ErdOS’s original console login on the next boot:</p>
+        <pre><code>sudo systemctl disable greetd.service
+sudo systemctl set-default multi-user.target</code></pre>
+        <p>Save any open work and reboot. To uninstall afterward, run <code>sudo apt remove greetd gtkgreet cage</code>. Leave the normal <code>~/.profile</code> tty1 startup rule in place. This is an optional Debian setup, separate from ErdOS’s default-install test coverage. <a href="https://manpages.debian.org/trixie/greetd/greetd.5.en.html">greetd configuration</a> · <a href="https://manpages.debian.org/trixie/gtkgreet/gtkgreet.1.en.html">gtkgreet setup</a> · <a href="https://manpages.debian.org/trixie/cage/cage.1.en.html">Cage options</a>.</p>
       </section>
       <section id="shortcuts"><h2>Keyboard shortcuts</h2>
         <p>Super is usually the Windows key. Workspace bindings use key names and support the usual Shift + number-row combinations. Keypad tiling supports either NumLock state.</p>
@@ -152,7 +235,6 @@ sudo apt install --no-install-recommends swaylock swayidle</code></pre>
       </section>
       <a class="back-link" href="index.html">← Back to ErdOS</a>
     </article>
-  <section><h2>Desktop updates</h2><p>Update an installed Alpha 3 desktop without reinstalling or replacing hardware fixes. Curl and built-in Python download instructions are available; no extra packages are required. <a href="updates.md">Update and rollback instructions</a>.</p></section>
 </main>
   <footer class="site-footer wrap"><p>ErdOS · An independent project built on Debian.</p><nav aria-label="Footer navigation"><a href="https://github.com/patx/erdos/blob/main/LICENSE">Licenses</a><a href="https://github.com/patx/erdos/issues">Issues</a><a href="building.md">Build from source</a></nav></footer>
 </body>
