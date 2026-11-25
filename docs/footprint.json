@@ -1,6 +1,6 @@
 {
   "schema": 3,
-  "measured_at": "2026-11-24T12:44:44.190271-05:00",
+  "measured_at": "2026-11-24T22:46:34.125877-05:00",
   "vm": {
     "vcpus": 2,
     "allocated_ram_bytes": 2147483648,
@@ -296,12 +296,85 @@
       "source_revision": "60df297 + development image label",
       "sampler": "scripts/measure-footprint.py",
       "sampler_sha256": "906297b822b6b61bd9c11820c2c980470508c8ba0dad46e95a5c1972bbd80cf5"
+    },
+    "beta2": {
+      "kernel": "6.12.118+deb13-amd64",
+      "uefi": true,
+      "desktop_ready_uptime_seconds": 21.08,
+      "settle_seconds": 120,
+      "sample_interval_seconds": 10,
+      "ram_definition": "MemTotal - MemAvailable",
+      "ram_samples": [
+        {
+          "uptime_seconds": 141.08,
+          "mem_total_bytes": 2063314944,
+          "mem_available_bytes": 1694277632,
+          "used_bytes": 369037312
+        },
+        {
+          "uptime_seconds": 151.08,
+          "mem_total_bytes": 2063314944,
+          "mem_available_bytes": 1694277632,
+          "used_bytes": 369037312
+        },
+        {
+          "uptime_seconds": 161.08,
+          "mem_total_bytes": 2063314944,
+          "mem_available_bytes": 1694277632,
+          "used_bytes": 369037312
+        },
+        {
+          "uptime_seconds": 171.08,
+          "mem_total_bytes": 2063314944,
+          "mem_available_bytes": 1694277632,
+          "used_bytes": 369037312
+        },
+        {
+          "uptime_seconds": 181.08,
+          "mem_total_bytes": 2063314944,
+          "mem_available_bytes": 1694277632,
+          "used_bytes": 369037312
+        }
+      ],
+      "ram_median_bytes": 369037312,
+      "filesystems": [
+        {
+          "mount": "/",
+          "used_bytes": 1878056960,
+          "filesystem_bytes": 22859108352
+        },
+        {
+          "mount": "/boot/efi",
+          "used_bytes": 311296,
+          "filesystem_bytes": 1021370368
+        }
+      ],
+      "disk_used_bytes": 1878368256,
+      "disk_definition": "Used filesystem blocks on root and EFI; excludes swap and unallocated space",
+      "swap_proc_kib": "Filename\t\t\t\tType\t\tSize\t\tUsed\t\tPriority\n/dev/vda3                               partition\t1305596\t\t0\t\t-2",
+      "service_state": {
+        "NetworkManager": "active",
+        "systemd-timesyncd": "active",
+        "bluetooth": "inactive"
+      },
+      "processes": "COMMAND           RSS\nlabwc           134412\nlxpolkit        20824\nNetworkManager  19252\nswaybg          19044\npython3         18748\nsystemd-journal 16420\nwireplumber     15896\nsystemd         13492\nsystemd         12480\npipewire        10992\nsystemd-udevd   10004\npolkitd          9088\nsystemd-logind   8996\npipewire-pulse   8276\nsystemd-timesyn  8264\ngvfsd            7768\ngvfsd-fuse       7176\nwpa_supplicant   6952\ndconf-service    5940\npipewire         5260\ndbus-daemon      4904\nlogin            4624\ndbus-daemon      4356\nlogin            4336\nlogin            4212\nbash             4028\nbash             3996\nps               3804\navahi-daemon     3720\n(sd-pam)         3708\nmpris-proxy      3572\nrtkit-daemon     3204\navahi-daemon     1316\nkthreadd            0\npool_workqueue_     0\nkworker/R-kvfre     0\nkworker/R-rcu_g     0\nkworker/R-sync_     0\nkworker/R-slub_     0\nkworker/R-netns     0\nkworker/0:0-cgr     0\nkworker/0:1-eve     0\nkworker/0:0H-ev     0\nkworker/u8:0-ev     0\nkworker/R-mm_pe     0\nrcu_tasks_kthre     0\nrcu_tasks_rude_     0\nrcu_tasks_trace     0\nksoftirqd/0         0\nrcu_preempt         0\nrcu_exp_par_gp_     0\nrcu_exp_gp_kthr     0\nmigration/0         0\nidle_inject/0       0\ncpuhp/0             0\ncpuhp/1             0\nidle_inject/1       0\nmigration/1         0\nksoftirqd/1         0\nkworker/1:0-eve     0\nkworker/1:0H-kb     0\nkworker/u8:1-fl     0\nkdevtmpfs           0\nkworker/R-inet_     0\nkauditd             0\nkhungtaskd          0\noom_reaper          0\nkworker/R-write     0\nkcompactd0          0\nksmd                0\nkhugepaged          0\nkworker/R-kinte     0\nkworker/R-kbloc     0\nkworker/R-blkcg     0\nirq/9-acpi          0\nkworker/1:1-eve     0\nkworker/u8:2-fl     0\nkworker/R-tpm_d     0\nkworker/R-edac-     0\nkworker/R-devfr     0\nkworker/R-quota     0\nkworker/1:1H-kb     0\nkswapd0             0\nkworker/R-kthro     0\nkworker/R-acpi_     0\nkworker/R-mld       0\nkworker/R-ipv6_     0\nkworker/R-kstrp     0\nkworker/u9:0        0\nkworker/u8:3-ev     0\nkworker/u8:4-fl     0\nkworker/0:1H-kb     0\nkworker/0:2-eve     0\nwatchdogd           0\nkworker/R-ata_s     0\nscsi_eh_0           0\nkworker/R-scsi_     0\nscsi_eh_1           0\nkworker/R-scsi_     0\nscsi_eh_2           0\nkworker/R-scsi_     0\nscsi_eh_3           0\nkworker/R-scsi_     0\nscsi_eh_4           0\nkworker/R-scsi_     0\nscsi_eh_5           0\nkworker/R-scsi_     0\nkworker/u8:5-fl     0\nkworker/u8:6-sc     0\nkworker/u8:7-sc     0\nkworker/u8:8-sc     0\nkworker/u8:9-sc     0\nkworker/u8:10-s     0\nkworker/u8:11-s     0\nkworker/u8:12       0\nkworker/1:2-cgr     0\njbd2/vda2-8         0\nkworker/R-ext4-     0\nkworker/1:3         0\nkworker/0:3         0\npsimon              0\nkworker/1:2H        0\nkworker/R-crypt     0\nkworker/0:4         0\npsimon              0",
+      "apt_indexes_present": true,
+      "release": "NAME=ErdOS\nVERSION=1.0.0-beta.2\nBUILD_DATE=2026-11-24",
+      "measured_at": "2026-11-24T22:46:34.125877-05:00",
+      "desktop": "labwc 0.9.7 + static wlroots 0.19.2; default blue starfield wallpaper; overview closed; PCManFM on demand",
+      "iso_filename": "erdos-amd64.iso",
+      "iso_bytes": 1164083200,
+      "iso_sha256": "4a85131cd9797aef2f05f34643f405f9b74a2b4c328f328afba7e194d6ad78cb",
+      "version": "1.0.0-beta.2",
+      "source_revision": "85096b83a7e4f3564a5f9054880c56bf6e750300",
+      "sampler": "scripts/measure-footprint.py",
+      "sampler_sha256": "906297b822b6b61bd9c11820c2c980470508c8ba0dad46e95a5c1972bbd80cf5"
     }
   },
   "delta_bytes": {
-    "iso_bytes": 0,
-    "disk_used_bytes": -2682880,
-    "ram_median_bytes": -17436672
+    "iso_bytes": 1146880,
+    "disk_used_bytes": 1105920,
+    "ram_median_bytes": -1290240
   },
   "notes": [
     "Fresh offline installations of each identified ISO; booted without installer media. Alpha 3 and X11 samples are historical baselines measured on 2026-11-21; Alpha 5 was measured on 2026-11-24.",
@@ -313,41 +386,78 @@
     "X11 development image was preserved for this measurement; it is not the older published Alpha 2 image. Historical local ISOs were later removed under the latest-ISO-only cleanup policy.",
     "Alpha 5 includes the default image wallpaper. Its serial getty was started temporarily for measurement to match the earlier setup; the desktop remained active on tty1. No persistent power/service settings were changed.",
     "Lean development build measured on 2026-11-24 using the same VM and sampler. PCManFM is not started at login; no applications were opened before measurement.",
-    "Package versions match Alpha 5 except Firefox 160.0.1~build1 to 161.0~build1. Four packages removed and none added. New Firefox retained file data is 470,721 bytes smaller, contributing to disk savings."
+    "Package versions match Alpha 5 except Firefox 160.0.1~build1 to 161.0~build1. Four packages removed and none added. New Firefox retained file data is 470,721 bytes smaller, contributing to disk savings.",
+    "Beta 2 measured on 2026-11-24 from the published ISO, unchanged, with the same VM allocation and reference sampler. Default blue starfield wallpaper active; overview closed; PCManFM on demand.",
+    "Beta 2 retains APT package indexes after the offline installation. They were counted in filesystem usage, not cleared; no apt update, package changes or application windows before sampling.",
+    "Beta 2 serial console was enabled through installer kernel options for collection; tty2 and serial shells are included. Sampler supplied through serial stdin without writing script/results into the guest filesystem.",
+    "All five Beta 2 RAM samples were 369037312 bytes. Small differences between runs are not evidence of a component-specific performance change."
   ],
   "release": {
-    "version": "1.0.0-beta.1",
+    "version": "1.0.0-beta.2",
     "published": true,
-    "iso_sha256": "128fb9324f41a6934a9ab4751c970144ebba67bfe97dc8ad2fb043fe0b1f4efa",
-    "note": "Beta 1 promotes the exact tested lean development ISO without rebuilding it. Embedded label remains dev-lean.",
-    "image_version": "dev-lean"
+    "iso_sha256": "4a85131cd9797aef2f05f34643f405f9b74a2b4c328f328afba7e194d6ad78cb",
+    "image_version": "1.0.0-beta.2",
+    "note": "Published Beta 2 ISO measured unchanged after a fresh offline installation."
   },
-  "current_build": "lean_dev",
-  "delta_comparison": "Beta 1 (unchanged lean development ISO) minus Alpha 5",
+  "current_build": "beta2",
+  "delta_comparison": "Beta 2 minus Beta 1 (unchanged lean development ISO)",
   "package_comparison": {
-    "removed": {
-      "libnma-common": "1.10.6-5",
-      "libnma0:amd64": "1.10.6-5",
-      "nm-connection-editor": "1.36.0-3+b1",
-      "pulsemixer": "1.5.1-1.1"
+    "removed": {},
+    "added": {
+      "erdos-archive-keyring": "1.0.0~beta.2.1",
+      "erdos-desktop": "1.0.0~beta.2.1",
+      "erdos-labwc": "1.0.0~beta.2.1"
     },
-    "added": {},
     "upgraded": {
-      "firefox": {
-        "old": "160.0.1~build1",
-        "new": "161.0~build1"
+      "libzstd1:amd64": {
+        "old": "1.5.7+dfsg-1",
+        "new": "1.5.7+dfsg-1+deb13u1"
       }
     }
   },
-  "payload_comparison": {
-    "alpha5": {
-      "firefox_file_bytes": 346008862,
-      "labwc_bytes": 6809944
-    },
-    "lean": {
-      "firefox_file_bytes": 345538141,
-      "labwc_bytes": 6771440
-    },
-    "firefox_growth_bytes": -470721
-  }
+  "comparison_history": {
+    "beta1_minus_alpha5": {
+      "delta_bytes": {
+        "iso_bytes": 0,
+        "disk_used_bytes": -2682880,
+        "ram_median_bytes": -17436672
+      },
+      "delta_comparison": "Beta 1 (unchanged lean development ISO) minus Alpha 5",
+      "package_comparison": {
+        "removed": {
+          "libnma-common": "1.10.6-5",
+          "libnma0:amd64": "1.10.6-5",
+          "nm-connection-editor": "1.36.0-3+b1",
+          "pulsemixer": "1.5.1-1.1"
+        },
+        "added": {},
+        "upgraded": {
+          "firefox": {
+            "old": "160.0.1~build1",
+            "new": "161.0~build1"
+          }
+        }
+      },
+      "payload_comparison": {
+        "alpha5": {
+          "firefox_file_bytes": 346008862,
+          "labwc_bytes": 6809944
+        },
+        "lean": {
+          "firefox_file_bytes": 345538141,
+          "labwc_bytes": 6771440
+        },
+        "firefox_growth_bytes": -470721
+      }
+    }
+  },
+  "previous_releases": [
+    {
+      "version": "1.0.0-beta.1",
+      "published": true,
+      "iso_sha256": "128fb9324f41a6934a9ab4751c970144ebba67bfe97dc8ad2fb043fe0b1f4efa",
+      "note": "Beta 1 promotes the exact tested lean development ISO without rebuilding it. Embedded label remains dev-lean.",
+      "image_version": "dev-lean"
+    }
+  ]
 }

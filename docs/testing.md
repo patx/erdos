@@ -48,7 +48,11 @@ Metadata refresh was tested on a disposable archive
 copy: new signatures verify and every package, source and index byte is unchanged.
 
 
-No Beta 2 disk/RAM benchmark was taken. Beta 1 results below remain historical.
+A fresh offline Beta 2 installation was measured on November 24, 2026:
+**1.749 GiB installed and 351.9 MiB idle RAM**. The unchanged published ISO and
+reference sampler were used; all five RAM samples matched. Default retained APT
+indexes were included, with no package updates or cache clearing. Full results
+and earlier baselines are below.
 VM checks do not certify physical GPU, touchpad, Wi-Fi/Bluetooth or suspend
 behavior. No machine-specific power or driver changes are included.
 
@@ -354,7 +358,8 @@ coverage. Alongside-OS partitioning and Secure Boot are not certified.
 
 | Build | Installed disk | Idle RAM | Measured |
 | --- | --- | --- | --- |
-| Lean development ISO | 1.748 GiB | 353.2 MiB | 2026-11-24 |
+| **ErdOS 1 Beta 2** | **1.749 GiB** | **351.9 MiB** | **2026-11-24** |
+| ErdOS 1 Beta 1 (lean development image) | 1.748 GiB | 353.2 MiB | 2026-11-24 |
 | ErdOS 1 Alpha 5 | 1.751 GiB | 369.8 MiB | 2026-11-24 |
 | Wayland candidate (Alpha 3) | 1.750 GiB | 355.4 MiB | 2026-11-21 |
 | Previous X11 dev | 1.814 GiB | 361.8 MiB | 2026-11-21 |
@@ -368,15 +373,19 @@ the serial getty and Python sampler are included. Alpha 5's serial getty was
 started temporarily to match the previous setup; no persistent service policy
 was changed.
 
-RAM is MemTotal minus MemAvailable, not summed process RSS. All five Alpha 5
-samples were 387,764,224 bytes after a 120-second settle, 10 seconds apart.
-Disk is root plus EFI used filesystem blocks: 1,879,633,920 + 311,296 bytes,
-excluding swap, filesystem free space and the spare disk. No cached APT package
-indexes or swap use were reported. The kernel is `6.12.118+deb13-amd64`.
+RAM is MemTotal minus MemAvailable, not summed process RSS. All five Beta 2
+samples were 369,037,312 bytes after a 120-second settle, 10 seconds apart.
+Disk is root plus EFI used filesystem blocks: 1,878,056,960 + 311,296 bytes,
+excluding swap, filesystem free space and the spare disk. Beta 2 retains APT
+package indexes after installation; these are included, not cleared for the
+benchmark. No swap use was reported. The kernel is `6.12.118+deb13-amd64`.
+Compared with Beta 1, disk usage is 1,105,920 bytes higher and median RAM is
+1,290,240 bytes lower. These small differences include run-to-run variation;
+they do not isolate the effect of a particular component.
 
 [Raw results](footprint.json) retain every sample, exact ISO checksum, filesystem
 usage, service state and process inventory, including the older baselines.
-The Beta 1 digest matches [release.json](release.json); the measured ISO was not
+The Beta 2 digest matches [release.json](release.json); the measured ISO was not
 rebuilt or modified. Physical GPU/driver/RAM configurations can change results.
 The X11 image was retained for the original comparison; old local ISOs and VM
 disks have since been removed under the latest-ISO-only storage policy. Raw

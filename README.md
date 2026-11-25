@@ -124,18 +124,19 @@ desktop startup checks, and signed APT refresh against Debian, Mozilla and ErdOS
 Initial user-reported testing on an ASUS L203MA and a MacBook has also been
 positive; broader hardware testing is ongoing.
 
-The following are historical Alpha 5/Beta 1 measurements, **not Beta 2 results**.
-Fresh offline VM measurements on November 24, 2026
+Fresh offline VM measurements on November 24, 2026, including the published
+Beta 2 ISO without rebuilding or modifying it
 (2 vCPUs, 2 GiB RAM, 1280×800, software rendering):
 
 | Build | Installed disk | Idle RAM |
 | --- | --- | --- |
-| ErdOS 1 Alpha 5 | 1.751 GiB | 369.8 MiB |
+| **ErdOS 1 Beta 2** | **1.749 GiB** | **351.9 MiB** |
 | ErdOS 1 Beta 1 | 1.748 GiB | 353.2 MiB |
+| ErdOS 1 Alpha 5 | 1.751 GiB | 369.8 MiB |
 
-Beta 1 saves 2.6 MiB of installed disk and 16.6 MiB of idle
-RAM versus Alpha 5. Four packages were removed; Firefox also changed from
-160.0.1 to 161.0, contributing about 0.45 MiB of the disk saving.
+Beta 2 is effectively unchanged from Beta 1: 1.1 MiB more disk and 1.2 MiB
+less RAM in these runs. All five Beta 2 RAM samples matched. Default retained
+APT indexes are included; no package updates or cache clearing preceded sampling.
 
 Disk includes root and EFI, excludes swap. RAM is the median of five
 MemTotal-minus-MemAvailable samples after a two-minute settle, with the default

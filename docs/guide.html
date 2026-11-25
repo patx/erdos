@@ -66,10 +66,10 @@
         <p>The bottom of the right-click menu contains Logout, Reboot and Power off. Logout ends labwc and the tty1 login session, returning to the console login prompt.</p>
       </section>
       <section id="footprint"><h2>Disk and RAM usage</h2>
-        <p>Fresh offline installations measured on November 24, 2026. These are historical Alpha 5/Beta 1 results, not a new Beta 2 measurement:</p>
-        <table><thead><tr><th>Build</th><th>Installed disk</th><th>Idle RAM</th></tr></thead><tbody><tr><td>ErdOS 1 Alpha 5</td><td>1.751 GiB</td><td>369.8 MiB</td></tr><tr><td>ErdOS 1 Beta 1</td><td>1.748 GiB</td><td>353.2 MiB</td></tr></tbody></table>
+        <p>Fresh offline installations measured on November 24, 2026. Beta 2 uses the published ISO without rebuilding or modifying it; older results remain for comparison:</p>
+        <table><thead><tr><th>Build</th><th>Installed disk</th><th>Idle RAM</th></tr></thead><tbody><tr><td><strong>ErdOS 1 Beta 2</strong></td><td><strong>1.749 GiB</strong></td><td><strong>351.9 MiB</strong></td></tr><tr><td>ErdOS 1 Beta 1</td><td>1.748 GiB</td><td>353.2 MiB</td></tr><tr><td>ErdOS 1 Alpha 5</td><td>1.751 GiB</td><td>369.8 MiB</td></tr></tbody></table>
         <p>UEFI, 2 vCPUs, 2 GiB RAM, 24 GiB install disk and 1280×800 software-rendered display. The default desktop and wallpaper are active; the overview is closed. No network adapter, package updates or app windows before measurement. Disk counts root and EFI used blocks, excluding swap. RAM is MemTotal minus MemAvailable: five samples 10 seconds apart after a two-minute settle. Hardware and graphics drivers change these results.</p>
-        <p>Beta 1 saves 2.6 MiB of installed disk and 16.6 MiB of idle RAM. Four packages were removed. Firefox also changed from 160.0.1 to 161.0; its smaller files account for about 0.45 MiB of the disk saving.</p>
+        <p>Beta 2 is effectively unchanged from Beta 1: 1.1 MiB more disk and 1.2 MiB less RAM in these runs. All five Beta 2 RAM samples matched. Default retained APT indexes are included; no caches were cleared. Optional apps and services increase the footprint.</p>
         <p><a href="footprint.json">Raw samples, ISO checksums and earlier baselines</a> · <a href="testing.md#reproduce-the-footprint-measurement">Measurement method and validation</a>.</p>
       </section>
       <section id="settings"><h2>Settings</h2>
