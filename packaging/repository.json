@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "fingerprint": "6AF1B019608CA9CCA7EA32E36AC65596E9E4F83D",
+  "public_key": "config/includes.chroot/usr/share/keyrings/erdos-archive-keyring.asc",
+  "origin": "ErdOS",
+  "suite": "trixie-erdos",
+  "valid_days": 30,
+  "public_key_sha256": "2a39bc80136dd54193dae427de8acc2a879b2801deef9b6e9501f390335e0fbc"
+}

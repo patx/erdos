@@ -12,11 +12,11 @@ for package in openbox xserver-xorg-core xinit scrot hsetroot firefox-esr chromi
     fi
 done
 update-alternatives --set x-terminal-emulator /usr/bin/sakura
-update-desktop-database /usr/local/share/applications
+update-desktop-database /usr/share/applications
 
 # Custom compositor is staged after package installation; all dynamic libraries
 # must be available in the image and survive the installer.
-if ldd /usr/local/bin/labwc | grep -q 'not found'; then
-    ldd /usr/local/bin/labwc >&2
+if ldd /usr/bin/labwc | grep -q 'not found'; then
+    ldd /usr/bin/labwc >&2
     exit 1
 fi

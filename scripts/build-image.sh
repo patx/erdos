@@ -5,6 +5,7 @@ project_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 mode=${1:?Missing build mode}
 build_dir=${ERDOS_WORK_DIR:?Use build.sh, not this internal worker directly}
 cp -a "$project_dir/config" "$build_dir/config"
+find "$build_dir/config" -type d -name __pycache__ -prune -exec rm -rf -- {} +
 bash "$project_dir/scripts/stage-bootloaders.sh" "$build_dir/config"
 bash "$project_dir/scripts/stage-twig.sh" "$build_dir/config/includes.chroot"
 bash "$project_dir/scripts/stage-compositor.sh" "$build_dir/config/includes.chroot"
@@ -13,11 +14,16 @@ if [[ $mode == --prepare ]]; then
   echo 'Customization staging check passed; temporary files will be removed.'
   exit 0
 fi
-# Build-only dependencies stay on the host, outside the live filesystem.
-bash "$project_dir/scripts/build-helpers.sh" "$build_dir/config/includes.chroot/usr/local/bin"
-install -Dm644 "$build_dir/config/includes.chroot/usr/local/bin/labwc.build.json" \
-  "$build_dir/config/includes.chroot/usr/local/share/doc/labwc/build.json"
-rm "$build_dir/config/includes.chroot/usr/local/bin/labwc.build.json"
+# Build package-owned components locally; the signing key is never needed here.
+bash "$project_dir/scripts/build-helpers.sh" "$build_dir/compositor"
+python3 "$project_dir/scripts/build-debs.py" --labwc-dir "$build_dir/compositor" --output "$build_dir/config/packages.chroot"
+# Avoid a second unmanaged copy of files already supplied by our .debs.
+for archive in "$build_dir/config/packages.chroot/"*.deb; do
+    dpkg-deb --fsys-tarfile "$archive" | tar -t | while read -r path; do
+        case "$path" in */) continue ;; esac
+        rm -f -- "$build_dir/config/includes.chroot/${path#./}"
+    done
+done
 cd "$build_dir"
 lb config \
   --ignore-system-defaults \
@@ -53,6 +59,9 @@ lb build 2>&1 | tee build.log
 # Validate the actual final ISO: live-build can remove or relocate its temporary
 # binary/ tree. A utility present live must also survive disk installation.
 python3 "$project_dir/scripts/prepare-release.py" --verify-only --iso "$build_dir/live-image-amd64.hybrid.iso"
+# Keep the same package bytes for the APT archive and the image.
+mkdir -p "$project_dir/dist/packages"
+cp "$build_dir/config/packages.chroot/"*.deb "$build_dir/config/packages.chroot/components.json" "$build_dir/config/packages.chroot/erdos-components-source.tar.gz" "$project_dir/dist/packages/"
 # The outer lifecycle publishes only after this worker and verification succeed.
 mv live-image-amd64.hybrid.iso erdos-amd64.iso
 sha256sum erdos-amd64.iso > erdos-amd64.iso.sha256

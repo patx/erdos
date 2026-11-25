@@ -1,0 +1,7 @@
+Package: erdos-desktop erdos-labwc erdos-archive-keyring
+Pin: release o=ErdOS
+Pin-Priority: 500
+
+Package: *
+Pin: release o=ErdOS
+Pin-Priority: -1

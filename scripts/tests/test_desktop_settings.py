@@ -12,7 +12,7 @@ import unittest
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
-LIB = ROOT / 'config/includes.chroot/usr/local/lib/erdos'
+LIB = ROOT / 'config/includes.chroot/usr/lib/erdos'
 
 
 class DesktopSettingsTests(unittest.TestCase):
@@ -23,7 +23,7 @@ class DesktopSettingsTests(unittest.TestCase):
         shutil.copytree(ROOT / 'config/includes.chroot/etc/skel/.config', self.config)
         self.bin = self.root / 'bin'; self.bin.mkdir()
         self.env = patch.dict(os.environ, HOME=str(self.root), XDG_CONFIG_HOME=str(self.config),
-                              PATH=str(self.bin) + os.pathsep + os.environ['PATH'])
+                              PATH=str(self.bin) + os.pathsep + os.environ['PATH'], GSETTINGS_BACKEND='memory')
         self.env.start()
         self.addCleanup(self.env.stop); self.addCleanup(self.temp.cleanup)
         self.executable('labwc', '#!/bin/sh\n[ "${FAIL_RELOAD:-0}" = 0 ] || exit 1\nprintf "labwc test compositor\\n"\n')
@@ -53,6 +53,27 @@ class DesktopSettingsTests(unittest.TestCase):
             self.assertIn('CUSTOM=keep', env.read_text())
             self.assertIn('gtk-font-name', gtk.read_text())
             self.assertTrue(gtk.with_name('settings.ini.previous').exists())
+
+    def test_window_controls_change_both_layouts_without_touching_shortcuts(self):
+        import configparser
+        import xml.etree.ElementTree as ET
+        keys=self.settings.keyboard()
+        self.assertEqual(self.settings.window_button_options(), (False, False))
+        cases = [('left', False, False, 'close:', 'close:'),
+                 ('right', False, False, ':close', ':close'),
+                 ('left', True, True, 'close,iconify,max:', 'close,minimize,maximize:'),
+                 ('right', True, True, ':iconify,max,close', ':minimize,maximize,close'),
+                 ('left', True, False, 'close,iconify:', 'close,minimize:'),
+                 ('right', False, True, ':max,close', ':maximize,close')]
+        for side,minimize,maximize,layout,gtk_layout in cases:
+            self.settings.set_window_buttons(side, minimize, maximize)
+            self.assertEqual(self.settings.window_button_options(), (minimize, maximize))
+            self.assertEqual(self.settings.window_button_side(),side)
+            self.assertEqual(ET.parse(self.config/'labwc/rc.xml').findtext('theme/titlebar/layout'),layout)
+            parser=configparser.ConfigParser();parser.read(self.config/'gtk-3.0/settings.ini')
+            self.assertEqual(parser['Settings']['gtk-decoration-layout'],gtk_layout)
+            self.assertIn('gtk-font-name',parser['Settings'])
+            self.assertEqual(self.settings.keyboard(),keys)
 
     def test_repeat_and_caps_preserve_layout_switching_and_shortcuts(self):
         env = self.config / 'labwc/environment'
@@ -154,7 +175,7 @@ from pathlib import Path
 Path(os.environ['ERDOS_TEST_SUDO']).write_text(json.dumps(sys.argv[1:]))
 sys.exit(int(os.environ.get('ERDOS_TEST_EXIT','0')))
 ''')
-            helper=ROOT/'config/includes.chroot/usr/local/bin/erdos-maintenance'
+            helper=ROOT/'config/includes.chroot/usr/bin/erdos-maintenance'
             for action, command in [('update',['update']),('upgrade',['upgrade']),('autopurge',['autoremove','--purge']),('clean',['clean'])]:
                 result=subprocess.run([str(helper),action],input='\n',capture_output=True,text=True)
                 self.assertEqual(result.returncode,0,result.stderr)

@@ -1,4 +1,14 @@
-# Development
+# ErdOS 1 Beta 2 — 2026-11-24
+
+- Replace the bundled wallpaper with the new blue starfield image.
+
+- Package custom components under /usr for signed, scoped APT delivery. Add a
+  checked one-time legacy adoption helper, dedicated archive key, corresponding
+  source publication and expiring by-hash repository metadata.
+- Keep base-image identity separate from installed desktop/component provenance
+  in About. Detect when logout is needed to load an installed compositor update.
+- Use only the close button on the left for new profiles, with Left/Right and
+  optional minimize/maximize controls in Appearance. Use unmodified upstream sizing for the regular thumbnail switcher.
 
 - Add cursor theme/size, keyboard repeat rate/delay and Caps Lock mappings.
 - Add touchpad disable-while-typing and disable-on-external-mouse controls.
@@ -6,9 +16,10 @@
   rollback and saved topology handling.
 - Add Software for explicit, interactive APT update/upgrade/autopurge/clean and
   About with a copyable hardware/software summary.
-- Reuse existing dependencies; add no locker, idle listener, package or service.
+- Reuse existing runtime dependencies; add no locker, idle listener or service.
   Document optional user-installed swaylock/swayidle in the guide.
-- Published Beta 1 ISO, release links and measured footprint remain unchanged.
+- Rebuild the ISO with package-managed components. Beta 1 measurements remain
+  historical; they are not measurements of Beta 2.
 
 # ErdOS 1 Beta 1 — 2026-11-24
 

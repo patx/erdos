@@ -2,4 +2,4 @@
 Description=ErdOS Wayland background
 
 [Service]
-ExecStart=/usr/local/bin/erdos-background
+ExecStart=/usr/bin/erdos-background

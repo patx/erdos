@@ -1,3 +1,57 @@
+# Beta 2 verification — 2026-11-24
+
+The rebuilt image identifies itself as `1.0.0-beta.2`; its three custom packages
+are `1.0.0~beta.2.1`. ISO SHA-256:
+`4a85131cd9797aef2f05f34643f405f9b74a2b4c328f328afba7e194d6ad78cb`.
+
+The final image verifier passes embedded configuration, offline installer
+policy, package retention, root ownership/sudo setuid, APT-cache budget, Twig and
+compositor provenance. Source/staging checks and Settings persistence tests pass.
+The lifecycle suite passes eleven unprivileged cases; the privileged tmpfs case
+remains separately documented below. The full managed build also exports its
+exact package archives and matching source snapshot, then removes its container.
+
+A new 24 GiB disk completed an offline Debian Installer UEFI installation in a
+2-vCPU, 2 GiB KVM guest. Installer answers were supplied only in its private VM
+fixture; public disk choices/write confirmations remain manual. The disk booted
+without ISO media. The installed normal account authenticated sudo; tty1 login
+started labwc, Super+I opened Settings, and the screenshot was visually reviewed
+for the close-only default, new wallpaper and sixteen-section sidebar.
+The installed desktop also saved and reloaded right-side minimize/maximize/close
+controls, then restored close-only on the left. The live desktop was visually
+checked in both configurations. With a virtual
+network adapter attached after installation, strict `apt-get --error-on=any
+update` passed against Debian, Mozilla and ErdOS sources.
+
+Compared with the public Beta 1 package manifest, only the three own package
+records are added: `erdos-desktop`, `erdos-labwc`, `erdos-archive-keyring`.
+No third-party runtime packages are added or removed. `libzstd1` updates from
+`1.5.7+dfsg-1` to `1.5.7+dfsg-1+deb13u1`. The compositor source still matches
+maintenance fork `270ab9c`; labwc 0.9.7 and wlroots 0.19.2 are unchanged.
+The signed archive's source snapshot is checked against the component source
+digest. All public APT objects and the entire public ISO were read back and
+matched their local hashes.
+
+An earlier disposable integration test exercised a real APT migration and
+subsequent component upgrade, preservation of personal configuration and
+hardware fixes, rejection of tampered InRelease metadata and rejection of an
+unrelated archive key. No host packages were changed.
+
+The final public HTTPS repository was also tested against the verified Beta 1
+filesystem: cancelling the actual APT confirmation retained all legacy files;
+rerunning resumed and installed exactly the three own packages, archived old
+shadows, removed pending state, and preserved test user, driver and network
+configuration. A repeated migration was a successful no-op. An unrelated key
+was rejected by the actual APT verifier. All fixtures were removed. Legacy absolute menu/command paths were also executed
+through the new compatibility links; user configuration files remain untouched.
+Metadata refresh was tested on a disposable archive
+copy: new signatures verify and every package, source and index byte is unchanged.
+
+
+No Beta 2 disk/RAM benchmark was taken. Beta 1 results below remain historical.
+VM checks do not certify physical GPU, touchpad, Wi-Fi/Bluetooth or suspend
+behavior. No machine-specific power or driver changes are included.
+
 # Development Settings additions — 2026-11-24
 
 The checkout adds cursor theme/size, key repeat/Caps Lock mapping, touchpad input
@@ -353,3 +407,21 @@ stdin/output used in the reference run.
 
 There is no screen locker bundled. Debian power policy remains unchanged;
 no charging or idle-sleep daemon was added.
+
+## Repeat the public APT migration check
+
+After publishing a candidate repository, the integration check downloads and
+verifies the historical Beta 1 ISO in a disposable chroot. It covers cancellation,
+resume, exact package additions, preserved personal/hardware settings, legacy
+absolute command paths and unrelated-key rejection. It needs roughly 4 GiB of
+temporary space, which the wrapper removes. Never run it against the host root.
+
+```sh
+./scripts/run-in-debian.sh bash -c '
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update && apt-get install -y --no-install-recommends python3 ca-certificates xorriso squashfs-tools
+  python3 /project/scripts/tests/check_apt_migration.py
+'
+```
+
+This optional public-network check is separate from the small offline CI suite.

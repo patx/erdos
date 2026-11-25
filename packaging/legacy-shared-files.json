@@ -1,0 +1,29 @@
+{
+  "usr/lib/live/config/9990-erdos-apt": [
+    "f4e245e970cd3bf8535af4a973ba4d2f34cb05fd965b659c6efd41337daa1c2a"
+  ],
+  "usr/lib/systemd/user/erdos-background.service": [
+    "6313080a44264c365144f32f9756edc3bee7beda65f4a83e7be4fb596864b141"
+  ],
+  "usr/lib/udev/rules.d/91-erdos-keyboard-backlight.rules": [
+    "8e398a91277f9725785805f1fe1c0fdbca9d12657f3017be3666075f05b492c7"
+  ],
+  "usr/share/applications/erdos-settings.desktop": [
+    "54bb9b0558939095142e7c6e83c692654345b3a932a0611d1937050df84748e8"
+  ],
+  "usr/share/erdos/backgrounds/default.png": [
+    "c780e54855ffe1fa6810b0c6cda49486548a2a903d7c283d80840fe71fe39d30"
+  ],
+  "usr/share/erdos/grub/boot.png": [
+    "8340086084bd55e02c45b774a2d314da5826838caa0fa74b31b5925e33c24246"
+  ],
+  "usr/share/erdos/grub/theme.txt": [
+    "d4d35f5f4f692f863da29c60845ab25da46f64130cb35da3f2327ea08226e754"
+  ],
+  "usr/share/themes/ErdOS/openbox-3/themerc": [
+    "9cc11574cff9339a8c2a10ee0cb83987e44bb6470cd40fd02d580cc5d8abd4f7"
+  ],
+  "usr/share/xdg-desktop-portal/labwc-portals.conf": [
+    "6317ce82f01a93099917cb05a824c02d3647a07be1fe37f1d9f5045a4c23d2d6"
+  ]
+}

@@ -16,7 +16,7 @@ import zipfile
 from project_files import public_files
 
 ROOT = Path(__file__).resolve().parent.parent
-CORE = {'desktop-file-utils', 'network-manager', 'systemd-timesyncd', 'bluez', 'libspa-0.2-bluetooth', 'ca-certificates', 'debian-archive-keyring', 'sudo', 'sakura', 'firefox', 'pcmanfm', 'libinput10', 'libxkbcommon0', 'gsettings-desktop-schemas', 'dconf-gsettings-backend', 'xdg-desktop-portal-gtk', 'libseat1', 'swaybg', 'grim', 'slurp', 'wlr-randr', 'xwayland', 'python3', 'python3-gi', 'gir1.2-gtk-3.0', 'procps'}
+CORE = {'desktop-file-utils', 'network-manager', 'systemd-timesyncd', 'bluez', 'libspa-0.2-bluetooth', 'ca-certificates', 'debian-archive-keyring', 'sudo', 'sakura', 'firefox', 'pcmanfm', 'libinput10', 'libxkbcommon0', 'gsettings-desktop-schemas', 'dconf-gsettings-backend', 'xdg-desktop-portal-gtk', 'libseat1', 'swaybg', 'grim', 'slurp', 'wlr-randr', 'xwayland', 'python3', 'python3-gi', 'erdos-desktop', 'erdos-labwc', 'erdos-archive-keyring', 'gir1.2-gtk-3.0', 'procps'}
 
 
 def run(*args):
@@ -95,7 +95,7 @@ def verify_image(iso):
         # Repacking an extracted tree must preserve privileged-file metadata.
         critical = ('usr/bin/sudo', 'etc/sudo.conf', 'etc/sudoers',
                     'usr/lib/systemd/systemd', 'usr/bin/systemctl',
-                    'usr/local/lib/erdos/configure-apt')
+                    'usr/lib/erdos/configure-apt')
         listing = subprocess.check_output(['unsquashfs', '-lln', '-o', offset,
             str(iso), *critical], text=True, stderr=subprocess.PIPE)
         checked = set()
@@ -127,16 +127,16 @@ def verify_image(iso):
             raise ValueError(f'ISO carries excessive APT build cache: {apt_bytes} bytes')
         includes = ROOT / 'config/includes.chroot'
         for source in sorted(includes.rglob('*')):
-            if source.is_file():
+            if source.is_file() and '__pycache__' not in source.parts and source.suffix not in ('.pyc', '.pyo'):
                 relative = str(source.relative_to(includes))
                 actual = subprocess.check_output(['unsquashfs', '-cat', '-o', offset, str(iso), relative], stderr=subprocess.PIPE)
                 if actual != source.read_bytes():
                     raise ValueError(f'ISO desktop configuration differs from source: {relative}')
-        twig = subprocess.check_output(['unsquashfs', '-cat', '-o', offset, str(iso), 'usr/local/bin/twig'], stderr=subprocess.PIPE)
+        twig = subprocess.check_output(['unsquashfs', '-cat', '-o', offset, str(iso), 'usr/bin/twig'], stderr=subprocess.PIPE)
         if twig != (ROOT / 'vendor/twig/twig.py').read_bytes():
             raise ValueError('ISO Twig runtime differs from the vendored source')
-        binary = subprocess.check_output(['unsquashfs','-cat','-o',offset,str(iso),'usr/local/bin/labwc'],stderr=subprocess.PIPE)
-        build = json.loads(subprocess.check_output(['unsquashfs','-cat','-o',offset,str(iso),'usr/local/share/doc/labwc/build.json'],stderr=subprocess.PIPE))
+        binary = subprocess.check_output(['unsquashfs','-cat','-o',offset,str(iso),'usr/bin/labwc'],stderr=subprocess.PIPE)
+        build = json.loads(subprocess.check_output(['unsquashfs','-cat','-o',offset,str(iso),'usr/share/erdos/labwc-build.json'],stderr=subprocess.PIPE))
         if build.get('sha256') != hashlib.sha256(binary).hexdigest() or build.get('effects') is not False:
             raise ValueError('ISO labwc binary/build verification failed')
         for project in ('labwc','wlroots'):
@@ -146,6 +146,9 @@ def verify_image(iso):
                     checksum.update(str(path.relative_to(ROOT/'vendor'/project)).encode()+b'\0'+path.read_bytes())
             if build.get(project+'_source_sha256') != checksum.hexdigest():
                 raise ValueError(f'ISO {project} source provenance differs from current source')
+        components=json.loads(subprocess.check_output(['unsquashfs','-cat','-o',offset,str(iso),'usr/share/erdos/components.json'],stderr=subprocess.PIPE))
+        if components['labwc_binary_sha256']!=build['sha256']:
+            raise ValueError('Component version record does not match installed compositor')
         return packages
 
 

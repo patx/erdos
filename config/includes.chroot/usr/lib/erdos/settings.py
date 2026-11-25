@@ -612,12 +612,17 @@ def display_policy(enabled):
 
 
 def apply_session():
-    # Publish a default on first login; preserve a later explicit system choice.
+    # Publish defaults on first login; preserve explicit user choices.
     parser=configparser.ConfigParser(interpolation=None)
     parser.read(CONFIG / 'gtk-3.0/settings.ini')
     dark=parser.getboolean('Settings','gtk-application-prefer-dark-theme',fallback=True)
     set_color_scheme(dark,initialize=True)
+    buttons = window_preferences()
+    if buttons and buttons.get_user_value('button-layout') is None:
+        fallback = 'close:' if window_button_side() == 'left' else ':close'
+        buttons.set_string('button-layout', parser.get('Settings', 'gtk-decoration-layout', fallback=fallback))
     # The compositor owns gestures/workspaces; only the background is resident.
+    run('systemctl', '--user', 'daemon-reload')
     apply_background()
     run('erdos-displays', '--apply')
 
@@ -843,6 +848,55 @@ def set_keyboard_behavior(rate, delay, caps):
     apply_desktop_files(changes)
 
 
+
+def window_button_side():
+    _, _, root = labwc_config()
+    layout = root.findtext('theme/titlebar/layout', 'close:')
+    left, _, right = layout.partition(':')
+    return 'left' if 'close' in left.split(',') else 'right' if 'close' in right.split(',') else 'custom'
+
+
+def window_preferences():
+    from gi.repository import Gio
+    source = Gio.SettingsSchemaSource.get_default()
+    schema = source.lookup('org.gnome.desktop.wm.preferences', True) if source else None
+    return Gio.Settings.new_full(schema, None, None) if schema and schema.has_key('button-layout') else None
+
+
+def window_button_options():
+    _, _, root = labwc_config()
+    names = root.findtext('theme/titlebar/layout', 'close:').replace(':', ',').split(',')
+    return 'iconify' in names, 'max' in names
+
+
+def set_window_buttons(side, minimize=False, maximize=False):
+    if side not in ('left', 'right'):
+        raise ValueError('Choose Left or Right for window buttons.')
+    if not isinstance(minimize, bool) or not isinstance(maximize, bool):
+        raise ValueError('Window button choices must be enabled or disabled.')
+    path, source, root = labwc_config()
+    node = root.find('theme')
+    if node is None: node = ET.SubElement(root, 'theme')
+    titlebar = node.find('titlebar')
+    if titlebar is None: titlebar = ET.SubElement(node, 'titlebar')
+    layout = titlebar.find('layout')
+    if layout is None: layout = ET.SubElement(titlebar, 'layout')
+    optional = (['iconify'] if minimize else []) + (['max'] if maximize else [])
+    layout.text = ','.join(['close', *optional]) + ':' if side == 'left' else ':' + ','.join([*optional, 'close'])
+    gtk_path = CONFIG / 'gtk-3.0/settings.ini'
+    gtk_source = gtk_path.read_text() if gtk_path.exists() else None
+    gtk = configparser.ConfigParser(interpolation=None); gtk.read_string(gtk_source or '')
+    if not gtk.has_section('Settings'): gtk.add_section('Settings')
+    gtk_optional = (['minimize'] if minimize else []) + (['maximize'] if maximize else [])
+    gtk['Settings']['gtk-decoration-layout'] = ','.join(['close', *gtk_optional]) + ':' if side == 'left' else ':' + ','.join([*gtk_optional, 'close'])
+    stream = io.StringIO(); gtk.write(stream)
+    apply_desktop_files([(path, source, ET.tostring(root, encoding='unicode') + '\n'),
+                         (gtk_path, gtk_source, stream.getvalue())])
+    preferences = window_preferences()
+    if preferences:
+        preferences.set_string('button-layout', gtk['Settings']['gtk-decoration-layout'])
+    return 'Window buttons saved. Reopen apps that retain their previous decorations.'
+
 def system_information():
     """On-demand report, deliberately excluding hostnames, serials and addresses."""
     import platform
@@ -861,16 +915,37 @@ def system_information():
     except (OSError, RuntimeError, subprocess.SubprocessError):
         compositor = 'Unavailable'
     usage = shutil.disk_usage('/')
+    try:
+        components = json.loads(Path('/usr/share/erdos/components.json').read_text())
+    except (OSError, ValueError):
+        components = {}
+    component_lines = [
+        'Desktop package: ' + components.get('package_version', 'Unpackaged / legacy installation'),
+        'Desktop source: ' + components.get('source_revision', 'Not recorded'),
+        'Installed labwc: ' + components.get('labwc', 'Not recorded'),
+        'Bundled wlroots: ' + components.get('wlroots', 'Not recorded'),
+        'Twig source: ' + components.get('twig_commit', 'Not recorded'),
+    ]
+    pid = os.environ.get('LABWC_PID', '')
+    if pid.isdigit() and components.get('labwc_binary_sha256'):
+        try:
+            import hashlib
+            with Path('/proc', pid, 'exe').open('rb') as stream:
+                running = hashlib.file_digest(stream, 'sha256').hexdigest()
+            if running != components['labwc_binary_sha256']:
+                component_lines.append('Session: log out and back in to load the installed compositor update')
+        except OSError:
+            pass
     return '\n'.join([
-        values.get('NAME', 'ErdOS').strip('"') + ' ' + values.get('VERSION', values.get('VERSION_ID', 'unknown')).strip('"'),
-        'Build date: ' + values.get('BUILD_DATE', 'unknown'),
+        'Base image: ' + values.get('NAME', 'ErdOS').strip('"') + ' ' + values.get('VERSION', values.get('VERSION_ID', 'unknown')).strip('"'),
+        'Image build date: ' + values.get('BUILD_DATE', 'unknown'),
         'Kernel: ' + platform.release(), 'Architecture: ' + platform.machine(),
         'Computer: ' + (model or 'Not reported'), 'Processor: ' + cpu,
         f'Memory: {memory / 1024**3:.2f} GiB',
         f'Root filesystem: {usage.used / 1024**3:.2f} GiB used / {usage.total / 1024**3:.2f} GiB total',
         'Firmware boot: ' + ('UEFI' if Path('/sys/firmware/efi').exists() else 'BIOS / not reported'),
         'Desktop: ' + os.environ.get('XDG_CURRENT_DESKTOP', 'unknown'),
-        'Session: ' + os.environ.get('XDG_SESSION_TYPE', 'unknown'), 'Compositor: ' + compositor,
+        'Session: ' + os.environ.get('XDG_SESSION_TYPE', 'unknown'), 'Running compositor: ' + os.environ.get('LABWC_VER', 'Not reported by this session'), *component_lines,
     ])
 
 

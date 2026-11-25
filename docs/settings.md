@@ -6,14 +6,10 @@ controls, readable labels, keyboard focus, inline validation and Apply/Revert
 feedback are shared across the app. No extra UI libraries, packages or background
 services are added.
 
-Beta 1 removes Overview Dock and its editor, nm-connection-editor and pulsemixer.
-PCManFM starts on demand. Clock and battery status are in the desktop menu.
-The ISO retains its tested `dev-lean` label; the hosted Settings-only updater
-does not replace labwc.
-
-These additions describe the development checkout after Beta 1. The published
-Beta 1 ISO and its benchmarks have not been rebuilt or changed. The controls
-reuse existing packages; no locker, idle daemon or other dependency is added.
+Beta 2 retains the dock-free overview and on-demand PCManFM. Clock and battery
+status are in the desktop menu. The new Software and About sections, input and
+display controls reuse installed dependencies. Signed component updates use APT;
+no updater daemon, locker or idle listener is added.
 
 ## Editing and feedback
 
@@ -34,7 +30,7 @@ a rejected mode from a successful restore, and the display list refreshes afterw
 
 | Section | Controls |
 | --- | --- |
-| Appearance | GTK 3, icon, and labwc themes, font, dark preference, accents, cursor theme/size, desktop color and image backgrounds |
+| Appearance | GTK 3, icon, and labwc themes, font, dark preference, accents, cursor theme/size, window-button position and optional minimize/maximize controls, desktop color and image backgrounds |
 | Default Programs | Terminal, browser, file manager and text editor |
 | Touchpad | Natural scrolling, tapping, clickfinger right-click, pointer speed, disable while typing/on external mouse |
 | Mouse | Pointer and scroll speed, acceleration, natural scrolling and left-handed buttons |
@@ -62,7 +58,14 @@ keep their associations. Existing open apps are unaffected.
 
 ## Backgrounds and appearance
 
-Beta 1 starts with the bundled Dark Glacier wallpaper. Choose Image in
+New profiles show only the close button on the left. Appearance → Window
+controls offers Left/Right positioning and optional minimize/maximize buttons
+for labwc and GTK apps that follow desktop decoration settings. Keyboard window
+actions still work when their title-bar buttons are hidden. Existing user layouts are preserved until explicitly changed.
+The regular Super+Tab switcher uses labwc’s unmodified 300×250 thumbnail defaults;
+the overview uses its independent grid.
+
+ErdOS starts with the bundled blue starfield wallpaper. Choose Image in
 Settings to return to the bundled wallpaper after using a solid color.
 Select a custom image and Fill, Fit, Center or Tile. ErdOS validates and copies
 it into `~/.config/erdos/background-image`, so moving the original does not break
@@ -279,9 +282,14 @@ Software opens the system terminal with one explicit command:
 APT keeps its confirmation prompts; no unattended `-y` is used. The terminal
 stays open after success, cancellation or failure so the result can be read.
 No passwords are stored. These commands use configured signed repositories and
-are not the hosted ErdOS desktop updater. Nothing runs automatically.
+also update ErdOS components on package-managed installations. Log out after
+desktop/compositor updates. They do not run automatically; see
+[signed updates](updates.md) for legacy adoption.
 
-About loads version/build details, kernel, architecture, CPU, model, RAM and root
+About separates base-image identity from installed desktop package/source
+versions, labwc/wlroots and Twig provenance. A running compositor digest that
+differs from the installed one prompts logout/login. It also loads kernel,
+architecture, CPU, model, RAM and root
 filesystem usage on demand. **Copy system information** copies the displayed
 report for troubleshooting. Hostnames, usernames, serials and network addresses
 are omitted. Root filesystem usage is not the benchmark's installed-disk metric.

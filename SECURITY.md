@@ -24,3 +24,14 @@ SHA256 checksums detect corruption; unsigned checksums do not authenticate a
 publisher. Obtain images and checksums from the same intended GitHub release and
 verify them before booting. Secure Boot is disabled in this project. Review the
 installer’s destination disk and write confirmation before installing.
+
+## Signed component updates
+
+Beta 2 uses a dedicated, source-scoped archive key for `erdos-desktop`,
+`erdos-labwc` and `erdos-archive-keyring`. APT verifies signed, expiring metadata,
+index hashes and package hashes. Other packages from Origin ErdOS are pinned out.
+Debian and Mozilla repositories retain their own signing keys. See
+[update trust and key maintenance](docs/updates.md) for the fingerprint and migration.
+Maintainers must track security changes in the custom compositor and bundled
+wlroots; Debian does not update that custom binary. Package signing does not
+make the ISO checksums signed, enable Secure Boot or guarantee security support.

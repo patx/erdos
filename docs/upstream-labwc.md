@@ -173,8 +173,10 @@ method. Headless checks complement physical hardware tests.
 Git history/import alone does not add runtime disk or RAM overhead. New upstream
 features and dependencies can, so review them before accepting a version.
 
-The current compositor is an ErdOS-built `/usr/local/bin/labwc`, not Debian's
-labwc package. Rebuilding an ISO does not update existing installations, and the
-hosted Settings-only updater does not distribute compositor binaries. Plan and
-test binary delivery separately; a future ErdOS `.deb` can use the existing APT
-stack. Keep a known-good ISO and source snapshot available for rollback.
+The compositor is an ErdOS-built `/usr/bin/labwc` in `erdos-labwc`, rather
+than Debian's labwc package. Deliver tested compositor changes through the signed
+APT repository described in [updates.md](updates.md), together with matching
+corresponding source. Increment the package version before publication; do not
+restart an active user session during installation. Rebuilding an ISO alone does
+not update existing installations. The old hosted Alpha 3 Settings bundle does
+not deliver compositor binaries. Keep known-good source and images available.

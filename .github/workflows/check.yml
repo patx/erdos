@@ -32,6 +32,8 @@ jobs:
         run: ./scripts/run-test.sh python3 scripts/tests/test_workspaces.py
       - name: Check desktop settings persistence and maintenance safety
         run: ./scripts/run-test.sh python3 scripts/tests/test_desktop_settings.py
+      - name: Check package adoption safety
+        run: ./scripts/run-test.sh python3 scripts/tests/test_package_adoption.py
       - name: Compile the minimal pinned Wayland compositor
         run: ./scripts/build-helpers.sh /tmp/erdos-helpers
       - name: Stage the live-image configuration

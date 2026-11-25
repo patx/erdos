@@ -3,33 +3,32 @@
 A minimal **Debian 13 amd64** desktop using **labwc and Wayland**, with a small
 application set, keyboard navigation and touchpad gestures.
 
-**ErdOS 1 Beta 1** keeps the live window overview, moves clock and battery
-status into the desktop menu, and starts PCManFM only when needed.
-[Download the amd64 ISO](https://downloads.erd.sh/v1.0.0-beta.1/erdos-amd64.iso) ·
-[SHA-256](https://downloads.erd.sh/v1.0.0-beta.1/erdos-amd64.iso.sha256) ·
-[Release notes](https://github.com/patx/erdos/releases/tag/v1.0.0-beta.1).
+**ErdOS 1 Beta 2** adds signed APT updates for ErdOS components, expanded
+Settings controls and component version information in About.
+[Download the amd64 ISO](https://downloads.erd.sh/v1.0.0-beta.2/erdos-amd64.iso) ·
+[SHA-256](https://downloads.erd.sh/v1.0.0-beta.2/erdos-amd64.iso.sha256) ·
+[Release notes](https://github.com/patx/erdos/releases/tag/v1.0.0-beta.2).
 This is an experimental prerelease; start in a VM. Secure Boot is not supported.
 
 [Website](https://patx.gitman.io/erdos/) · [User guide](https://patx.gitman.io/erdos/guide.html) ·
 [Build instructions](docs/building.md) · [Settings](docs/settings.md) ·
 [Validation](docs/testing.md) · [Compositor maintenance](docs/upstream-labwc.md)
 
-Existing Alpha 3 installations can use the [desktop updater](docs/updates.md)
-without reinstalling or replacing machine-specific drivers and settings.
+## Updates and customization
 
-## Development settings
+New installations receive custom-component updates through normal signed APT
+updates. Supported legacy installations can use the explicit checked migration
+in [Updating ErdOS](docs/updates.md), preserving personal settings and hardware
+fixes. The old Alpha 3 bundle updater is frozen for its original baseline.
 
-The checkout adds cursor controls, keyboard repeat/Caps Lock options, touchpad
+Settings includes cursor controls, keyboard repeat/Caps Lock options, touchpad
 input suppression, monitor enable/disable, interactive APT maintenance and About.
-These reuse installed tools, without new packages or background processes.
-They are not yet in the published Beta 1 ISO. Screen locking remains an
+New profiles show only a close button on the left. Appearance can change its
+position and optionally show minimize/maximize buttons. Super+Tab uses upstream thumbnail sizes. These reuse existing tools;
+no updater daemon, locker or idle listener is added. Screen locking remains an
 [optional user install](docs/guide.html#optional-locking).
 
 ## Desktop
-
-Beta 1 publishes the tested `dev-lean` image unchanged. Its embedded version
-label remains `dev-lean`. The hosted Settings-only updater does not deliver
-the compositor and package changes in this release.
 
 - Floating windows and square dark decorations; no panel or overview dock.
 - Native labwc overview with live window previews and a blurred desktop snapshot.

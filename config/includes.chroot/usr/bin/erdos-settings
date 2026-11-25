@@ -6,7 +6,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 settings_lib = Path(__file__).resolve().parent.parent / 'lib/erdos'
 if not (settings_lib / 'settings.py').is_file():
-    settings_lib = Path('/usr/local/lib/erdos')
+    settings_lib = Path('/usr/lib/erdos')
 sys.path.insert(0, str(settings_lib))
 import settings as backend
 
@@ -466,6 +466,7 @@ class Settings(Gtk.Application):
         self.labwc_theme_controls(page)
         self.accent_controls(page)
         self.cursor_controls(page)
+        self.window_controls(page)
 
     def labwc_theme_controls(self, page):
         current = backend.labwc_theme()
@@ -523,6 +524,21 @@ class Settings(Gtk.Application):
 
         self.button(page, 'Apply accents', apply)
 
+
+    def window_controls(self, page):
+        selected = backend.window_button_side()
+        choices = [('left', 'Left'), ('right', 'Right')]
+        if selected == 'custom': choices.append(('custom', 'Custom layout (unchanged)'))
+        side = self.choice(page, 'Close button position', choices, selected)
+        show_minimize, show_maximize = backend.window_button_options()
+        minimize = self.toggle(page, 'Show minimize button', show_minimize)
+        maximize = self.toggle(page, 'Show maximize button', show_maximize)
+        def apply():
+            value = side.get_active_id()
+            use_minimize, use_maximize = minimize.get_active(), maximize.get_active()
+            return lambda: backend.set_window_buttons(value, use_minimize, use_maximize)
+        self.button(page, 'Apply window controls', apply)
+        self.note(page, 'The close button is always shown. Minimize and maximize buttons are optional; their keyboard shortcuts still work. Applies to labwc and GTK apps that follow desktop decorations. Reopen apps that keep their old layout.')
 
     def cursor_controls(self, page):
         theme, size = backend.cursor_values()
@@ -1195,7 +1211,7 @@ class Settings(Gtk.Application):
         ):
             self.button(page, title, lambda action=action: lambda: backend.launch_maintenance(action))
             self.note(page, detail)
-        self.note(page, 'These actions use your configured Debian and Mozilla repositories. They do not install a new ErdOS desktop release or run on a schedule.')
+        self.note(page, 'These actions use your configured signed repositories. Package-managed installations also receive ErdOS updates here. Log out after desktop/compositor updates. Nothing runs on a schedule.')
 
     def about(self, page):
         content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)

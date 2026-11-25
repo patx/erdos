@@ -1,0 +1,112 @@
+{
+  "usr/local/bin/erdos-applications": [
+    "c7d87b3eef4e1d56434eea3745a1e83b4d7fbb7015efea89973f3703c98e5507",
+    "856b133b2a002698bfad3df4b66cb9cd4cda4c09f7ccd0b2f31b082eca9fd74c"
+  ],
+  "usr/local/bin/erdos-background": [
+    "b55d13fc480c66ca171d9a4a6048843fb61114127d410f2fc9cce56cebe71099"
+  ],
+  "usr/local/bin/erdos-displays": [
+    "77776c4ff43bdd91ddbb12f1dd0e967b55c9541e80317a1c8b73f9d6a9676657"
+  ],
+  "usr/local/bin/erdos-launch": [
+    "c935280045e5eba20bd838e0f722ac040df962f5936f144fbeecda374ced1c9e"
+  ],
+  "usr/local/bin/erdos-maintenance": [
+    "378961ce64a20322ca1e8f8661e22147f336602d61661328f7d9ff1d42cc75ef"
+  ],
+  "usr/local/bin/erdos-screenshot": [
+    "918c265bbffbd024580f8789f453ddf546e8b3b14560a90f0814e108d3bdd8fe"
+  ],
+  "usr/local/bin/erdos-settings": [
+    "0ae366ae376368a58a041950de5b78e6afb21ce2263b635cf5600f2909871c48",
+    "4eb391230fbd7a01defb5bbeedbeeaa023d903f312b38596f3f37425bb21bdba",
+    "e3864e51f7c92a4df5b45d316656455d6f64cc4dcb86000f97063845734142e8",
+    "80c94e9eab58b6dac8c83b2657a3eae711b29053f3dc8dfe5ca3fc45dc5e658f"
+  ],
+  "usr/local/lib/erdos/bluetooth_settings.py": [
+    "fef5788bfa32f6e33d20c4216a2c75aa186a384285f214685dd799fd26dbb814"
+  ],
+  "usr/local/lib/erdos/configure-apt": [
+    "ccb1f1f5a46da9ffc6e257d2ded3930f5c3e5f4c2f4238d248dda19ce6412eb6"
+  ],
+  "usr/local/lib/erdos/default_apps.py": [
+    "6f049f793cbcdc83e9d333f57bd79b0541e33b3c354d496677d974ea3fa5ee81"
+  ],
+  "usr/local/lib/erdos/display_settings.py": [
+    "42e85ac9b9da44088f1543cf3ae16576b995193892fa2a2bb8e8c56c1f577fb0",
+    "465f2493f999544114716fa2e2bd95a0851dead9c85c90c8c0c4fdef2b2b1f27",
+    "8bd8d0d6fa76b510d4093275fd37eecaac81e606589e00657b448bd537ceba80"
+  ],
+  "usr/local/lib/erdos/network_settings.py": [
+    "8fc50a295c3066d9cc8ec7f7ca3c4b21a547359413db796651d5b7fbcb5f7311",
+    "4b9608dd0755342dcae9fa6a2d2ddfde88c4d68ba357dc1e8e3cd0c48a37e6c5",
+    "da045054bc47420f2010adc31918df55ce4ccb9004333e1827d6ff9a4433f57b"
+  ],
+  "usr/local/lib/erdos/settings.py": [
+    "76944977a04b2b6a8c047fdebc9f2d2c47b7d382df9e4a281c3898d68502509b",
+    "adb7a0e523d1098b7131a10c2cf37c6c82f25b6951bfd1699d1eee2e85cd47b9",
+    "27d7a7781d697738d3477315a94b357eacb3ca2f7670b212f1a1fe5d18a2c0f0",
+    "e0e1c92b546533a87c249783011eddd7025313093cc297c3c0d1aecb546b96f5"
+  ],
+  "usr/local/share/erdos/apt/erdos.sources": [
+    "d1d47817896da5afcedba1d4739468c3ce8aa8b659681c580d3afa841b630066"
+  ],
+  "usr/local/share/erdos/apt/mozilla.sources": [
+    "a6aaec8aa3175a473bd21b740c028d863baa6fc28768b384ddad5fb9368b6f42"
+  ],
+  "usr/local/bin/erdos-wifi-picker": [
+    "490e3eb1166a8af44bf631eb0031a0b96211250bfe44b537759209aef03eb3a6"
+  ],
+  "usr/local/bin/twig": [
+    "c1178649c9b69378b5b10b0d8f8b7e9623681d05e91599306879dd6d810980a5"
+  ],
+  "usr/local/share/applications/twig.desktop": [
+    "0fbe7c0a351fa44c0ec0476b6910dc1ecc459c2b9a4efb57f993317d684cbc64"
+  ],
+  "usr/local/share/icons/hicolor/16x16/apps/twig.png": [
+    "c92fea1675126676725aad13683d9c40ea429e1478667b2c268f27ccd752091d"
+  ],
+  "usr/local/share/icons/hicolor/24x24/apps/twig.png": [
+    "6cb0cc8e3f54aa57bcde20b22e63e6b80dae194dc16cb6fb11f20d9655e2cc59"
+  ],
+  "usr/local/share/icons/hicolor/32x32/apps/twig.png": [
+    "bf5f04c6e79ca716856312f2271dd1843ea6a55953f4bbfd8f92bf5812c2075d"
+  ],
+  "usr/local/share/icons/hicolor/48x48/apps/twig.png": [
+    "6f70f874939ca5aaceaf494c7065853614983e5efe14aa1a131a0486cbe4f297"
+  ],
+  "usr/local/share/icons/hicolor/64x64/apps/twig.png": [
+    "e69cc373f11b8148ed42f18972239476ec3198a91b95bc95a6c42e004a777a7d"
+  ],
+  "usr/local/share/icons/hicolor/128x128/apps/twig.png": [
+    "a225edebc4276efc83b0cc31cee6a5cdefa31f5b07693995002e3fce2a1e3ce2"
+  ],
+  "usr/local/share/icons/hicolor/256x256/apps/twig.png": [
+    "b62c71edde0836c0fa70b354dbd5a8a8ae31bfaa4b39053821017aecc0968f4c"
+  ],
+  "usr/local/share/icons/hicolor/512x512/apps/twig.png": [
+    "327fef0e188309ec4d44e0a716e9870ff76714cfda2441baa3592123679f59f6"
+  ],
+  "usr/local/share/doc/labwc/copyright": [
+    "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+  ],
+  "usr/local/share/doc/labwc/UPSTREAM": [
+    "b3a5e556238d2098ba832df0e821740683b2ab9bb2834036226471353dfb90b1"
+  ],
+  "usr/local/share/doc/wlroots/copyright": [
+    "35d427c043dcafe8893b9e7247348f599847c81d9a067703587c80707f3d58df"
+  ],
+  "usr/local/share/doc/wlroots/UPSTREAM": [
+    "cf9e4f4715453d4d8a1810badf293f4cb88b3c3f598648292a5ecbcf724ecabd"
+  ],
+  "usr/local/share/doc/twig/copyright": [
+    "9c5231882862c283059185f0e691422b42ee8dd94859ff174fb3a9742a5b9378"
+  ],
+  "usr/local/share/doc/twig/UPSTREAM": [
+    "bd4914b8fc5a7eba6a45c4616efe991c3bac3ced9527fdd515b0abb801aca597"
+  ],
+  "usr/local/bin/erdos-update": [
+    "b8712b25e2a33384749f49f3f6a3489758b64e61c6d87c6b8bbdabb2b7a07dd7"
+  ]
+}

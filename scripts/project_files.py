@@ -1,7 +1,7 @@
 """The public source boundary shared by validation and release packaging."""
 from pathlib import Path
 
-DIRECTORIES = ('.github', 'LICENSES', 'branding', 'config', 'docs', 'helpers', 'scripts', 'vendor')
+DIRECTORIES = ('.github', 'LICENSES', 'branding', 'config', 'docs', 'helpers', 'scripts', 'vendor', 'packaging')
 FILES = ('.editorconfig', '.gitattributes', '.gitignore', 'CHANGELOG.md', 'CONTRIBUTING.md',
          'LICENSE', 'README.md', 'SECURITY.md', 'THIRD_PARTY.md', 'AGENTS.md', 'build.sh')
 

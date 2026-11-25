@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+VERSION := $(shell dpkg-parsechangelog -SVersion)
+.PHONY: build binary binary-arch binary-indep clean
+build:
+	bash scripts/build-helpers.sh debian/compositor
+binary: build
+	python3 scripts/build-debs.py --labwc-dir debian/compositor --output .. --version $(VERSION)
+	for p in ../erdos-*_$(VERSION)_*.deb; do dpkg-distaddfile "$$(basename "$$p")" x11 optional; done
+binary-arch: binary
+binary-indep: binary
+clean:
+	rm -rf debian/compositor debian/files

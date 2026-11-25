@@ -13,7 +13,7 @@ if [[ $mode == build ]]; then
   . /etc/os-release
   [[ $ID == debian && $VERSION_ID == 13 ]] || { echo 'A Debian 13 build host is required.' >&2; exit 1; }
   [[ $(dpkg --print-architecture) == amd64 ]] || { echo 'An amd64 build host is required.' >&2; exit 1; }
-  for command in umount lb debootstrap xorriso mksquashfs unsquashfs cc pkg-config file python3; do
+  for command in umount lb debootstrap xorriso mksquashfs unsquashfs cc pkg-config file python3 dpkg-deb dpkg-shlibdeps; do
     command -v "$command" >/dev/null || { echo "Missing dependency: $command (see README.md)" >&2; exit 1; }
   done
   if [[ -e $project_dir/.git ]]; then

@@ -123,7 +123,7 @@ did not upgrade labwc or wlroots or change the current runtime source.
 | `config/package-lists/desktop.list.chroot` | Runtime package selection |
 | `config/includes.chroot/etc/skel/.profile` | Console login launches labwc |
 | `config/includes.chroot/etc/skel/.config/labwc/` | Keys, menu, input, theme and session startup |
-| `config/includes.chroot/usr/local/lib/erdos/` | Settings, defaults and display confirmation |
+| `config/includes.chroot/usr/lib/erdos/` | Settings, defaults and display confirmation |
 | `config/includes.chroot/etc/erdos/gestures.conf` | Default compositor swipe bindings |
 | `vendor/labwc/src/erdos.c` | Native gesture, switcher, Super-key and hotplug integration |
 | `vendor/labwc/src/menu/menu.c` | Desktop menu with on-open clock and battery status |
@@ -134,7 +134,7 @@ did not upgrade labwc or wlroots or change the current runtime source.
 
 The pinned upstream revisions and ErdOS modifications are recorded in each
 vendor directory's `UPSTREAM`. Runtime build provenance is installed at
-`/usr/local/share/doc/labwc/build.json`. Include the complete source archive when
+`/usr/share/erdos/labwc-build.json`. Include the complete source archive when
 distributing a modified compositor. [Licenses and provenance](../THIRD_PARTY.md).
 
 ## Regular Firefox
@@ -170,15 +170,33 @@ and [Debian Live additional-repository documentation](https://live-team.pages.de
 describe the package/repository and live-build mechanisms.
 
 
+## Package-owned components
+
+Full builds compile the /usr-prefix compositor and create the three local
+component packages in `config/packages.chroot`. The live image installs those
+packages, so ordinary APT upgrades can subsequently update them. Package payloads
+are not duplicated as unmanaged includes. Image identity remains separate in
+`/etc/erdos-release`; package provenance is `/usr/share/erdos/components.json`.
+Build-only tools and private signing keys never enter the runtime. See
+[signed updates and migration](updates.md).
+
 ## Existing installations
 
-The [hosted desktop updater](updates.md) preserves user configuration and
-machine-specific fixes. Its current bundle targets the older Alpha 3 compositor;
-it does not install the Alpha 5 compositor or migrate an X11 installation.
-`scripts/update-desktop.sh` is a compatibility entry point for that same updater,
-not a package installer or a way to install the latest checkout. Use the tested
-ISO for a fresh installation of the current release.
+New package-managed installations receive component updates through signed APT.
+Supported existing labwc builds need the explicit checked migration in
+[updates.md](updates.md). The legacy hosted Alpha 3 updater is unchanged and
+is not a compositor migration tool.
 
 Builds follow current signed package repositories and are not bit-for-bit
 reproducible. A checksum detects corruption; it is not a signature or a hardware
 compatibility guarantee. See [validation](testing.md) and [release preparation](releasing.md).
+
+### Signed APT bootstrap
+
+The custom source must be published before live-build's final APT refresh.
+For the first repository setup, publish a lower-version signed candidate first,
+then build and publish the final image's exact exported component packages.
+Never replace a published package with different bytes at the same version.
+The Docker ISO build exports those packages and their exact public source
+snapshot to `dist/packages/`; see [updates.md](updates.md) for signing and upload.
+Normal later builds use the existing repository and need no bootstrap candidate.

@@ -7,7 +7,7 @@
   <theme>
     <name>ErdOS</name>
     <titlebar>
-      <layout>icon:iconify,max,close</layout>
+      <layout>close:</layout>
     </titlebar>
     <font place="ActiveWindow">
       <name>DejaVu Sans</name>

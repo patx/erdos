@@ -3,9 +3,17 @@
 Repository: <https://github.com/patx/erdos>. Website:
 <https://patx.gitman.io/erdos/>. These instructions prepare artifacts locally;
 the release-packaging script does not commit, tag, push, upload or publish.
-The current public release is [ErdOS 1 Beta 1](https://github.com/patx/erdos/releases/tag/v1.0.0-beta.1).
+The current release is [ErdOS 1 Beta 2](https://github.com/patx/erdos/releases/tag/v1.0.0-beta.2).
 Both source remotes use `main`: GitHub at the URL above and Gitman at
 <https://gitman.io/git/patx/erdos>.
+
+## Beta 2
+
+Beta 2 rebuilds the image as `1.0.0-beta.2` with the three signed-APT component
+packages at `1.0.0~beta.2.1`. Publish the exact component archives exported by the
+ISO build, together with matching source, using [updates.md](updates.md).
+Image, APT package and installed component versions appear separately in About.
+Beta 1 and its benchmark results remain historical and unchanged.
 
 ## Beta 1: tested image promoted unchanged
 
@@ -56,8 +64,8 @@ checksums, and refreshes `docs/release.json` from the actual ISO. It requires
 `published` false and clears the tag for the newly prepared image. Restore the
 actual published tag and status only after its assets are available. Packaging
 a future build must not be mistaken for publishing it.
-The source ZIP requires compiling the compositor to build a new ISO. The hosted
-[desktop updater](updates.md) reuses the installed compositor and needs no build.
+The source ZIP requires compiling the compositor to build a new ISO. Signed [component updates](updates.md) deliver prebuilt custom components;
+clients need no compiler.
 Generated executables are not silently bundled into a source archive.
 
 Review and upload these assets to the versioned **Cloudflare R2** download directory:
@@ -72,12 +80,13 @@ Review and upload these assets to the versioned **Cloudflare R2** download direc
 
 The Standard-storage bucket is `erdos-releases`, served through
 <https://downloads.erd.sh/> with a minimum TLS version of 1.2. The current objects
-are under `v1.0.0-beta.1/`; the ISO URL is
-<https://downloads.erd.sh/v1.0.0-beta.1/erdos-amd64.iso>.
+are under `v1.0.0-beta.2/`; the ISO URL is
+<https://downloads.erd.sh/v1.0.0-beta.2/erdos-amd64.iso>.
 The website remains on Gitman Pages, and source code stays on both Git remotes.
 The zone rule `erdos_alpha2_public_downloads` skips Security Level and Browser
 Integrity Check only for GET/HEAD requests to the exact release download
-paths for Alpha 2 through Alpha 5 and Beta 1, plus the five explicitly approved updater files.
+paths for published releases, plus the legacy updater files and the scoped
+public APT archive.
 Add each future version’s file paths to that rule before publishing its
 links; keep other hosts, paths and methods outside the exception.
 

@@ -24,5 +24,9 @@
   trees as the default debugging method. If active processes/mounts or an
   unavailable Docker daemon prevent safe cleanup, report the exact workspace
   instead of deleting through mounts or concealing the failure.
+- Component package builds use `scripts/build-components-in-docker.sh`. Their
+  small explicit outputs live in ignored `dist/packages/`; signed repository
+  artifacts live in `dist/apt/`. Keep private signing keys outside the checkout,
+  containers and artifacts. Use only the three scoped package names.
 - Follow `docs/upstream-labwc.md` for compositor changes. No runtime packages or
   compositor versions need changing for build/test storage maintenance.

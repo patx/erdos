@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "package_version": "1.0.0~beta.2.1",
+  "desktop_version": "1.0.0-beta.2",
+  "labwc": "0.9.7",
+  "wlroots": "0.19.2",
+  "twig_commit": "a9123c2ecf1e89eaa31cbf178a434733bba6ead8",
+  "suite": "trixie-erdos",
+  "repository": "https://downloads.erd.sh/apt/"
+}

@@ -20,3 +20,6 @@ PY
 cd /tmp/erdos-project
 ./build.sh
 cp dist/erdos-amd64.iso dist/erdos-amd64.iso.sha256 /artifacts/
+
+# Keep the exact package archives used by this image for signed APT publication.
+cp -a dist/packages /artifacts/packages

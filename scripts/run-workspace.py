@@ -227,6 +227,7 @@ def publish_iso(candidate, checksum, destination):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--kind', choices=('build', 'prepare', 'test'), required=True)
+    parser.add_argument('--publish-packages', action='store_true', help='Export successful component packages to dist/packages')
     parser.add_argument('--docker', action='store_true', help='Use a disposable Debian 13 container')
     parser.add_argument('--privileged', action='store_true', help='Allow live-build mounts/KVM inside Docker')
     parser.add_argument('--publish-iso', action='store_true', help='Publish the verified worker ISO result on success')
@@ -237,6 +238,8 @@ def main():
         parser.error('Supply a command after --')
     if args.privileged and not args.docker:
         parser.error('--privileged requires --docker')
+    if args.publish_packages and args.kind != 'build':
+        parser.error('--publish-packages requires --kind build')
     if args.publish_iso and args.kind != 'build':
         parser.error('--publish-iso requires --kind build')
     # Linux directory locks work for both sudo and ordinary-user runs, without
@@ -272,7 +275,7 @@ def main():
             'pid_namespace': os.readlink('/proc/self/ns/pid'),
             'boot_id': Path('/proc/sys/kernel/random/boot_id').read_text().strip()}
     marker.write_text(json.dumps(info))
-    environment = dict(os.environ, ERDOS_WORK_DIR=str(workspace), ERDOS_TEST_DIR=str(workspace))
+    environment = dict(os.environ, ERDOS_WORK_DIR=str(workspace), ERDOS_TEST_DIR=str(workspace), PYTHONDONTWRITEBYTECODE='1')
     container = None
     process = None
     status = 1
@@ -287,9 +290,8 @@ def main():
     try:
         with logfile.open('w+b') as log:
             try:
-                if args.kind == 'test':
-                    (workspace / 'tmp').mkdir()
-                    environment['TMPDIR'] = str(workspace / 'tmp')
+                (workspace / 'tmp').mkdir()
+                environment['TMPDIR'] = str(workspace / 'tmp')
                 if args.docker:
                     container = 'erdos-' + args.kind + '-' + token
                     docker = ['docker', 'run', '--rm', '--name', container, '--label', LABEL + '=' + token]
@@ -338,6 +340,30 @@ def main():
                 process = None
                 info.pop('child_pid', None)
                 marker.write_text(json.dumps(info))
+                if status == 0 and args.publish_packages:
+                    source = workspace / 'packages'
+                    members = list(source.iterdir())
+                    if not members or any(not p.is_file() or p.is_symlink() for p in members):
+                        raise ValueError('Package output must contain regular files only')
+                    destination = ROOT / 'dist/packages'
+                    if destination.is_symlink() or destination.parent.is_symlink():
+                        raise ValueError('Refusing symlinked package destination')
+                    destination.parent.mkdir(exist_ok=True)
+                    # Package generation is small and explicit; preserve an older
+                    # complete result if copying or publication fails.
+                    stage = workspace / 'publish-packages'
+                    shutil.copytree(source, stage)
+                    backup = workspace / 'previous-packages'
+                    if destination.exists():
+                        os.replace(destination, backup)
+                    try:
+                        os.replace(stage, destination)
+                        for path in (destination, *destination.iterdir()): managed_owner(path)
+                    except BaseException:
+                        if destination.exists(): shutil.rmtree(destination)
+                        if backup.exists(): os.replace(backup, destination)
+                        raise
+                    print('Component packages: ' + str(destination), flush=True)
                 if status == 0 and args.publish_iso:
                     publish_iso(workspace / 'erdos-amd64.iso', workspace / 'erdos-amd64.iso.sha256', ROOT / 'dist')
             except (Exception, KeyboardInterrupt) as error:

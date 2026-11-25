@@ -91,7 +91,7 @@ def main():
                 check_link(path, value, pages)
         if path.suffix in {'.md', '.py', '.sh', '.yml', '.yaml', '.json', '.html'}:
             text = path.read_text()
-            if re.search(r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----', text):
+            if re.search(r'-----BEGIN (?:(?:RSA |EC |OPENSSH )?PRIVATE KEY|PGP PRIVATE KEY BLOCK)-----', text):
                 raise ValueError(f'Private key in public source: {relative}')
 
     # The maintained fork is the source of compositor changes. Check its pin
@@ -129,6 +129,14 @@ def main():
     if settings.get('passwd/root-login') != 'false' or settings.get('passwd/make-user') != 'true':
         raise ValueError('First-account sudo requires disabled root login and user creation')
 
+    repository = json.loads((ROOT / 'packaging/repository.json').read_text())
+    key = (ROOT / repository['public_key']).resolve()
+    if not key.is_relative_to(ROOT) or not key.read_bytes().startswith(b'-----BEGIN PGP PUBLIC KEY BLOCK-----'):
+        raise ValueError('Archive key must be a public key inside the source boundary')
+    if hashlib.sha256(key.read_bytes()).hexdigest() != repository['public_key_sha256']:
+        raise ValueError('Archive public key differs from its pinned digest')
+    if not re.fullmatch(r'[A-F0-9]{40}', repository['fingerprint']):
+        raise ValueError('Invalid archive key fingerprint')
     release = json.loads((ROOT / 'docs/release.json').read_text())
     if release.get('schema') != 1 or not re.fullmatch(r'[A-Za-z0-9-]+/[A-Za-z0-9_.-]+', release['repository']):
         raise ValueError('Invalid release schema or repository')

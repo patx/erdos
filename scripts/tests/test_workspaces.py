@@ -193,6 +193,21 @@ class WorkspaceTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assert_clean()
 
+    def test_component_export_replaces_only_after_success_and_preserves_iso(self):
+        packages=self.dist/'packages';packages.mkdir();(packages/'old.deb').write_bytes(b'previous build')
+        def run(code):
+            return subprocess.run([sys.executable,str(self.runner),'--kind','build','--publish-packages','--',sys.executable,'-c',code],stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,text=True,timeout=15)
+        code="import os,pathlib; p=pathlib.Path(os.environ['ERDOS_WORK_DIR'])/'packages'; p.mkdir(); (p/'new.deb').write_bytes(b'new component')"
+        failed=run(code+"; raise SystemExit(9)")
+        self.assertEqual(failed.returncode,9)
+        self.assertEqual((packages/'old.deb').read_bytes(),b'previous build')
+        success=run(code)
+        self.assertEqual(success.returncode,0,success.stderr)
+        self.assertEqual([p.name for p in packages.iterdir()],['new.deb'])
+        self.assertEqual((packages/'new.deb').read_bytes(),b'new component')
+        self.assertEqual((self.image.read_bytes(),self.sidecar.read_bytes()),self.original)
+        self.assert_clean()
+
     def test_unmarked_directories_are_not_reaped_and_log_is_bounded(self):
         unmarked = self.root / 'work/unmanaged'
         unmarked.mkdir(parents=True); (unmarked / 'keep').write_text('unmanaged data')
