@@ -1,0 +1,25 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+# Only explicit, interactive APT actions; never run automatically at login.
+set -u
+case "${1:-}" in
+    update) set -- apt-get update ;;
+    upgrade) set -- apt-get upgrade ;;
+    autopurge) set -- apt-get autoremove --purge ;;
+    clean) set -- apt-get clean ;;
+    *) echo 'Usage: erdos-maintenance {update|upgrade|autopurge|clean}' >&2; exit 2 ;;
+esac
+printf 'ErdOS Software\n\n'
+printf 'Command:'; printf ' %s' "$@"; printf '\n\n'
+printf 'Review package changes before confirming. Ctrl+C cancels.\n\n'
+result=0
+sudo -- "$@" || result=$?
+printf '\n'
+if [ "$result" -eq 0 ]; then
+    printf 'Finished successfully.\n'
+else
+    printf 'Command failed or was cancelled (exit %s). Read the output above.\n' "$result"
+fi
+printf '\nPress Enter to close this terminal.'
+IFS= read -r _ || :
+exit "$result"

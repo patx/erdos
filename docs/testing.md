@@ -1,3 +1,26 @@
+# Development Settings additions — 2026-11-24
+
+The checkout adds cursor theme/size, key repeat/Caps Lock mapping, touchpad input
+suppression, output enable/disable, Software maintenance and About. Package lists,
+autostart and services are unchanged; no locker or idle daemon is installed.
+The public Beta 1 ISO and existing footprint measurements are unchanged.
+
+Focused tests exercise saved user files with existing settings preserved and
+rollback after a failed compositor reload; keyboard-layout/shortcut preservation;
+touchpad configuration; display enable/disable through the real trial helper,
+cancellation, confirmation and next-login restoration; last-display protection;
+and the maintenance command allowlist, interactive flags and exit statuses.
+External desktop/APT command boundaries use isolated test fixtures. No host
+packages were upgraded or removed, and these checks do not certify physical
+monitor/touchpad behavior.
+
+A disposable Debian 13 GTK/Xvfb smoke run opened Appearance, Keyboard, Touchpad,
+Displays, Software and About without section-construction errors. Screenshots
+were visually inspected for cursor controls, monitor switches, Software and
+About. Fixture outputs stood in for physical displays. All container packages,
+workspaces and captures were removed after inspection. Source/staging checks
+pass. No ISO rebuild or hardware test was performed for these additions.
+
 # Beta 1 release verification — 2026-11-24
 
 Beta 1 promotes the previously tested `dev-lean` image unchanged, SHA-256

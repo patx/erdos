@@ -64,7 +64,10 @@ class Settings(Gtk.Application):
         sidebar = Gtk.StackSidebar(stack=self.stack)
         sidebar.set_size_request(175, -1)
         sidebar.get_accessible().set_name('Settings sections')
-        body.pack_start(sidebar, False, False, 0)
+        sidebar_scroll = Gtk.ScrolledWindow()
+        sidebar_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        sidebar_scroll.add(sidebar)
+        body.pack_start(sidebar_scroll, False, False, 0)
         body.pack_start(self.stack, True, True, 0)
         self.status = Gtk.Label(xalign=0, wrap=True, selectable=True)
         self.status.set_margin_start(16); self.status.set_margin_end(16)
@@ -91,7 +94,7 @@ class Settings(Gtk.Application):
         self.trial_process = None
         self.trial_timer = None
         self.window.add(outer)
-        for name in ('Appearance', 'Default Programs', 'Touchpad', 'Mouse', 'Keyboard', 'Menu', 'Startup Applications', 'Gestures', 'Displays', 'Sound', 'Network', 'Bluetooth', 'Power', 'Date & Time'):
+        for name in ('Appearance', 'Default Programs', 'Touchpad', 'Mouse', 'Keyboard', 'Menu', 'Startup Applications', 'Gestures', 'Displays', 'Sound', 'Network', 'Bluetooth', 'Power', 'Date & Time', 'Software', 'About'):
             page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
             page.set_border_width(28)
             title = Gtk.Label(xalign=0); title.set_markup(f'<span size="x-large" weight="bold">{GLib.markup_escape_text(name)}</span>')
@@ -462,6 +465,7 @@ class Settings(Gtk.Application):
         self.button(page, 'Apply background', apply_background)
         self.labwc_theme_controls(page)
         self.accent_controls(page)
+        self.cursor_controls(page)
 
     def labwc_theme_controls(self, page):
         current = backend.labwc_theme()
@@ -520,6 +524,17 @@ class Settings(Gtk.Application):
         self.button(page, 'Apply accents', apply)
 
 
+    def cursor_controls(self, page):
+        theme, size = backend.cursor_values()
+        names = backend.cursor_themes() | {theme}
+        selected = self.choice(page, 'Cursor theme', [(name, name) for name in sorted(names)], theme)
+        pixels = self.scale(page, 'Cursor size (pixels)', 16, 96, size)
+        self.note(page, 'Uses installed cursor themes. Reopen applications that keep their old cursor.')
+        def apply():
+            values = selected.get_active_id(), pixels.get_value_as_int()
+            return lambda: backend.set_cursor(*values)
+        self.button(page, 'Apply cursor', apply)
+
     def default_programs(self, page):
         import default_apps
         self.note(page, 'These choices control the desktop menu and app shortcuts, plus web links, folders and plain-text files.')
@@ -556,11 +571,14 @@ class Settings(Gtk.Application):
         self.note(page, 'When enabled, moving fingers up moves the page content down.')
         tap = self.toggle(page, 'Tap to click', prefs['tapping'])
         click = self.toggle(page, 'Two-finger click for right-click', prefs['clickfinger'])
+        typing = self.toggle(page, 'Disable touchpad while typing', prefs['disable_while_typing'])
+        external = self.toggle(page, 'Disable touchpad when a mouse is connected', prefs['disable_on_mouse'])
         speed = self.scale(page, 'Pointer speed', -1, 1, prefs['speed'], .1)
         self.note(page, 'Applies to libinput touchpads now and automatically when connected.')
         def apply():
             values = dict(natural=natural.get_active(), tapping=tap.get_active(),
-                          clickfinger=click.get_active(), speed=speed.get_value())
+                          clickfinger=click.get_active(), speed=speed.get_value(),
+                          disable_while_typing=typing.get_active(), disable_on_mouse=external.get_active())
             return lambda: backend.touchpad(backend.save_preferences(**values))
         self.button(page, 'Apply touchpad settings', apply)
 
@@ -605,6 +623,14 @@ class Settings(Gtk.Application):
 
     def keyboard(self, page):
         self.keyboard_layout_controls(page)
+        rate, delay, mapping = backend.keyboard_behavior()
+        repeats = self.scale(page, 'Key repeat (per second; 0 disables)', 0, 100, rate)
+        wait = self.scale(page, 'Key repeat delay (milliseconds)', 100, 2000, delay, 50)
+        caps = self.choice(page, 'Caps Lock behavior', list(backend.CAPS_OPTIONS.items()), mapping)
+        def apply_behavior():
+            values = repeats.get_value_as_int(), wait.get_value_as_int(), caps.get_active_id()
+            return lambda: backend.set_keyboard_behavior(*values)
+        self.button(page, 'Apply keyboard behavior', apply_behavior)
         prefs = backend.preferences()
         dynamic = self.toggle(page, 'Dynamic workspaces', prefs['dynamic_workspaces'])
         count = self.scale(page, 'Fixed workspace count', 1,32,prefs['workspace_count'])
@@ -865,50 +891,58 @@ class Settings(Gtk.Application):
     def resolution_controls(self, page, outputs):
         choices = {}
         for output in outputs:
-            if not output['mode']:
-                self.note(page, output['name'] + ': connected but inactive')
-                continue
-            label = output['name'] + (' (primary)' if output['primary'] else '')
+            label = output['name'] + (' (built-in)' if output['primary'] else '')
+            enabled = self.toggle(page, label + ' enabled', bool(output['mode']))
             modes = output['modes']
+            if not modes:
+                enabled.set_active(False); enabled.set_sensitive(False)
+                self.note(page, label + ': no usable modes reported')
+                choices[output['name']] = None
+                continue
+            controls = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+            page.pack_start(controls, False, False, 0)
+            current = output['mode'] or output['preferred'] or modes[0]
             resolutions = list(dict.fromkeys(map(display_settings.resolution, modes)))
-            resolution = self.choice(page, f'{label} resolution',
-                                     [(mode, mode) for mode in resolutions],
-                                     display_settings.resolution(output['mode']))
-            resolution.set_sensitive(len(resolutions) > 1)
-            rate = self.choice(page, f'{label} refresh rate', [])
-
-            def refresh_rates(widget, rate=rate, modes=modes, current=output['mode']):
+            resolution = self.choice(controls, 'Resolution', [(mode, mode) for mode in resolutions],
+                                     display_settings.resolution(current))
+            rate = self.choice(controls, 'Refresh rate', [])
+            def refresh_rates(widget, rate=rate, modes=modes, current=current):
                 matching = [mode for mode in modes if display_settings.resolution(mode) == widget.get_active_id()]
                 rate.remove_all()
                 for mode in matching:
                     rate.append(mode, mode.split('@', 1)[1].removesuffix('Hz') + ' Hz')
-                if not rate.set_active_id(current):
-                    rate.set_active(0)
+                if not rate.set_active_id(current): rate.set_active(0)
                 rate.set_sensitive(len(matching) > 1)
-
             resolution.connect('changed', refresh_rates)
             refresh_rates(resolution)
+            resolution.set_sensitive(len(resolutions) > 1)
             scales = sorted({1.0, 1.25, 1.5, 1.75, 2.0, output['scale']})
-            scale = self.choice(page, f'{label} scale',
-                                [(value, f'{value:.1%}'.replace('.0%', '%')) for value in scales],
-                                output['scale'])
-            rotation = self.choice(page, f'{label} rotation', list(zip(
-                display_settings.TRANSFORMS,
-                ('Normal', '90°', '180°', '270°', 'Flipped', 'Flipped 90°', 'Flipped 180°', 'Flipped 270°')
-            )), output['transform'])
-            x = self.scale(page, f'{label} horizontal position', -32768, 32768, output['x'])
-            y = self.scale(page, f'{label} vertical position', -32768, 32768, output['y'])
-            choices[output['name']] = (rate, scale, rotation, x, y)
-        if not choices:
-            self.note(page, 'No active display detected.')
+            scale = self.choice(controls, 'Scale', [(value, f'{value:.0%}') for value in scales], output['scale'])
+            rotation = self.choice(controls, 'Rotation', list(zip(display_settings.TRANSFORMS,
+                ('Normal', '90°', '180°', '270°', 'Flipped', 'Flipped 90°', 'Flipped 180°', 'Flipped 270°'))), output['transform'])
+            x = self.scale(controls, 'Horizontal position', -32768, 32768, output['x'])
+            y = self.scale(controls, 'Vertical position', -32768, 32768, output['y'])
+            enabled.connect('notify::active', lambda toggle, _, box=controls: box.set_sensitive(toggle.get_active()))
+            controls.set_sensitive(enabled.get_active())
+            choices[output['name']] = (enabled, rate, scale, rotation, x, y)
+        if not outputs:
+            self.note(page, 'No connected display detected.')
             return
+        def selections():
+            result = {}
+            for name, widgets in choices.items():
+                if widgets is None:
+                    result[name] = dict(mode=None, scale=1, transform='normal', x=0, y=0)
+                    continue
+                enabled, rate, scale, rotation, x, y = widgets
+                result[name] = dict(mode=rate.get_active_id() if enabled.get_active() else None,
+                                    scale=float(scale.get_active_id()), transform=rotation.get_active_id(),
+                                    x=x.get_value_as_int(), y=y.get_value_as_int())
+            return result
         button = Gtk.Button(label='Test display changes', halign=Gtk.Align.START)
-        button.connect('clicked', lambda *_: self.test_resolution({
-            name: dict(mode=rate.get_active_id(), scale=float(scale.get_active_id()),
-                       transform=rotation.get_active_id(), x=x.get_value_as_int(), y=y.get_value_as_int())
-            for name, (rate, scale, rotation, x, y) in choices.items()
-        }))
+        button.connect('clicked', lambda *_: self.test_resolution(selections()))
         page.pack_start(button, False, False, 0)
+        self.note(page, 'Keep at least one display enabled. Changes are saved only after you confirm them.')
 
     def test_resolution(self, selections):
         if self.trial_process is not None:
@@ -1150,6 +1184,44 @@ class Settings(Gtk.Application):
                 self.button(box, action + ' now', apply)
 
         self.load_section(actions, capabilities, controls)
+
+    def software(self, page):
+        self.note(page, 'Maintenance opens in the system terminal and asks for your administrator password. Review proposed package changes before confirming.')
+        for title, action, detail in (
+            ('Refresh package lists', 'update', 'Downloads repository indexes; does not upgrade installed packages.'),
+            ('Upgrade packages', 'upgrade', 'Updates installed packages. Refresh package lists first. Does not automatically remove packages.'),
+            ('Remove unused packages', 'autopurge', 'Removes automatically installed dependencies that APT no longer needs, including their system configuration. Review the removal list carefully.'),
+            ('Clear package cache', 'clean', 'Deletes downloaded package archives. Keeps installed apps, repositories and package lists.'),
+        ):
+            self.button(page, title, lambda action=action: lambda: backend.launch_maintenance(action))
+            self.note(page, detail)
+        self.note(page, 'These actions use your configured Debian and Mozilla repositories. They do not install a new ErdOS desktop release or run on a schedule.')
+
+    def about(self, page):
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        page.pack_start(content, False, False, 0)
+        def show(box, report):
+            text = Gtk.TextView(editable=False, cursor_visible=False, monospace=True,
+                                wrap_mode=Gtk.WrapMode.WORD_CHAR)
+            text.get_buffer().set_text(report)
+            box.pack_start(text, False, False, 0)
+            copy = Gtk.Button(label='Copy system information', halign=Gtk.Align.START)
+            def clipboard(*_):
+                Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(report, -1)
+                self.report('System information copied.')
+            copy.connect('clicked', clipboard)
+            box.pack_start(copy, False, False, 0)
+        def refresh(*_):
+            for child in content.get_children(): child.destroy()
+            self.load_section(content, backend.system_information, show)
+        def selected(*_):
+            if self.stack.get_visible_child_name() == 'About' and not content.get_children():
+                refresh()
+        self.stack.connect('notify::visible-child-name', selected)
+        button = Gtk.Button(label='Refresh information', halign=Gtk.Align.START)
+        button.connect('clicked', refresh)
+        page.pack_start(button, False, False, 0)
+        self.note(page, 'Includes software versions and basic hardware details, without usernames, hostnames, serial numbers or network addresses. Filesystem use is current usage, not an installed-size benchmark.')
 
     def date_time(self, page):
         current = self.note(page, '')

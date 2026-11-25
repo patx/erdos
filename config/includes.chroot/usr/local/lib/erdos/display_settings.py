@@ -50,6 +50,8 @@ def current_settings(item):
 
 def output_args(item, target):
     mode, scale, transform = target['mode'], target['scale'], target['transform']
+    if mode is None:
+        return ['--output', item['name'], '--off']
     if mode not in item['modes']:
         raise ValueError(f'{item["name"]} no longer advertises {mode}. Refresh displays.')
     if not valid_scale(scale):
@@ -65,11 +67,13 @@ def output_args(item, target):
 
 
 def layout(items, selections):
-    active = [item for item in items if item['mode']]
-    if not active or set(selections) != {item['name'] for item in active}:
+    if not items or set(selections) != {item['name'] for item in items}:
         raise ValueError('Connected displays changed. Refresh the display list.')
+    if not any(target['mode'] is not None for target in selections.values()):
+        raise ValueError('Keep at least one display enabled.')
     command = ['wlr-randr']
-    for item in active:
+    # Enable replacements before disabling a currently active output.
+    for item in sorted(items, key=lambda item: selections[item['name']]['mode'] is None):
         command.extend(output_args(item, selections[item['name']]))
     return command
 
@@ -84,9 +88,9 @@ def automatic():
     command = ['wlr-randr']
     if configurations:
         try:
-            available = {item['name']: item for item in items}
-            for name, target in configurations.items():
-                command.extend(output_args(available[name], target))
+            # Old saves recorded active outputs only; retain other outputs' state.
+            targets = {item['name']: configurations.get(item['name'], current_settings(item)) for item in items}
+            command = layout(items, targets)
         except (KeyError, TypeError, ValueError):
             command = ['wlr-randr']
         if len(command) > 1:
@@ -154,10 +158,12 @@ def trial():
         answer = sys.stdin.readline().strip() if ready else ''
         if answer == 'keep':
             current = outputs()
-            active = {item['name']: current_settings(item) for item in current if item['mode']}
+            active = {item['name']: current_settings(item) for item in current}
             if (topology(current) != topology(previous) or active.keys() != selection.keys()
-                    or any(any(item[key] != selection[name][key] for key in ('mode', 'x', 'y', 'transform'))
-                           or not math.isclose(item['scale'], selection[name]['scale'], abs_tol=0.005)
+                    or any(item['mode'] != selection[name]['mode']
+                           or (item['mode'] is not None and
+                               (any(item[key] != selection[name][key] for key in ('x', 'y', 'transform'))
+                                or not math.isclose(item['scale'], selection[name]['scale'], abs_tol=0.005)))
                            for name, item in active.items())):
                 raise ValueError('Display settings did not match the requested changes.')
             settings.save_preferences(display_modes={'outputs': topology(previous), 'configurations': active})

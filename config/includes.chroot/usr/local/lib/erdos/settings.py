@@ -16,7 +16,8 @@ CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home() / '.config')))
 PREFERENCES = CONFIG / 'erdos/settings.json'
 DEFAULT_WALLPAPER = Path('/usr/share/erdos/backgrounds/default.png')
 DEFAULTS = dict(terminal_app='system', background='#202326', background_image=False, background_layout='fill', natural=True, tapping=True, clickfinger=True,
-                speed=0.0, automatic_displays=True, dynamic_workspaces=True, workspace_count=2, super_overview=True, menu_touchpad=True, menu_mouse=True)
+                speed=0.0, disable_while_typing=True, disable_on_mouse=False,
+                automatic_displays=True, dynamic_workspaces=True, workspace_count=2, super_overview=True, menu_touchpad=True, menu_mouse=True)
 NS = ''
 
 
@@ -62,11 +63,10 @@ def save_preferences(**values):
 
 
 def touchpad(prefs):
-    path = CONFIG / 'labwc/rc.xml'
-    tree = ET.parse(path)
-    libinput = tree.find('libinput')
+    path, source, root = labwc_config()
+    libinput = root.find('libinput')
     if libinput is None:
-        libinput = ET.SubElement(tree.getroot(), 'libinput')
+        libinput = ET.SubElement(root, 'libinput')
     device = next((d for d in libinput if d.get('category') == 'touchpad'), None)
     if device is None:
         device = ET.SubElement(libinput, 'device', {'category': 'touchpad'})
@@ -74,14 +74,15 @@ def touchpad(prefs):
               'tap': 'yes' if prefs['tapping'] else 'no',
               'clickMethod': 'clickfinger' if prefs['clickfinger'] else 'buttonAreas',
               'tapButtonMap': 'lrm', 'clickfingerButtonMap': 'lrm',
-              'pointerSpeed': str(prefs['speed']), 'scrollMethod': 'twofinger'}
+              'pointerSpeed': str(prefs['speed']), 'scrollMethod': 'twofinger',
+              'disableWhileTyping': 'yes' if prefs['disable_while_typing'] else 'no',
+              'sendEventsMode': 'disabledOnExternalMouse' if prefs['disable_on_mouse'] else 'yes'}
     for key, value in values.items():
         node = device.find(key)
         if node is None:
             node = ET.SubElement(device, key)
         node.text = value
-    write(path, ET.tostring(tree.getroot(), encoding='unicode') + '\n')
-    run('labwc', '--reconfigure')
+    update_labwc(path, source, ET.tostring(root, encoding='unicode') + '\n')
 
 
 
@@ -729,3 +730,158 @@ def save_menu(source, entries):
     root[:] = nodes
     write(path, ET.tostring(tree, encoding='unicode') + '\n')
     run('labwc', '--reconfigure')
+
+
+def apply_desktop_files(changes):
+    """Save related per-user settings together; restore them if reload fails."""
+    written = []
+    try:
+        for path, previous, updated in changes:
+            actual = path.read_text() if path.exists() else None
+            if actual != previous:
+                raise ValueError('Configuration changed outside Settings. Reopen this section before saving.')
+            if previous != updated:
+                write(path, updated)
+                written.append((path, previous))
+        run('labwc', '--reconfigure')
+    except Exception:
+        for path, previous in reversed(written):
+            if previous is None:
+                path.unlink(missing_ok=True)
+            else:
+                write(path, previous)
+        # Reload restored files as well, if the compositor is reachable.
+        try:
+            run('labwc', '--reconfigure')
+        except Exception:
+            pass
+        raise
+
+
+def environment_changes(values):
+    path = CONFIG / 'labwc/environment'
+    source = path.read_text() if path.exists() else None
+    lines = [line for line in (source or '').splitlines()
+             if line.partition('=')[0].strip() not in values]
+    lines.extend(f'{key}={value}' for key, value in values.items())
+    return path, source, '\n'.join(lines) + '\n'
+
+
+def cursor_themes():
+    paths = os.environ.get('XCURSOR_PATH')
+    roots = [Path(os.path.expandvars(part)).expanduser() for part in paths.split(':') if part] if paths else [
+        Path.home() / '.local/share/icons', Path.home() / '.icons',
+        Path('/usr/share/icons'), Path('/usr/share/pixmaps'), Path.home() / '.cursors',
+        Path('/usr/share/cursors/xorg-x11'), Path('/usr/X11R6/lib/X11/icons')]
+    return {path.parent.name for root in roots for path in root.glob('*/cursors') if path.is_dir()}
+
+
+def cursor_values():
+    parser = configparser.ConfigParser(interpolation=None)
+    parser.read(CONFIG / 'gtk-3.0/settings.ini')
+    path = CONFIG / 'labwc/environment'
+    env = dict(line.split('=', 1) for line in path.read_text().splitlines()
+               if '=' in line and not line.lstrip().startswith('#')) if path.exists() else {}
+    theme = env.get('XCURSOR_THEME', parser.get('Settings', 'gtk-cursor-theme-name', fallback='Adwaita')).strip()
+    size = int(env.get('XCURSOR_SIZE', parser.get('Settings', 'gtk-cursor-theme-size', fallback='24')))
+    return theme, size
+
+
+def set_cursor(theme, size):
+    if theme not in cursor_themes() or not re.fullmatch(r'[\w. +()-]+', theme):
+        raise ValueError('Choose an installed cursor theme.')
+    if type(size) is not int or not 16 <= size <= 96:
+        raise ValueError('Choose a cursor size between 16 and 96 pixels.')
+    path = CONFIG / 'gtk-3.0/settings.ini'
+    source = path.read_text() if path.exists() else None
+    parser = configparser.ConfigParser(interpolation=None)
+    parser.read_string(source or '')
+    if not parser.has_section('Settings'):
+        parser.add_section('Settings')
+    parser['Settings'].update({'gtk-cursor-theme-name': theme, 'gtk-cursor-theme-size': str(size)})
+    stream = io.StringIO(); parser.write(stream)
+    apply_desktop_files([environment_changes({'XCURSOR_THEME': theme, 'XCURSOR_SIZE': str(size)}),
+                         (path, source, stream.getvalue())])
+    return 'Cursor saved. Reopen applications that still show their previous cursor.'
+
+
+CAPS_OPTIONS = {'default': 'Default', 'caps:swapescape': 'Swap Caps Lock and Esc',
+                'ctrl:nocaps': 'Caps Lock acts as Ctrl', 'caps:escape': 'Caps Lock acts as Esc',
+                'caps:none': 'Disable Caps Lock', 'custom': 'Keep custom mapping'}
+
+
+def keyboard_behavior():
+    _, _, root = labwc_config()
+    path = CONFIG / 'labwc/environment'
+    options = keyboard_environment(path.read_text() if path.exists() else '')['XKB_DEFAULT_OPTIONS'].split(',')
+    caps = [option for option in options if option.startswith('caps:') or option in ('ctrl:nocaps', 'ctrl:swapcaps')]
+    current = caps[0] if len(caps) == 1 and caps[0] in CAPS_OPTIONS else 'custom' if caps else 'default'
+    return int(root.findtext('keyboard/repeatRate', '25')), int(root.findtext('keyboard/repeatDelay', '600')), current
+
+
+def set_keyboard_behavior(rate, delay, caps):
+    if type(rate) is not int or type(delay) is not int or not (0 <= rate <= 100 and 100 <= delay <= 2000) or caps not in CAPS_OPTIONS:
+        raise ValueError('Invalid repeat or Caps Lock settings.')
+    path, source, root = labwc_config()
+    keyboard = root.find('keyboard')
+    if keyboard is None:
+        keyboard = ET.SubElement(root, 'keyboard')
+    for key, value in {'repeatRate': rate, 'repeatDelay': delay}.items():
+        node = keyboard.find(key)
+        if node is None:
+            node = ET.SubElement(keyboard, key)
+        node.text = str(value)
+    changes = [(path, source, ET.tostring(root, encoding='unicode') + '\n')]
+    if caps != 'custom':
+        env_path = CONFIG / 'labwc/environment'
+        env = keyboard_environment(env_path.read_text() if env_path.exists() else '')
+        options = [option for option in env['XKB_DEFAULT_OPTIONS'].split(',') if option
+                   and not option.startswith('caps:') and option not in ('ctrl:nocaps', 'ctrl:swapcaps')]
+        if caps != 'default':
+            options.append(caps)
+        changes.append(environment_changes({'XKB_DEFAULT_OPTIONS': ','.join(options)}))
+    apply_desktop_files(changes)
+
+
+def system_information():
+    """On-demand report, deliberately excluding hostnames, serials and addresses."""
+    import platform
+    def read(path):
+        try:
+            return Path(path).read_text().strip()
+        except OSError:
+            return ''
+    release = read('/etc/erdos-release') or read('/etc/os-release')
+    values = dict(line.split('=', 1) for line in release.splitlines() if '=' in line)
+    model = ' '.join(value for value in (read('/sys/class/dmi/id/sys_vendor'), read('/sys/class/dmi/id/product_name')) if value)
+    cpu = next((line.split(':', 1)[1].strip() for line in read('/proc/cpuinfo').splitlines() if line.startswith(('model name', 'Hardware'))), platform.machine())
+    memory = next((int(line.split()[1]) * 1024 for line in read('/proc/meminfo').splitlines() if line.startswith('MemTotal:')), 0)
+    try:
+        compositor = run('labwc', '--version', timeout=3)
+    except (OSError, RuntimeError, subprocess.SubprocessError):
+        compositor = 'Unavailable'
+    usage = shutil.disk_usage('/')
+    return '\n'.join([
+        values.get('NAME', 'ErdOS').strip('"') + ' ' + values.get('VERSION', values.get('VERSION_ID', 'unknown')).strip('"'),
+        'Build date: ' + values.get('BUILD_DATE', 'unknown'),
+        'Kernel: ' + platform.release(), 'Architecture: ' + platform.machine(),
+        'Computer: ' + (model or 'Not reported'), 'Processor: ' + cpu,
+        f'Memory: {memory / 1024**3:.2f} GiB',
+        f'Root filesystem: {usage.used / 1024**3:.2f} GiB used / {usage.total / 1024**3:.2f} GiB total',
+        'Firmware boot: ' + ('UEFI' if Path('/sys/firmware/efi').exists() else 'BIOS / not reported'),
+        'Desktop: ' + os.environ.get('XDG_CURRENT_DESKTOP', 'unknown'),
+        'Session: ' + os.environ.get('XDG_SESSION_TYPE', 'unknown'), 'Compositor: ' + compositor,
+    ])
+
+
+def launch_maintenance(action):
+    if action not in ('update', 'upgrade', 'autopurge', 'clean'):
+        raise ValueError('Unknown maintenance action.')
+    # Debian's terminal-emulator interface accepts -e followed by an argument vector.
+    # No shell expansion, root GUI, password storage, or unattended -y option.
+    terminal = shutil.which('x-terminal-emulator')
+    helper = shutil.which('erdos-maintenance')
+    if not terminal or not helper:
+        raise RuntimeError('Install a system terminal and the ErdOS maintenance helper first.')
+    subprocess.Popen([terminal, '-e', helper, action], cwd=Path.home())
+    return 'Opened in the system terminal. Review its output and any confirmation prompts.'

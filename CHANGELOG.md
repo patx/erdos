@@ -1,3 +1,15 @@
+# Development
+
+- Add cursor theme/size, keyboard repeat rate/delay and Caps Lock mappings.
+- Add touchpad disable-while-typing and disable-on-external-mouse controls.
+- Enable/disable connected displays with last-display protection, confirmation,
+  rollback and saved topology handling.
+- Add Software for explicit, interactive APT update/upgrade/autopurge/clean and
+  About with a copyable hardware/software summary.
+- Reuse existing dependencies; add no locker, idle listener, package or service.
+  Document optional user-installed swaylock/swayidle in the guide.
+- Published Beta 1 ISO, release links and measured footprint remain unchanged.
+
 # ErdOS 1 Beta 1 — 2026-11-24
 
 - Automatically clean build/test workspaces and owned processes/containers on

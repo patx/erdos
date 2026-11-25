@@ -17,6 +17,14 @@ This is an experimental prerelease; start in a VM. Secure Boot is not supported.
 Existing Alpha 3 installations can use the [desktop updater](docs/updates.md)
 without reinstalling or replacing machine-specific drivers and settings.
 
+## Development settings
+
+The checkout adds cursor controls, keyboard repeat/Caps Lock options, touchpad
+input suppression, monitor enable/disable, interactive APT maintenance and About.
+These reuse installed tools, without new packages or background processes.
+They are not yet in the published Beta 1 ISO. Screen locking remains an
+[optional user install](docs/guide.html#optional-locking).
+
 ## Desktop
 
 Beta 1 publishes the tested `dev-lean` image unchanged. Its embedded version

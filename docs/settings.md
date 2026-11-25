@@ -1,7 +1,7 @@
 # ErdOS Settings
 
 Open **Settings** from the desktop menu or **Super + I**. The current checkout
-has fourteen sections in one Python/GTK window. Native theme colors, grouped
+has sixteen sections in one Python/GTK window. Native theme colors, grouped
 controls, readable labels, keyboard focus, inline validation and Apply/Revert
 feedback are shared across the app. No extra UI libraries, packages or background
 services are added.
@@ -10,6 +10,10 @@ Beta 1 removes Overview Dock and its editor, nm-connection-editor and pulsemixer
 PCManFM starts on demand. Clock and battery status are in the desktop menu.
 The ISO retains its tested `dev-lean` label; the hosted Settings-only updater
 does not replace labwc.
+
+These additions describe the development checkout after Beta 1. The published
+Beta 1 ISO and its benchmarks have not been rebuilt or changed. The controls
+reuse existing packages; no locker, idle daemon or other dependency is added.
 
 ## Editing and feedback
 
@@ -30,20 +34,22 @@ a rejected mode from a successful restore, and the display list refreshes afterw
 
 | Section | Controls |
 | --- | --- |
-| Appearance | GTK 3, icon, and labwc themes, font, dark preference, accents, desktop color and image backgrounds |
+| Appearance | GTK 3, icon, and labwc themes, font, dark preference, accents, cursor theme/size, desktop color and image backgrounds |
 | Default Programs | Terminal, browser, file manager and text editor |
-| Touchpad | Natural scrolling, tapping, clickfinger right-click and pointer speed |
+| Touchpad | Natural scrolling, tapping, clickfinger right-click, pointer speed, disable while typing/on external mouse |
 | Mouse | Pointer and scroll speed, acceleration, natural scrolling and left-handed buttons |
-| Keyboard | Layouts and layout switching, dynamic/fixed workspaces, Super-key overview, shortcuts and custom commands |
+| Keyboard | Layouts, repeat rate/delay, Caps Lock mapping, dynamic/fixed workspaces, Super-key overview, shortcuts and custom commands |
 | Menu | Edit/reorder menu entries; enable three-finger and Super + right-click triggers |
 | Startup Applications | Edit labwc login commands with syntax validation and backup |
 | Gestures | Swipe distance and configurable three/four-finger actions |
-| Displays | Resolution, refresh rate, scale, rotation and position with timed rollback, automatic extension and laptop brightness |
+| Displays | Enable/disable outputs, resolution, refresh rate, scale, rotation and position with timed rollback, automatic extension and laptop brightness |
 | Sound | PipeWire input/output devices, volume and mute |
 | Network | Wi-Fi/internet state, saved profiles, PEAP enterprise Wi-Fi, IPv4 and DNS |
 | Bluetooth | Scan, pair, connect/disconnect, trust and forget |
 | Power | Battery status, capacity, health and cycles, plus suspend and hibernate where available |
 | Date & Time | Current time, time zone and synchronization status |
+| Software | Interactive APT update, upgrade, unused-package purge and cache cleaning |
+| About | Software version, hardware summary and Copy system information |
 
 ## Default programs
 
@@ -84,6 +90,10 @@ such as PCManFM. Use **Use the desktop accent for GTK 3 apps** to share one
 color. Turn off a custom accent to return to the theme default. Reopen GTK 3
 apps after applying the change.
 
+**Cursor theme and size** use cursor themes already installed in the standard
+XCursor paths. The compositor and GTK 3 settings are saved together, preserving
+other appearance settings. Reopen apps that keep a previously loaded cursor.
+
 For further customization, [labwc-tweaks](https://github.com/labwc/labwc-tweaks)
 is the upstream graphical tool for labwc themes and compositor settings.
 [nwg-look](https://github.com/nwg-piotr/nwg-look) provides additional GTK 3
@@ -95,6 +105,11 @@ Set up to four XKB layouts in **Keyboard** and choose a shortcut to switch
 between them. Enter comma-separated layout codes such as `us,gb`. Variant
 codes follow the same order. Leave an entry blank to use that layout's default.
 **Mouse** controls non-touch pointing devices independently of **Touchpad**.
+Set key repeat speed (0 disables repeat), delay and Caps Lock behavior separately
+from layouts. Caps Lock can remain normal, swap with Esc, act as Ctrl/Esc or be
+disabled. Other XKB options and shortcuts are preserved; custom mappings can be
+left unchanged. Touchpad can disable input while typing or while an external
+mouse is present, where supported by libinput. Neither needs a listener daemon.
 
 Tap Super or swipe three fingers up to open the live window overview on the
 display nearest the pointer. It shows windows across workspaces and outputs.
@@ -201,6 +216,9 @@ locked. Physical support depends on the touchpad; typical VMs expose only a mous
 ## Displays
 
 Resolutions come from the Wayland output-management protocol through `wlr-randr`.
+Enable or disable connected outputs; at least one must remain enabled.
+Disabled outputs can be turned back on and their state is saved for that display
+combination. Every change uses the same confirmation/rollback flow.
 Set a higher scale to make text and windows larger while keeping the display
 at its native resolution. Set the refresh rate, rotation, and position for
 each active output. Positions use logical pixels and stay where you set them
@@ -246,6 +264,27 @@ status. System-wide time changes use existing system authorization. Automatic
 synchronization is enabled by default but requires connectivity. If APT reports
 metadata/signatures are not valid yet, check the clock; signature validation is
 never disabled to hide clock errors.
+
+## Software and About
+
+Software opens the system terminal with one explicit command:
+
+- Refresh package lists: `sudo apt-get update`.
+- Upgrade packages: `sudo apt-get upgrade` (refresh lists first).
+- Remove unused packages: `sudo apt-get autoremove --purge`, equivalent to APT's
+  autopurge action. Review its package list before approving removals.
+- Clear package cache: `sudo apt-get clean`. This removes downloaded package
+  archives, not installed apps or repository indexes.
+
+APT keeps its confirmation prompts; no unattended `-y` is used. The terminal
+stays open after success, cancellation or failure so the result can be read.
+No passwords are stored. These commands use configured signed repositories and
+are not the hosted ErdOS desktop updater. Nothing runs automatically.
+
+About loads version/build details, kernel, architecture, CPU, model, RAM and root
+filesystem usage on demand. **Copy system information** copies the displayed
+report for troubleshooting. Hostnames, usernames, serials and network addresses
+are omitted. Root filesystem usage is not the benchmark's installed-disk metric.
 
 ## Persistence and compatibility
 

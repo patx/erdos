@@ -14,7 +14,7 @@
   <a class="skip-link" href="#content">Skip to content</a>
   <header class="site-header wrap"><a class="brand" href="./" aria-label="ErdOS home"><span class="wordmark"><img src="assets/erdos-logo.png?v=c4600b5be396" alt="ErdOS" width="1265" height="278"></span></a><nav aria-label="Main navigation"><a href="guide.html" aria-current="page">User Guide</a><a href="https://github.com/patx/erdos">Github</a></nav></header>
   <main class="wrap guide-layout" id="content">
-    <nav class="guide-nav" aria-label="On this page"><div><a href="#try">Try the live desktop</a><a href="#verify">Verify a download</a><a href="#install">Install to disk</a><a href="#desktop">Desktop and apps</a><a href="#footprint">Disk and RAM usage</a><a href="#settings">Settings</a><a href="#defaults">Default programs</a><a href="#background">Backgrounds</a><a href="#menu">Customize menu</a><a href="#shortcuts">Keyboard shortcuts</a><a href="#gestures">Touchpad gestures</a><a href="#monitors">Multiple monitors</a><a href="#troubleshooting">Troubleshooting</a></div></nav>
+    <nav class="guide-nav" aria-label="On this page"><div><a href="#try">Try the live desktop</a><a href="#verify">Verify a download</a><a href="#install">Install to disk</a><a href="#desktop">Desktop and apps</a><a href="#footprint">Disk and RAM usage</a><a href="#settings">Settings</a><a href="#optional-locking">Optional locking</a><a href="#defaults">Default programs</a><a href="#background">Backgrounds</a><a href="#menu">Customize menu</a><a href="#shortcuts">Keyboard shortcuts</a><a href="#gestures">Touchpad gestures</a><a href="#monitors">Multiple monitors</a><a href="#troubleshooting">Troubleshooting</a></div></nav>
     <article class="guide-content">
       <h1>User guide</h1>
       <p class="intro">ErdOS 1 Beta 1 uses a window-only overview, menu clock and battery, and the Dark Glacier wallpaper. PCManFM starts on demand. This is a beta prerelease: start in a VM and keep backups before installing on real disks. The tested ISO is unchanged and retains its embedded <code>dev-lean</code> label.</p>
@@ -61,6 +61,7 @@
         <p><a href="footprint.json">Raw samples, ISO checksums and earlier baselines</a> · <a href="testing.md#reproduce-the-footprint-measurement">Measurement method and validation</a>.</p>
       </section>
       <section id="settings"><h2>Settings</h2>
+        <p>The development checkout adds cursor theme/size, keyboard repeat and Caps Lock mapping, touchpad disable options, monitor enable/disable, Software maintenance and About. These additions are not yet in the published Beta 1 ISO. No new packages or background processes are needed.</p>
         <p>Press <strong>Super + I</strong> or choose Settings in the menu. Appearance, Default Programs, Touchpad, Keyboard, Menu, Startup Applications, Gestures, Displays, Sound, Network, Bluetooth, Power and Date &amp; Time share one GTK window.</p>
         <p>Grouped controls use Apply/Revert, editors show readable shortcuts and menu entries, and closing protects unsaved edits. Network and Bluetooth keep their own action buttons. Pending changes finish before Settings exits; no permanent Settings service is added. <a href="settings.md">All controls and persistence details</a>.</p>
         <p>Power displays battery information and keeps Debian defaults. Date &amp; Time shows the clock, time zones and synchronization status. Displays has resolution confirmation and rollback. Startup Applications edits <code>~/.config/labwc/autostart</code>, checks shell syntax and keeps a previous-version backup. Changes run at the next login.</p>
@@ -77,6 +78,16 @@
         <p>Open Settings → Menu. Double-click a name or command to edit it. Use Add item, Add separator, Delete, Move up and Move down, then Apply menu. Changes take effect immediately and persist for your user.</p>
         <p>Applications still updates automatically as apps are installed or removed. Existing submenu contents and built-in actions are preserved when renamed or moved. Super + I opens Settings even if its menu entry is removed. The previous menu is backed up as <code>~/.config/openbox/menu.xml.previous</code>.</p>
         <p>In Settings → Keyboard, Add shortcut creates a custom key combination and command. Double-click either field, then Apply shortcuts. Remove selected deletes a custom binding when applied. Conflicts with other shortcuts are rejected. Use W for Super, C for Ctrl, A for Alt and S for Shift; for example, <code>W-p</code> with command <code>pcmanfm</code>.</p>
+      </section>
+      <section id="optional-locking"><h2>Optional screen locking</h2>
+        <p>ErdOS does not bundle a screen locker or idle daemon. The desktop stays unlocked after suspend. If you want locking, install Debian’s optional packages yourself:</p>
+        <pre><code>sudo apt update
+sudo apt install --no-install-recommends swaylock swayidle</code></pre>
+        <p>First test <code>swaylock -f -c 202326</code> in Terminal. Enter your account password to unlock; the live USB account password is <code>live</code>. In Settings → Keyboard, add a custom shortcut such as Super+L with that command.</p>
+        <p>For locking before sleep and on logind lock requests, add this line in Settings → Startup Applications, then log out and back in:</p>
+        <pre><code>swayidle -w before-sleep 'swaylock -f -c 202326' lock 'swaylock -f -c 202326' &amp;</code></pre>
+        <p>Use only one swayidle instance. Debian documents <code>-w</code> with swaylock’s <code>-f</code> so the sleep hook waits for the lock to be acquired. Test lid-close/resume on your hardware. This listener does not change Debian’s suspend policy or add an inactivity timer. To disable it later, remove the startup line and log out.</p>
+        <p>Optional idle locking: add <code>timeout 600 'swaylock -f -c 202326'</code> to the same command for a ten-minute idle timeout. <a href="https://manpages.debian.org/trixie/swayidle/swayidle.1.en.html">swayidle manual</a> · <a href="https://manpages.debian.org/trixie/swaylock/swaylock.1.en.html">swaylock manual</a>.</p>
       </section>
       <section id="shortcuts"><h2>Keyboard shortcuts</h2>
         <p>Super is usually the Windows key. Workspace bindings use key names and support the usual Shift + number-row combinations. Keypad tiling supports either NumLock state.</p>
