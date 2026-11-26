@@ -2,11 +2,41 @@
 """Network controls with current state, explicit actions and event-driven refresh."""
 import ipaddress
 from pathlib import Path
+from subprocess import TimeoutExpired
 import tempfile
 import threading
+from time import monotonic
 import uuid
 from gi.repository import Gio, GLib, Gtk
 import settings as backend
+
+SCAN_FIELDS = 'IN-USE,BSSID,SSID,SIGNAL,SECURITY'
+SCAN_LOCK = threading.Lock()
+last_scan = float('-inf')
+
+
+def visible_access_points(rows):
+    def priority(row):
+        used, _, _, signal, security = row
+        return used == '*', bool(security and security != '--'), int(signal)
+
+    networks = {}
+    for row in rows:
+        ssid = row[2]
+        if ssid and (ssid not in networks or priority(row) > priority(networks[ssid])):
+            networks[ssid] = row
+    return list(networks.values())
+
+
+def scan_access_points(force=False):
+    global last_scan
+    with SCAN_LOCK:
+        if force or monotonic() - last_scan >= 30:
+            try:
+                return backend.nm_lines('-f', SCAN_FIELDS, 'device', 'wifi', 'list', '--rescan', 'yes')
+            finally:
+                last_scan = monotonic()
+    return []
 
 
 def snapshot():
@@ -15,7 +45,15 @@ def snapshot():
     radio = backend.run('nmcli', 'radio', 'wifi') == 'enabled'
     connections = backend.nm_lines('-f', 'UUID,NAME,TYPE,ACTIVE', 'connection', 'show')
     profiles = [row for row in connections if row[2] in ('wifi', '802-11-wireless')]
-    aps = backend.nm_lines('-f', 'IN-USE,BSSID,SSID,SIGNAL,SECURITY', 'device', 'wifi', 'list', '--rescan', 'no') if wifi and radio else []
+    aps = []
+    if wifi and radio:
+        aps = visible_access_points(
+            backend.nm_lines('-f', SCAN_FIELDS, 'device', 'wifi', 'list', '--rescan', 'no'))
+        if len(aps) <= 1 and any(row[2] not in ('unavailable', 'unmanaged') for row in wifi):
+            try:
+                aps = visible_access_points(scan_access_points()) or aps
+            except (RuntimeError, TimeoutExpired):
+                pass  # Keep the cached list if the adapter cannot scan yet.
     return dict(devices=devices, wifi=wifi, radio=radio, profiles=profiles, aps=aps,
                 connections=[row for row in connections if row[2] in ('wifi', '802-11-wireless', 'ethernet', '802-3-ethernet')],
                 internet=backend.run('nmcli', '-g', 'CONNECTIVITY', 'general'))
@@ -57,14 +95,19 @@ def set_ipv4(profile, address, gateway, dns):
                 'ipv4.ignore-auto-dns', 'yes' if servers else 'no')
 
 
-def activate_enterprise(profile, password):
+def activate_with_password(profile, password, secret_key):
     if not password or any(char in password for char in ('\0', '\r', '\n')):
-        raise ValueError('Enter a single-line enterprise Wi-Fi password.')
-    with tempfile.NamedTemporaryFile(mode='w', prefix='erdos-wifi-') as credentials:
-        credentials.write(f'802-1x.password:{password}\n')
+        raise ValueError('Enter a single-line Wi-Fi password.')
+    with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', prefix='erdos-wifi-') as credentials:
+        credentials.write(f'{secret_key}:{password}\n')
         credentials.flush()
         backend.run('nmcli', '--wait', '30', 'connection', 'up', 'uuid', profile,
                     'passwd-file', credentials.name, timeout=40)
+
+
+def profile_security(profile):
+    return backend.run('nmcli', '-g', '802-11-wireless-security.key-mgmt',
+                       'connection', 'show', 'uuid', profile)
 
 
 def connect_enterprise(ssid, identity, domain, certificate, password):
@@ -82,7 +125,7 @@ def connect_enterprise(ssid, identity, domain, certificate, password):
                 '802-1x.identity', identity, '802-1x.ca-cert', str(cert.resolve()),
                 '802-1x.domain-suffix-match', domain, '802-1x.password-flags', '2')
     try:
-        activate_enterprise(profile, password)
+        activate_with_password(profile, password, '802-1x.password')
     except Exception as error:
         try:
             backend.run('nmcli', 'connection', 'delete', 'uuid', profile)
@@ -167,16 +210,14 @@ class Network:
         self.networks.remove_all()
         seen = set()
         active = None
-        for used, bssid, ssid, signal, security in info['aps']:
-            if not ssid or bssid in seen:
-                continue
-            seen.add(bssid)
+        for used, _, ssid, signal, security in info['aps']:
+            seen.add(ssid)
             suffix = f'{signal}% · ' + ('secured' if security and security != '--' else 'open')
             if used == '*' and len(info['wifi']) == 1:
                 suffix = 'connected' if info['wifi'][0][2].startswith('connected') else 'connecting'
-            self.networks.append(bssid, f'{ssid} — {suffix}')
+            self.networks.append(ssid, f'{ssid} — {suffix}')
             if used == '*':
-                active = bssid
+                active = ssid
         self.networks.set_active_id(selected if selected in seen else (active or ''))
         if self.networks.get_active() < 0 and seen:
             self.networks.set_active(0)
@@ -210,7 +251,7 @@ class Network:
         self.password.set_sensitive(enabled)
         self.scan.set_sensitive(enabled)
         selected = self.networks.get_active_id()
-        connected = {row[1] for row in self.info['aps'] if row[0] == '*'}
+        connected = {row[2] for row in self.info['aps'] if row[0] == '*'}
         self.connect.set_sensitive(enabled and bool(selected) and selected not in connected)
         selected = self.saved.get_active_id()
         connected = {row[0] for row in self.info['profiles'] if row[3] == 'yes'}
@@ -262,7 +303,7 @@ class Network:
                        'Turning Wi-Fi on…' if enabled else 'Turning Wi-Fi off…', summary)
 
     def scan_networks(self, *_):
-        self.operation(lambda: backend.run('nmcli', '--wait', '20', '-f', 'SSID', 'device', 'wifi', 'list', '--rescan', 'yes', timeout=30),
+        self.operation(lambda: scan_access_points(force=True),
                        'Scanning for Wi-Fi networks…',
                        lambda info: 'Scan complete. Select a network to connect.' if info['aps'] else 'No visible networks found. Try scanning again or check Wi-Fi range.')
 
@@ -271,16 +312,25 @@ class Network:
         if not selected:
             self.app.report('Scan for networks and select one first.', error=True)
             return
-        ssid = next(row[2] for row in self.info['aps'] if row[1] == selected)
+        _, bssid, ssid, _, security = next(row for row in self.info['aps'] if row[2] == selected)
+        profiles = self.info['profiles']
         secret = self.password.get_text()
         self.password.set_text('')
-        if '\n' in secret or '\r' in secret:
+        if any(char in secret for char in ('\0', '\r', '\n')):
             self.app.report('Password must be a single line.', error=True)
             return
         def connect():
-            # Secret on stdin, never on the command line or in ErdOS preferences.
             try:
-                backend.run('nmcli', '--ask', '--wait', '30', 'device', 'wifi', 'connect', selected,
+                if secret and 'WPA' in security and '802.1X' not in security:
+                    for profile, name, _, _ in profiles:
+                        if name != ssid or profile_security(profile) not in ('wpa-psk', 'sae'):
+                            continue
+                        saved_ssid = backend.run('nmcli', '--escape', 'no', '-g', '802-11-wireless.ssid',
+                                                 'connection', 'show', 'uuid', profile)
+                        if saved_ssid == ssid:
+                            activate_with_password(profile, secret, '802-11-wireless-security.psk')
+                            return
+                backend.run('nmcli', '--ask', '--wait', '30', 'device', 'wifi', 'connect', bssid,
                             input=secret+'\n', timeout=40)
             except Exception as error:
                 message = self.app.error_text(error)
@@ -300,10 +350,12 @@ class Network:
 
         def connect():
             if password:
-                security = backend.run('nmcli', '-g', '802-11-wireless-security.key-mgmt',
-                                       'connection', 'show', 'uuid', selected)
+                security = profile_security(selected)
                 if security in ('wpa-eap', 'wpa-eap-suite-b-192'):
-                    activate_enterprise(selected, password)
+                    activate_with_password(selected, password, '802-1x.password')
+                    return
+                if security in ('wpa-psk', 'sae'):
+                    activate_with_password(selected, password, '802-11-wireless-security.psk')
                     return
             backend.run('nmcli', '--wait', '30', 'connection', 'up', 'uuid', selected, timeout=40)
 
