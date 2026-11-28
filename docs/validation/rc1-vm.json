@@ -1,0 +1,174 @@
+{
+  "iso_sha256": "7b326830dcacd718b45af5b79b9d5434e2d4fc03f44c441fc8d334d1afe21e5b",
+  "iso_bytes": 1164083200,
+  "checks": [
+    {
+      "name": "signed Beta 2 -> exact RC1 upgrade, settings/driver preservation, tampered metadata and wrong-key rejection",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "name": "UEFI live boot, console login, sudo and embedded Wi-Fi fix",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "name": "uefi-installed offline installation, boot without media and normal-account sudo",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "name": "Settings sections, live persistence, default shortcut, display rollback and Firefox color preference",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "name": "default application shortcuts and native window overview/menu",
+      "result": "pass",
+      "detail": "Visually reviewed before suspend; Print will be verified independently through Wayland virtual keyboard."
+    },
+    {
+      "name": "cold boot, installed login and signed Debian/Mozilla/ErdOS APT refresh",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "name": "simulated Wi-Fi scans/deduplication, old/new password retry, radio reconnect, Print Screen, tiling and restore",
+      "result": "pass",
+      "detail": "Executed in the real active desktop PAM session."
+    },
+    {
+      "name": "signed component revision upgrade preserves user configuration and hardware fixes",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "name": "bios-installed offline installation, boot without media and normal-account sudo",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "name": "minimum configuration: 2 vCPUs, 2 GiB RAM, 10 GiB disk, 1024x768 display",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "name": "legacy BIOS installed boot",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "name": "normal reboot in minimal BIOS VM without shared-folder/hotplug instrumentation",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "name": "normal poweroff in minimal BIOS VM without shared-folder/hotplug instrumentation",
+      "result": "pass",
+      "detail": ""
+    }
+  ],
+  "limitations": [
+    "Virtio-vga S3 resumed the serial shell but left the graphical output black; following reboot did not complete within 102 seconds. Virtual power-cycle check is not passed; physical laptop resume/reboot remains required.",
+    "Instrumented BIOS VM reached kernel Power down but QEMU did not exit within 30 seconds; a kernel warning/clocksource diagnostic followed. Repeat without the shared 9p folder and hotplug root port to isolate fixture effects.",
+    "Physical GPU, real Wi-Fi/WPA3/enterprise authentication, Bluetooth, gestures, audio, brightness, lid handling and external monitor hotplug require laptop testing.",
+    "Windows/macOS alongside installation, Secure Boot and physical printer compatibility are not certified."
+  ],
+  "schema": 1,
+  "version": "1.0.0-rc.1",
+  "package_version": "1.0.0~rc.1.1",
+  "published": false,
+  "status": "completed_with_limitations",
+  "tested_at": "2026-11-27T23:16:15.999058-05:00",
+  "source_base": "1c4022caf26f4ac44b2a2ffb9d568134dbe87242",
+  "source_note": "Wi-Fi fix 7233d32 is already in the source base. Local changes label the candidate and correct the decorative-alt validator; documentation changes do not alter runtime behavior.",
+  "environment": {
+    "qemu": "10.0.13",
+    "acceleration": "KVM",
+    "cpu": "host, 2 vCPUs",
+    "allocated_ram_bytes": 2147483648,
+    "uefi_disk_bytes": 25769803776,
+    "bios_disk_bytes": 10737418240,
+    "spare_disk_bytes": 12884901888,
+    "uefi_display": "1280x800",
+    "bios_display": "1024x768",
+    "kernel": "6.12.118+deb13-amd64",
+    "graphics": "virtio-vga without 3D acceleration",
+    "network": "No network adapter during installation; virtual Ethernet hotplugged afterward for APT and test-tool installation."
+  },
+  "source_checks": {
+    "project_validation": "passed",
+    "decorative_alt_boundary": "empty alt accepted; absent alt rejected",
+    "settings_persistence_tests": 6,
+    "package_adoption_tests": 1,
+    "lifecycle_cases": 12,
+    "lifecycle_note": "All cases covered across normal-user and privileged Debian-container runs; privilege-specific skips are covered in the complementary run."
+  },
+  "wifi_checks": [
+    "two real simulated APs discovered",
+    "same-SSID APs deduplicated",
+    "pre-fix handler fails the saved-password retry",
+    "fixed saved-password retry connects",
+    "password entry cleared",
+    "temporary credential files removed",
+    "available-network retry reuses saved profile",
+    "radio-off state has no visible networks",
+    "reconnect after radio cycle without re-entering password",
+    "Print key creates a private full-desktop screenshot",
+    "keyboard tiling reduces window width",
+    "Super+Down restores tiled window",
+    "keyboard maximize increases window width",
+    "Super+Down restores maximized window"
+  ],
+  "wifi_note": "Three mac80211_hwsim radios: one managed client and two WPA2 hostapd APs advertising the same SSID. GUI handlers ran in the actual active desktop PAM session. Synthetic credentials only. Test tools and signing keys are disposable and not included in the ISO.",
+  "update_checks": {
+    "beta2_to_exact_rc1": "passed with isolated signed fixture archive",
+    "later_component_revision": "passed",
+    "user_settings_and_hardware_fixes": "preserved",
+    "tampered_metadata": "rejected by APT",
+    "unrelated_signing_key": "rejected by APT",
+    "production_signing_key": "not accessed",
+    "public_repositories": "not modified"
+  },
+  "power_checks": [
+    {
+      "context": "Instrumented UEFI VM: shared 9p folder, hotplug root port, virtio-vga",
+      "result": "not_passed",
+      "observed": "Serial shell returned after S3, but the graphical output was black and subsequent reboot did not finish in the test window.",
+      "upstream_context": "A similar virtual-GPU behavior is described at https://gitlab.com/qemu-project/qemu/-/issues/1860; this does not establish the cause here."
+    },
+    {
+      "context": "Instrumented BIOS VM with shared 9p folder and hotplug root port",
+      "result": "not_passed",
+      "observed": "Kernel reached Power down but QEMU did not exit within 30 seconds; kernel warning/clocksource output followed."
+    },
+    {
+      "context": "Same BIOS installed disk, cold boot without shared-folder/hotplug instrumentation",
+      "result": "passed",
+      "observed": "Normal requested reboot, renewed desktop login, and normal requested poweroff all completed. S3 was not repeated in this control configuration."
+    }
+  ],
+  "minimum_target_check": {
+    "vcpus": 2,
+    "ram_bytes": 2147483648,
+    "install_disk_bytes": 10737418240,
+    "display": [
+      1024,
+      768
+    ],
+    "firmware": "legacy BIOS",
+    "applications": "labwc desktop, Settings and Firefox started; screenshot visually reviewed",
+    "scope": "Practical minimum target for light use, not an absolute lower boot limit or a browser-workload benchmark."
+  },
+  "unverified": [
+    "Physical GPUs and external-monitor hotplug",
+    "Real Wi-Fi adapters, WPA3 and enterprise/RADIUS authentication",
+    "Bluetooth, audio/microphone, brightness/media/Fn keys and physical touchpad gestures",
+    "Physical lid-close/suspend/resume; uninstrumented VM S3",
+    "Windows/macOS alongside installation and Secure Boot",
+    "Physical printers; CUPS instructions are optional setup guidance"
+  ],
+  "landing_page_changed": false,
+  "stable_release_published": false,
+  "iso_rebuilt_after_tests": false
+}

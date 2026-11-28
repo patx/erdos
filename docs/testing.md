@@ -1,3 +1,89 @@
+# Local RC1 validation — 2026-11-27 (unpublished)
+
+This is an **unpublished hardware-test candidate**, not the stable release.
+The local image identifies itself as `1.0.0-rc.1`; custom packages are
+`1.0.0~rc.1.1`. It includes Wi-Fi fix `7233d32`, with no compositor upgrade,
+additions to the default package list or power-policy changes. Its SHA-256 is:
+`7b326830dcacd718b45af5b79b9d5434e2d4fc03f44c441fc8d334d1afe21e5b`.
+The ISO is 1,164,083,200 bytes. Published Beta 2 assets, metadata and benchmarks
+remain unchanged; the landing page is unchanged.
+
+Completed checks:
+
+- Final ISO verification matches runtime configuration and compositor provenance;
+  required-package, permissions/sudo and APT-cache checks pass.
+- Six Settings persistence/maintenance tests and the package-adoption safety test
+  pass. All twelve build/test lifecycle cases are covered across unprivileged
+  and privileged runs, including tmpfs unmounting and permission-denied cleanup.
+- Decorative images with empty alt text pass the corrected source validator;
+  images with no alt attribute are still rejected.
+- Actual signed APT upgrade from the verified published Beta 2 filesystem to the
+  exact RC1 component packages preserves personal settings and test hardware/
+  network fixes, and installs the exact new Wi-Fi code. APT rejects modified
+  signed metadata and an unrelated archive key. These fixtures use an isolated
+  disposable signing key; no production private key or public archive is changed.
+- UEFI live boot through the ISO bootloader, normal console login, sudo, desktop
+  and menu work. The live boot menu requires choosing Try ErdOS; it does not
+  automatically select an installation action.
+- Fresh offline UEFI installation boots without the ISO and grants the first
+  normal account sudo access.
+
+Additional completed checks:
+
+- All sixteen Settings sections load. Real compositor-backed window-control
+  changes preserve shortcuts; startup saves do not execute commands; menu edits
+  persist and restore correctly.
+- Super+T follows a newly selected editor. Firefox's actual CSS
+  `prefers-color-scheme` result follows both dark and light system preferences.
+- A real output-mode trial restores after its fifteen-second confirmation timeout;
+  disabling every output is rejected.
+- Default app shortcuts, the native live-window overview and desktop menu were
+  exercised and their captures reviewed.
+- Three `mac80211_hwsim` radios provide a real NetworkManager client and two WPA2
+  access points sharing one SSID. Discovery and duplicate filtering pass. In the
+  active desktop session, the pre-fix saved-password handler fails with the
+  deliberately wrong saved PSK; the new handler connects using the supplied
+  password. Available-network retry reuses the profile, credentials are cleared
+  from the entry/temporary files, and reconnect after a radio cycle works without
+  entering the password again. Serial-session authorization is not substituted
+  for the real active desktop policy.
+- Wayland virtual-keyboard input verifies private full-desktop Print Screen
+  capture, focused capture, tiling/maximize and Super+Down restoration. QEMU's
+  separate SysRq injection did not produce the expected Print event, so it is
+  not counted as screenshot-key proof.
+- A later signed component revision installs while preserving personal keyboard
+  configuration and a test hardware-fix file.
+- A fresh offline legacy-BIOS install boots from a **10 GiB disk**, with
+  **2 vCPUs, 2 GiB RAM and 1024×768**. Settings and Firefox start; the display
+  capture was reviewed. This supports the documented practical minimum target,
+  not an absolute boot limit or a heavy-browser workload claim.
+
+### Virtual power checks and limits
+
+The instrumented UEFI VM returned to its serial shell after S3, but its graphical
+output was black and the following reboot did not complete in the test window.
+The instrumented BIOS VM reached kernel `Power down` but QEMU did not exit within
+30 seconds; kernel warning/clocksource output followed. These checks are **not
+marked passed**. Both used a shared 9p test folder and a hotplug root port.
+
+A control run on the same BIOS installed disk, without those extra devices,
+completed a normal requested reboot, renewed desktop login and a normal requested
+poweroff. S3 was not repeated in that control configuration. A similar virtio-GPU
+resume symptom is recorded in [QEMU issue 1860](https://gitlab.com/qemu-project/qemu/-/issues/1860),
+but that does not establish the cause of this run. No ErdOS power policy, driver
+or compositor workaround was added based on this VM result.
+
+[The candidate report](validation/rc1-vm.json) records the exact image identity,
+passed stages, individual Wi-Fi/keyboard receipts and power-test limitations.
+Test packages, captures, virtual disks, signing keys and containers were temporary;
+none of the test tools was added to the ISO. Only the latest local ISO is retained.
+
+Physical GPU, real Wi-Fi (including WPA3/enterprise), Bluetooth, audio, gestures,
+brightness/media keys, lid-close/wake and external-monitor hotplug still require
+laptop testing. Windows/macOS alongside installations and Secure Boot are not
+certified. No physical printer is certified; printing support remains optional.
+No new idle RAM or disk-footprint benchmark is claimed for this RC1 candidate.
+
 # Beta 2 verification — 2026-11-24
 
 The rebuilt image identifies itself as `1.0.0-beta.2`; its three custom packages

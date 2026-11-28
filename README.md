@@ -16,6 +16,22 @@ This is an experimental prerelease; start in a VM. Secure Boot is not supported.
 [Build instructions](docs/building.md) · [Settings](docs/settings.md) ·
 [Validation](docs/testing.md) · [Compositor maintenance](docs/upstream-labwc.md)
 
+## System requirements
+
+| | Minimum (light use) | Recommended |
+| --- | --- | --- |
+| CPU | 64-bit Intel/AMD (amd64), 2 cores | 64-bit Intel/AMD, 2 or more cores |
+| RAM | 2 GiB | 4 GiB or more |
+| Installation space | 10 GiB | 20 GiB or more, preferably on an SSD |
+| Display | 1024×768 | 1280×800 or larger |
+
+Use a 4 GB or larger USB drive for installation, or attach the ISO directly to
+a VM. UEFI and legacy BIOS are supported; Secure Boot must be disabled.
+An internet connection is needed for updates and additional apps, not installation.
+These are practical targets for the default desktop and light browsing, not the
+smallest configuration that could boot. Browser tabs, video and additional apps
+need more memory/storage. Current VM coverage is recorded in [validation](docs/testing.md).
+
 ## Updates and customization
 
 New installations receive custom-component updates through normal signed APT

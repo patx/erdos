@@ -29,6 +29,7 @@
       <nav class="guide-nav" aria-labelledby="guide-nav-title">
         <h2 id="guide-nav-title">On this page</h2>
         <div>
+          <a href="https://patx.gitman.io/erdos/guide.html#requirements">System requirements</a>
           <a href="https://patx.gitman.io/erdos/guide.html#limitations">Defaults and limitations</a>
           <a href="https://patx.gitman.io/erdos/guide.html#try">Try the live desktop</a>
           <a href="https://patx.gitman.io/erdos/guide.html#verify">Verify a download</a>
@@ -38,6 +39,7 @@
           <a href="https://patx.gitman.io/erdos/guide.html#settings">Settings</a>
           <a href="https://patx.gitman.io/erdos/updates.md">System updates</a>
           <a href="https://patx.gitman.io/erdos/guide.html#extra-apps">Install more apps</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#printing">Printing</a>
           <a href="https://patx.gitman.io/erdos/guide.html#panels">Add a panel</a>
           <a href="https://patx.gitman.io/erdos/guide.html#optional-locking">Optional locking</a>
           <a href="https://patx.gitman.io/erdos/guide.html#login-screen">Add a login screen</a>
@@ -51,6 +53,16 @@
         </div>
       </nav>
       <article class="guide-content">
+      <section id="requirements"><h2>System requirements</h2>
+        <table><thead><tr><th>Component</th><th>Minimum (light use)</th><th>Recommended</th></tr></thead><tbody>
+          <tr><td>CPU</td><td>64-bit Intel/AMD (amd64), 2 cores</td><td>64-bit Intel/AMD, 2 or more cores</td></tr>
+          <tr><td>Memory</td><td>2 GiB RAM</td><td>4 GiB RAM or more</td></tr>
+          <tr><td>Installation space</td><td>10 GiB</td><td>20 GiB or more, preferably on an SSD</td></tr>
+          <tr><td>Display</td><td>1024×768</td><td>1280×800 or larger</td></tr>
+        </tbody></table>
+        <p>These are practical targets for the default desktop and light browsing, not a claim that lower-memory systems cannot boot. More browser tabs, video, additional apps and personal files need more resources. The roughly 1.75 GiB installed footprint is not a suitable partition size: leave space for package updates, kernels, caches and your files. <a href="https://patx.gitman.io/erdos/testing.md">Validation notes</a> distinguish tested VM configurations from physical hardware coverage.</p>
+        <p>Use a 4 GB or larger USB drive, or attach the ISO directly to a VM. The image is for amd64 PCs, not 32-bit-only computers or ARM/Apple Silicon. UEFI and legacy BIOS are supported; Secure Boot must be disabled. Installation works offline; internet access is needed afterward for updates and extra packages. Alongside installations should reserve at least the recommended 20 GiB of unallocated space.</p>
+      </section>
       <section id="limitations"><h2>What the minimal install leaves out</h2>
         <p>ErdOS provides a small desktop, not a full desktop environment. These are deliberate defaults you can change:</p>
         <ul>
@@ -143,6 +155,29 @@ sudo apt install --no-install-recommends mousepad</code></pre>
         <p>Graphical apps with desktop entries appear in Applications when you reopen the menu. Choose replacements in Settings → Default Programs; the main menu and default-app keyboard shortcuts follow that selection. Use Settings → Menu for custom launch commands and Settings → Keyboard for extra shortcuts.</p>
         <p>To remove the example editor, run <code>sudo apt remove mousepad</code>. Review <code>sudo apt autoremove --purge</code> separately before confirming: it can remove dependencies no longer marked as needed. Do not remove ErdOS components, firmware or drivers just because an unfamiliar package looks unnecessary.</p>
         <p><a href="https://www.debian.org/doc/manuals/debian-reference/ch02.en.html">Debian’s package-management guide</a> covers additional repositories, package selection and troubleshooting.</p>
+      </section>
+      <section id="printing"><h2>Printing</h2>
+        <p>Firefox’s <strong>Save to PDF</strong> option works without extra packages: press Ctrl+P and choose Save to PDF. Sending a job to a physical printer needs optional printing support. ErdOS includes the CUPS client library, but no CUPS service or printer-setup app by default.</p>
+        <h3>Set up a printer</h3>
+        <p>On an installed system with internet access, install CUPS and enable its service:</p>
+        <pre><code>sudo apt update
+sudo apt install --no-install-recommends cups
+sudo systemctl enable --now cups.service
+sudo adduser "$USER" lpadmin</code></pre>
+        <p>Log out completely and back in for the group change. Open <a href="http://localhost:631/">http://localhost:631/</a> in Firefox, choose Administration → Add Printer, and sign in with your normal login name and password when asked. Select your printer, give it a name, and choose the appropriate model or driverless option. Print a test page from its Maintenance menu before trying an application.</p>
+        <p>For a modern network printer, connect it to the same network as the laptop. Prefer <strong>IPP Everywhere / driverless</strong> when supported. If discovery does not find it, use the printer’s documented IPP/IPPS address; the hostname and queue path vary by model. There is no need to enable printer sharing just to print from this computer.</p>
+        <h3>USB and older printers</h3>
+        <p>For a USB printer that supports IPP over USB, also install:</p>
+        <pre><code>sudo apt install --no-install-recommends ipp-usb</code></pre>
+        <p>Reconnect the printer and check Add Printer again. IPP-over-USB devices appear as network-style printers. Older USB/network printers may need a model-specific driver instead; packages such as <code>printer-driver-gutenprint</code> or <code>printer-driver-hpcups</code> cover some models, not all. Check your model before installing a driver bundle. An optional graphical setup utility is available with <code>sudo apt install --no-install-recommends system-config-printer</code>; it is not needed for the CUPS web interface.</p>
+        <h3>Print from Firefox and troubleshoot</h3>
+        <p>After adding a queue, press Ctrl+P in Firefox and select that printer instead of Save to PDF. Reopen the print dialog or restart Firefox if the new queue is missing.</p>
+        <pre><code>lpstat -t
+systemctl status cups.service
+sudo journalctl -u cups.service -b --no-pager</code></pre>
+        <p>Check that the printer is powered on, reachable and not paused, and that jobs are accepted. Start with a CUPS test page: a failed test page indicates a printer/queue problem rather than a Firefox-only problem. Exact driver and USB support depends on the printer; these instructions do not certify every model.</p>
+        <p>CUPS, filters, drivers and any added services increase installed disk use and may use background RAM. Printing remains optional. To remove it later, delete the queues in CUPS and run <code>sudo apt remove cups</code>; remove <code>ipp-usb</code>, setup utilities or driver packages separately if you installed them and no longer need them. Review remaining dependencies before autoremove. Changes made in a live session disappear on reboot.</p>
+        <p><a href="https://support.mozilla.org/en-US/kb/how-print-web-pages-firefox">Firefox printing</a> · <a href="https://openprinting.github.io/cups/doc/admin.html">CUPS administration</a> · <a href="https://wiki.debian.org/SystemPrinting">Debian printing guide</a> · <a href="https://packages.debian.org/trixie/ipp-usb">IPP-over-USB support</a>.</p>
       </section>
       <section id="panels"><h2>Add a panel</h2>
         <p>Waybar is an optional Wayland panel. The example below adds application buttons and a 12-hour clock, without starting separate network or sound applets:</p>
