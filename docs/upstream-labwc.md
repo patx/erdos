@@ -163,7 +163,7 @@ ErdOS revision tied to a specific tested fork snapshot.
 
 ## Validation and delivery
 
-Follow [building.md](building.md) and [testing.md](testing.md). For a compositor
+Follow [building.md](https://patx.gitman.io/erdos/building.md) and [testing.md](https://patx.gitman.io/erdos/testing.md). For a compositor
 update, cover overview previews/selection/dismissal, native gestures, Super and
 other shortcuts, dynamic workspaces, menu status and Settings integration,
 display modes/hotplug, XWayland, suspend/resume on supported hardware, and a fresh
@@ -175,7 +175,7 @@ features and dependencies can, so review them before accepting a version.
 
 The compositor is an ErdOS-built `/usr/bin/labwc` in `erdos-labwc`, rather
 than Debian's labwc package. Deliver tested compositor changes through the signed
-APT repository described in [updates.md](updates.md), together with matching
+APT repository described in [updates.md](https://patx.gitman.io/erdos/updates.md), together with matching
 corresponding source. Increment the package version before publication; do not
 restart an active user session during installation. Rebuilding an ISO alone does
 not update existing installations. The old hosted Alpha 3 Settings bundle does

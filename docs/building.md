@@ -112,7 +112,7 @@ build tooling when requested, not a security sandbox for untrusted code.
 Our [Gitman maintenance fork](https://gitman.io/patx/labwc-erdos) retains the
 original GitHub history and focused ErdOS commits. The build uses the exact
 vendored snapshot pinned in [labwc-fork.json](../vendor/labwc-fork.json).
-See [upstream-labwc.md](upstream-labwc.md) for fetch-only GitHub setup, source
+See [upstream-labwc.md](https://patx.gitman.io/erdos/upstream-labwc.md) for fetch-only GitHub setup, source
 checks, deliberate merges, safe imports and validation. Establishing the fork
 did not upgrade labwc or wlroots or change the current runtime source.
 
@@ -178,18 +178,18 @@ packages, so ordinary APT upgrades can subsequently update them. Package payload
 are not duplicated as unmanaged includes. Image identity remains separate in
 `/etc/erdos-release`; package provenance is `/usr/share/erdos/components.json`.
 Build-only tools and private signing keys never enter the runtime. See
-[signed updates and migration](updates.md).
+[signed updates and migration](https://patx.gitman.io/erdos/updates.md).
 
 ## Existing installations
 
 New package-managed installations receive component updates through signed APT.
 Supported existing labwc builds need the explicit checked migration in
-[updates.md](updates.md). The legacy hosted Alpha 3 updater is unchanged and
+[updates.md](https://patx.gitman.io/erdos/updates.md). The legacy hosted Alpha 3 updater is unchanged and
 is not a compositor migration tool.
 
 Builds follow current signed package repositories and are not bit-for-bit
 reproducible. A checksum detects corruption; it is not a signature or a hardware
-compatibility guarantee. See [validation](testing.md) and [release preparation](releasing.md).
+compatibility guarantee. See [validation](https://patx.gitman.io/erdos/testing.md) and [release preparation](https://patx.gitman.io/erdos/releasing.md).
 
 ### Signed APT bootstrap
 
@@ -198,5 +198,5 @@ For the first repository setup, publish a lower-version signed candidate first,
 then build and publish the final image's exact exported component packages.
 Never replace a published package with different bytes at the same version.
 The Docker ISO build exports those packages and their exact public source
-snapshot to `dist/packages/`; see [updates.md](updates.md) for signing and upload.
+snapshot to `dist/packages/`; see [updates.md](https://patx.gitman.io/erdos/updates.md) for signing and upload.
 Normal later builds use the existing repository and need no bootstrap candidate.

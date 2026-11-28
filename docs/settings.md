@@ -284,7 +284,7 @@ stays open after success, cancellation or failure so the result can be read.
 No passwords are stored. These commands use configured signed repositories and
 also update ErdOS components on package-managed installations. Log out after
 desktop/compositor updates. They do not run automatically; see
-[signed updates](updates.md) for legacy adoption.
+[signed updates](https://patx.gitman.io/erdos/updates.md) for legacy adoption.
 
 About separates base-image identity from installed desktop package/source
 versions, labwc/wlroots and Twig provenance. A running compositor digest that

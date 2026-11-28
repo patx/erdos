@@ -11,7 +11,7 @@ Both source remotes use `main`: GitHub at the URL above and Gitman at
 
 Beta 2 rebuilds the image as `1.0.0-beta.2` with the three signed-APT component
 packages at `1.0.0~beta.2.1`. Publish the exact component archives exported by the
-ISO build, together with matching source, using [updates.md](updates.md).
+ISO build, together with matching source, using [updates.md](https://patx.gitman.io/erdos/updates.md).
 Image, APT package and installed component versions appear separately in About.
 Beta 1 and its benchmark results remain historical and unchanged.
 
@@ -23,8 +23,8 @@ The image was built from runtime source `60df297` plus that image label.
 The release source also contains subsequent host-only maintenance/cleanup tools.
 The image removes the overview dock and optional utilities, adds menu clock and
 battery status, and starts PCManFM on demand. Fresh offline UEFI installation
-and measurements are recorded in [validation](testing.md). Six immutable assets
-are served under `v1.0.0-beta.1/`; [release.json](release.json) identifies the bytes.
+and measurements are recorded in [validation](https://patx.gitman.io/erdos/testing.md). Six immutable assets
+are served under `v1.0.0-beta.1/`; [release.json](https://patx.gitman.io/erdos/release.json) identifies the bytes.
 Gitman hosts the source/tag and Pages site; GitHub hosts the prerelease notes.
 
 ## Source repository
@@ -42,8 +42,8 @@ upload a release asset.
 
 ## Build, test and package
 
-Build on Debian 13 amd64 as described in [building.md](building.md), then complete
-[testing.md](testing.md). A successful build is not a boot/install test. Retain
+Build on Debian 13 amd64 as described in [building.md](https://patx.gitman.io/erdos/building.md), then complete
+[testing.md](https://patx.gitman.io/erdos/testing.md). A successful build is not a boot/install test. Retain
 its logs outside Git. The checkout tracks current development; choose a new
 version and tag when preparing a release. Keep published version directories immutable.
 
@@ -64,7 +64,7 @@ checksums, and refreshes `docs/release.json` from the actual ISO. It requires
 `published` false and clears the tag for the newly prepared image. Restore the
 actual published tag and status only after its assets are available. Packaging
 a future build must not be mistaken for publishing it.
-The source ZIP requires compiling the compositor to build a new ISO. Signed [component updates](updates.md) deliver prebuilt custom components;
+The source ZIP requires compiling the compositor to build a new ISO. Signed [component updates](https://patx.gitman.io/erdos/updates.md) deliver prebuilt custom components;
 clients need no compiler.
 Generated executables are not silently bundled into a source archive.
 
@@ -143,18 +143,11 @@ Node.js, npm, frontend build step, analytics or external font dependency.
 `docs/.nojekyll` prevents Jekyll processing.
 
 The repository is mirrored on GitHub and Gitman. Publish the contents of `docs/`
-with Gitman Pages at <https://patx.gitman.io/erdos/>. Keep relative page and asset
-links so the same source works under `/erdos/`. ISO downloads use Cloudflare R2
-at <https://downloads.erd.sh/>; release notes remain on GitHub Releases.
-
-Preview locally:
-
-```sh
-python3 -m http.server 8000 --directory docs
-```
-
-Open <http://localhost:8000/>. Relative paths also work under the project prefix
-`/erdos/`. The user guide and download links work without JavaScript.
+with Gitman Pages at <https://patx.gitman.io/erdos/>. Use full URLs under that
+prefix for published pages and assets. Review the rendered site on Gitman Pages,
+where stylesheets, scripts, and images load from the same origin as the pages.
+ISO downloads use Cloudflare R2 at <https://downloads.erd.sh/>. Release notes
+are on GitHub Releases. The user guide and download links work without JavaScript.
 Build details and checksums are available on the GitHub release page. Keep
 release metadata accurate when uploading a new image. Gitman Pages hosts the site;
 Cloudflare R2 hosts the ISO and matching download artifacts.

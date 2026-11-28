@@ -105,7 +105,7 @@ SIGTERM cancellation with private root-created files. Each removed its container
 and host workspace. Existing containers/images/caches were not pruned. Staging
 and source checks pass; this host-only change does not rebuild the retained ISO
 or change installed disk/RAM measurements. A full ISO build and VM boot were not
-repeated for this tooling change. See [managed build/test usage](building.md).
+repeated for this tooling change. See [managed build/test usage](https://patx.gitman.io/erdos/building.md).
 
 # labwc fork maintenance validation
 
@@ -123,7 +123,7 @@ all bytes; an unexported local C edit is rejected without overwrite; an incorrec
 upstream version is rejected before mutation. The live vendored tree still
 matches its pin. Source syntax, links, offline pin integrity and installer checks
 pass. Remote refs confirm Gitman's `main`, clean `upstream-base` and peeled tag
-match the recorded commits. See [upstream maintenance](upstream-labwc.md).
+match the recorded commits. See [upstream maintenance](https://patx.gitman.io/erdos/upstream-labwc.md).
 
 # Lean development ISO — 2026-11-24
 
@@ -144,7 +144,7 @@ wallpaper. The normal account successfully authorized sudo. No applications
 were opened before measurement. After a 120-second settle, five samples at
 10-second intervals give **1.748 GiB installed and 353.2 MiB idle RAM**. The same
 VM, sampler and console overhead were used for Alpha 5. Raw samples and exact
-ISO identities are in [footprint.json](footprint.json).
+ISO identities are in [footprint.json](https://patx.gitman.io/erdos/footprint.json).
 
 Installed root used 1,876,951,040 bytes and EFI used
 311,296 bytes. Swap was unused, with no cached APT
@@ -290,7 +290,7 @@ fallback downloads successfully without installing packages.
 ## Alpha 3 baseline validation
 
 Alpha 3 uses labwc/Wayland. Alpha 2 remains available as the older Openbox/X11
-release. The current local image identity is recorded in [release.json](release.json);
+release. The current local image identity is recorded in [release.json](https://patx.gitman.io/erdos/release.json);
 Alpha 4 preparation reuses the tested Settings image without rebuilding.
 
 ## Live overview source checks
@@ -383,9 +383,9 @@ Compared with Beta 1, disk usage is 1,105,920 bytes higher and median RAM is
 1,290,240 bytes lower. These small differences include run-to-run variation;
 they do not isolate the effect of a particular component.
 
-[Raw results](footprint.json) retain every sample, exact ISO checksum, filesystem
+[Raw results](https://patx.gitman.io/erdos/footprint.json) retain every sample, exact ISO checksum, filesystem
 usage, service state and process inventory, including the older baselines.
-The Beta 2 digest matches [release.json](release.json); the measured ISO was not
+The Beta 2 digest matches [release.json](https://patx.gitman.io/erdos/release.json); the measured ISO was not
 rebuilt or modified. Physical GPU/driver/RAM configurations can change results.
 The X11 image was retained for the original comparison; old local ISOs and VM
 disks have since been removed under the latest-ISO-only storage policy. Raw
