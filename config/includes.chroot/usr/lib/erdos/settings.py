@@ -950,7 +950,7 @@ def system_information():
 
 
 def launch_maintenance(action):
-    if action not in ('update', 'upgrade', 'autopurge', 'clean'):
+    if action not in ('update', 'upgrade', 'autopurge', 'clean', 'setup-printing'):
         raise ValueError('Unknown maintenance action.')
     # Debian's terminal-emulator interface accepts -e followed by an argument vector.
     # No shell expansion, root GUI, password storage, or unattended -y option.

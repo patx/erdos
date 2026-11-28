@@ -1,22 +1,57 @@
 #!/bin/sh
 # SPDX-License-Identifier: MIT
-# Only explicit, interactive APT actions; never run automatically at login.
+# Only explicit, interactive system maintenance.
 set -u
-case "${1:-}" in
+action=${1:-}
+case "$action" in
     update) set -- apt-get update ;;
     upgrade) set -- apt-get upgrade ;;
     autopurge) set -- apt-get autoremove --purge ;;
     clean) set -- apt-get clean ;;
-    *) echo 'Usage: erdos-maintenance {update|upgrade|autopurge|clean}' >&2; exit 2 ;;
+    setup-printing) ;;
+    *) echo 'Usage: erdos-maintenance {update|upgrade|autopurge|clean|setup-printing}' >&2; exit 2 ;;
 esac
-printf 'ErdOS Software\n\n'
-printf 'Command:'; printf ' %s' "$@"; printf '\n\n'
+
+run_step() {
+    printf 'Command: sudo'; printf ' %s' "$@"; printf '\n\n'
+    sudo -- "$@"
+}
+
+if [ "$action" = setup-printing ]; then
+    printf 'ErdOS Printing\n\n'
+    printf 'Setup installs CUPS and grants your account printer administration access.\n\n'
+else
+    printf 'ErdOS Software\n\n'
+fi
 printf 'Review package changes before confirming. Ctrl+C cancels.\n\n'
 result=0
-sudo -- "$@" || result=$?
+if [ "$action" = setup-printing ]; then
+    account=$(id -un) &&
+        run_step apt update &&
+        run_step apt install --no-install-recommends cups &&
+        run_step adduser -- "$account" lpadmin &&
+        run_step systemctl enable --now cups.service || result=$?
+else
+    run_step "$@" || result=$?
+fi
 printf '\n'
 if [ "$result" -eq 0 ]; then
     printf 'Finished successfully.\n'
+    if [ "$action" = setup-printing ]; then
+        printf 'Log out and back in to use your printer administration access.\n'
+        if [ -t 0 ] && [ -n "${LABWC_PID:-}" ]; then
+            printf '\nSave your work before logging out.\n'
+            printf 'Press Enter to log out now, or type later and press Enter to stay signed in: '
+            if IFS= read -r answer && [ -z "$answer" ]; then
+                if ! labwc --exit; then
+                    printf '\nCould not end the desktop session. Use Logout from the desktop menu.\n'
+                    printf 'Press Enter to close this terminal.'
+                    IFS= read -r _ || :
+                fi
+            fi
+            exit 0
+        fi
+    fi
 else
     printf 'Command failed or was cancelled (exit %s). Read the output above.\n' "$result"
 fi

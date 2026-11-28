@@ -94,7 +94,7 @@ class Settings(Gtk.Application):
         self.trial_process = None
         self.trial_timer = None
         self.window.add(outer)
-        for name in ('Appearance', 'Default Programs', 'Touchpad', 'Mouse', 'Keyboard', 'Menu', 'Startup Applications', 'Gestures', 'Displays', 'Sound', 'Network', 'Bluetooth', 'Power', 'Date & Time', 'Software', 'About'):
+        for name in ('Appearance', 'Default Programs', 'Touchpad', 'Mouse', 'Keyboard', 'Menu', 'Startup Applications', 'Gestures', 'Displays', 'Sound', 'Network', 'Bluetooth', 'Printing', 'Power', 'Date & Time', 'Software', 'About'):
             page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
             page.set_border_width(28)
             title = Gtk.Label(xalign=0); title.set_markup(f'<span size="x-large" weight="bold">{GLib.markup_escape_text(name)}</span>')
@@ -1200,6 +1200,64 @@ class Settings(Gtk.Application):
                 self.button(box, action + ' now', apply)
 
         self.load_section(actions, capabilities, controls)
+
+    def printing(self, page):
+        status = self.note(page, 'Checking printing support…')
+        setup = self.button(page, 'Set up printing', lambda: backend.launch_maintenance('setup-printing'))
+
+        def open_cups():
+            if not Gio.AppInfo.launch_default_for_uri('http://localhost:631/', None):
+                raise RuntimeError('Could not open CUPS in your default browser.')
+
+        browser = self.button(page, 'Open CUPS in browser', open_cups)
+        setup.set_no_show_all(True)
+        browser.set_no_show_all(True)
+
+        client = Gio.SocketClient(enable_proxy=False, timeout=1)
+        timer = None
+        checking = False
+
+        def checked(client, result):
+            nonlocal checking
+            checking = False
+            try:
+                client.connect_to_host_finish(result).close(None)
+            except GLib.Error:
+                ready = False
+            else:
+                ready = True
+            if not page.get_mapped():
+                return
+            setup.set_visible(not ready)
+            browser.set_visible(ready)
+            if ready:
+                status.set_text(
+                    'Add printers and manage print jobs in CUPS. If you just set up printing, '
+                    'log out and back in to use your printer administration access.'
+                )
+            else:
+                status.set_text('The local print service is unavailable. Set up printing in the system terminal.')
+
+        def refresh():
+            nonlocal checking
+            if not checking:
+                checking = True
+                client.connect_to_host_async('localhost', 631, None, checked)
+            return GLib.SOURCE_CONTINUE
+
+        def start_refresh(*_):
+            nonlocal timer
+            refresh()
+            timer = GLib.timeout_add_seconds(3, refresh)
+
+        def stop_refresh(*_):
+            nonlocal timer
+            if timer is not None:
+                GLib.source_remove(timer)
+                timer = None
+
+        page.connect('map', start_refresh)
+        page.connect('unmap', stop_refresh)
 
     def software(self, page):
         self.note(page, 'Maintenance opens in the system terminal and asks for your administrator password. Review proposed package changes before confirming.')

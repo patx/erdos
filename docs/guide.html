@@ -69,7 +69,7 @@
           <li><strong>No screen lock or idle daemon.</strong> There is no automatic inactivity lock, and closing the lid or suspending does not lock your session. Anyone with physical access can use it after wake. Debian’s logind handles power events; Settings → Power reports battery information rather than configuring separate plugged-in/battery policies. <a href="https://patx.gitman.io/erdos/guide.html#optional-locking">Add locking and idle handling</a>.</li>
           <li><strong>No panel, dock or notification history.</strong> Use the menu for clock/battery, Settings for status controls and Super for the window overview. <a href="https://patx.gitman.io/erdos/guide.html#panels">Add an optional panel</a> if you want an always-visible taskbar or tray; a panel does not itself add a notification daemon.</li>
           <li><strong>No graphical login screen.</strong> Log in at the console on tty1; Logout returns there. <a href="https://patx.gitman.io/erdos/guide.html#login-screen">Add a graphical greeter</a> if preferred.</li>
-          <li><strong>A small application set.</strong> No office suite, printer setup utility or SSH server is preinstalled. There is no desktop password keyring, and removable-drive automounting runs only while PCManFM is open. <a href="https://patx.gitman.io/erdos/guide.html#extra-apps">Install the apps and services you need</a>.</li>
+          <li><strong>A small application set.</strong> No office suite or SSH server is preinstalled. Printing support is available on demand. There is no desktop password keyring, and removable-drive automounting runs only while PCManFM is open. <a href="https://patx.gitman.io/erdos/guide.html#extra-apps">Install the apps and services you need</a>.</li>
           <li><strong>Trimmed documentation and translations.</strong> Most packaged manuals and non-English translations are excluded. <a href="https://patx.gitman.io/erdos/guide.html#troubleshooting">Restore them</a> before reinstalling the relevant packages.</li>
           <li><strong>Hardware and compatibility limits.</strong> This amd64 beta requires Secure Boot to be disabled. Common firmware is included, but some devices need additional drivers. XWayland runs many legacy apps; X11-only panels, global input tools and screen lockers cannot provide equivalent control over the whole Wayland desktop. Live USB changes are not persistent, and Windows/macOS dual-boot setups have not been validated.</li>
         </ul>
@@ -159,12 +159,12 @@ sudo apt install --no-install-recommends mousepad</code></pre>
       <section id="printing"><h2>Printing</h2>
         <p>Firefox’s <strong>Save to PDF</strong> option works without extra packages: press Ctrl+P and choose Save to PDF. Sending a job to a physical printer needs optional printing support. ErdOS includes the CUPS client library, but no CUPS service or printer-setup app by default.</p>
         <h3>Set up a printer</h3>
-        <p>On an installed system with internet access, install CUPS and enable its service:</p>
+        <p>On an installed system with internet access, open <strong>Settings → Printing</strong> and choose <strong>Set up printing</strong>. This installs and enables CUPS, adds your account to the <code>lpadmin</code> group and offers to log you out. Sign back in, then click <strong>Open CUPS in browser</strong>. To set up from a terminal directly, run:</p>
         <pre><code>sudo apt update
 sudo apt install --no-install-recommends cups
-sudo systemctl enable --now cups.service
-sudo adduser "$USER" lpadmin</code></pre>
-        <p>Log out completely and back in for the group change. Open <a href="http://localhost:631/">http://localhost:631/</a> in Firefox, choose Administration → Add Printer, and sign in with your normal login name and password when asked. Select your printer, give it a name, and choose the appropriate model or driverless option. Print a test page from its Maintenance menu before trying an application.</p>
+sudo adduser "$USER" lpadmin
+sudo systemctl enable --now cups.service</code></pre>
+        <p>After adding your account to <code>lpadmin</code>, log out completely and back in. In <a href="http://localhost:631/">CUPS</a>, choose Administration → Add Printer and sign in with your normal login name and password when asked. Select your printer, give it a name, and choose the appropriate model or driverless option. Print a test page from its Maintenance menu before trying an application.</p>
         <p>For a modern network printer, connect it to the same network as the laptop. Prefer <strong>IPP Everywhere / driverless</strong> when supported. If discovery does not find it, use the printer’s documented IPP/IPPS address; the hostname and queue path vary by model. There is no need to enable printer sharing just to print from this computer.</p>
         <h3>USB and older printers</h3>
         <p>For a USB printer that supports IPP over USB, also install:</p>

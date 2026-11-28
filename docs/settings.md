@@ -1,7 +1,7 @@
 # ErdOS Settings
 
 Open **Settings** from the desktop menu or **Super + I**. The current checkout
-has sixteen sections in one Python/GTK window. Native theme colors, grouped
+has seventeen sections in one Python/GTK window. Native theme colors, grouped
 controls, readable labels, keyboard focus, inline validation and Apply/Revert
 feedback are shared across the app. No extra UI libraries, packages or background
 services are added.
@@ -42,6 +42,7 @@ a rejected mode from a successful restore, and the display list refreshes afterw
 | Sound | PipeWire input/output devices, volume and mute |
 | Network | Wi-Fi/internet state, saved profiles, PEAP enterprise Wi-Fi, IPv4 and DNS |
 | Bluetooth | Scan, pair, connect/disconnect, trust and forget |
+| Printing | Set up optional CUPS printing support in a terminal and open printer administration in your default browser |
 | Power | Battery status, capacity, health and cycles, plus suspend and hibernate where available |
 | Date & Time | Current time, time zone and synchronization status |
 | Software | Interactive APT update, upgrade, unused-package purge and cache cleaning |
@@ -55,6 +56,13 @@ PCManFM and Twig. Install alternatives, refresh the app list and apply a selecti
 Browser, directory and text choices use desktop MIME associations; terminal
 selection is per user, with the system terminal as fallback. Other file types
 keep their associations. Existing open apps are unaffected.
+
+## Printing
+
+Choose **Set up printing** to install and enable CUPS in the system terminal.
+Setup adds your account to the `lpadmin` group and offers to log you out when
+it finishes. After you sign back in, click **Open CUPS in browser** to add
+printers and manage jobs.
 
 ## Backgrounds and appearance
 
