@@ -31,7 +31,7 @@ class Page(HTMLParser):
             if attrs['id'] in self.ids:
                 raise ValueError(f'{self.path.name}: duplicate id {attrs["id"]}')
             self.ids.add(attrs['id'])
-        if tag == 'img' and not attrs.get('alt'):
+        if tag == 'img' and 'alt' not in attrs:
             raise ValueError(f'{self.path.name}: image needs alternative text')
         for key in ('href', 'src', 'data-image'):
             if attrs.get(key):
