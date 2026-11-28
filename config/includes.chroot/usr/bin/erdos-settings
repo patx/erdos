@@ -637,6 +637,34 @@ class Settings(Gtk.Application):
 
         self.button(page, 'Apply keyboard layouts', apply)
 
+    def keyboard_backlight(self, page):
+        for device in sorted(Path('/sys/class/leds').glob('*::kbd_backlight')):
+            try:
+                maximum = int((device / 'max_brightness').read_text())
+                current = int((device / 'brightness').read_text())
+            except (OSError, ValueError):
+                continue
+            if maximum > 0 and 0 <= current <= maximum:
+                break
+        else:
+            return
+
+        if maximum <= 2:
+            labels = ('Off', 'On') if maximum == 1 else ('Off', 'Low', 'High')
+            level = self.choice(page, 'Keyboard backlight', enumerate(labels), current)
+            selected = level.get_active_id
+        else:
+            level = self.scale(page, 'Keyboard backlight level', 0, maximum, current)
+            selected = level.get_value_as_int
+
+        def apply():
+            value = str(selected())
+            return lambda: backend.run(
+                'brightnessctl', '-q', '-c', 'leds', '-d', device.name, '--min-value=0', 'set', value
+            )
+
+        self.button(page, 'Apply keyboard backlight', apply)
+
     def keyboard(self, page):
         self.keyboard_layout_controls(page)
         rate, delay, mapping = backend.keyboard_behavior()
@@ -647,6 +675,7 @@ class Settings(Gtk.Application):
             values = repeats.get_value_as_int(), wait.get_value_as_int(), caps.get_active_id()
             return lambda: backend.set_keyboard_behavior(*values)
         self.button(page, 'Apply keyboard behavior', apply_behavior)
+        self.keyboard_backlight(page)
         prefs = backend.preferences()
         dynamic = self.toggle(page, 'Dynamic workspaces', prefs['dynamic_workspaces'])
         count = self.scale(page, 'Fixed workspace count', 1,32,prefs['workspace_count'])

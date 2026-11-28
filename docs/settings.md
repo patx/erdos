@@ -34,7 +34,7 @@ a rejected mode from a successful restore, and the display list refreshes afterw
 | Default Programs | Terminal, browser, file manager and text editor |
 | Touchpad | Natural scrolling, tapping, clickfinger right-click, pointer speed, disable while typing/on external mouse |
 | Mouse | Pointer and scroll speed, acceleration, natural scrolling and left-handed buttons |
-| Keyboard | Layouts, repeat rate/delay, Caps Lock mapping, dynamic/fixed workspaces, Super-key overview, shortcuts and custom commands |
+| Keyboard | Layouts, repeat rate/delay, Caps Lock mapping, keyboard backlight where available, dynamic/fixed workspaces, Super-key overview, shortcuts and custom commands |
 | Menu | Edit/reorder menu entries; enable three-finger and Super + right-click triggers |
 | Startup Applications | Edit labwc login commands with syntax validation and backup |
 | Gestures | Swipe distance and configurable three/four-finger actions |
