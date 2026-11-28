@@ -4,20 +4,53 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Try and install ErdOS, learn its keyboard shortcuts, and troubleshoot the Debian labwc/Wayland desktop.">
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#171d25">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://patx.gitman.io/erdos/assets/ https://patx.gitman.io/erdos/install-disk.png https://patx.gitman.io/erdos/install-confirmation.png; script-src 'self'; style-src 'self' https://patx.gitman.io/erdos/assets/; object-src 'none'; base-uri 'self'">
   <title>User guide — ErdOS</title>
   <link rel="icon" href="https://patx.gitman.io/erdos/assets/favicon.png?v=c4600b5be396" type="image/png">
-  <link rel="stylesheet" href="https://patx.gitman.io/erdos/assets/style.css?v=blue-wordmark">
+  <link rel="stylesheet" href="https://patx.gitman.io/erdos/assets/style.css?v=shared-layout">
 </head>
-<body>
+<body class="site-page">
   <a class="skip-link" href="https://patx.gitman.io/erdos/guide.html#content">Skip to content</a>
-  <header class="site-header wrap"><a class="brand" href="https://patx.gitman.io/erdos/" aria-label="ErdOS home"><span class="wordmark"><img src="https://patx.gitman.io/erdos/assets/erdos-logo.png?v=c4600b5be396" alt="ErdOS" width="1265" height="278"></span></a><nav aria-label="Main navigation"><a href="https://patx.gitman.io/erdos/guide.html" aria-current="page">User Guide</a><a href="https://github.com/patx/erdos">Github</a></nav></header>
-  <main class="wrap guide-layout" id="content">
-    <nav class="guide-nav" aria-label="On this page"><div><a href="https://patx.gitman.io/erdos/guide.html#limitations">Defaults and limitations</a><a href="https://patx.gitman.io/erdos/guide.html#try">Try the live desktop</a><a href="https://patx.gitman.io/erdos/guide.html#verify">Verify a download</a><a href="https://patx.gitman.io/erdos/guide.html#install">Install to disk</a><a href="https://patx.gitman.io/erdos/guide.html#desktop">Desktop and apps</a><a href="https://patx.gitman.io/erdos/guide.html#footprint">Disk and RAM usage</a><a href="https://patx.gitman.io/erdos/guide.html#settings">Settings</a><a href="https://patx.gitman.io/erdos/updates.md">System updates</a><a href="https://patx.gitman.io/erdos/guide.html#extra-apps">Install more apps</a><a href="https://patx.gitman.io/erdos/guide.html#panels">Add a panel</a><a href="https://patx.gitman.io/erdos/guide.html#optional-locking">Optional locking</a><a href="https://patx.gitman.io/erdos/guide.html#login-screen">Add a login screen</a><a href="https://patx.gitman.io/erdos/guide.html#defaults">Default programs</a><a href="https://patx.gitman.io/erdos/guide.html#background">Backgrounds</a><a href="https://patx.gitman.io/erdos/guide.html#menu">Customize menu</a><a href="https://patx.gitman.io/erdos/guide.html#shortcuts">Keyboard shortcuts</a><a href="https://patx.gitman.io/erdos/guide.html#gestures">Touchpad gestures</a><a href="https://patx.gitman.io/erdos/guide.html#monitors">Multiple monitors</a><a href="https://patx.gitman.io/erdos/guide.html#troubleshooting">Troubleshooting</a></div></nav>
-    <article class="guide-content">
-      <h1>User guide</h1>
-      <p class="intro">ErdOS 1 Beta 2 adds signed component updates, expanded Settings controls and version information in About. It keeps the window-only overview, menu clock and battery, and on-demand PCManFM. This is a beta prerelease: start in a VM and keep backups before installing on real disks. The image identifies itself as <code>1.0.0-beta.2</code>.</p>
+  <header class="header-band">
+    <div class="site-header shell">
+      <a class="brand" href="https://patx.gitman.io/erdos/" aria-label="ErdOS home"><span class="wordmark"><img src="https://patx.gitman.io/erdos/assets/erdos-logo.png?v=c4600b5be396" alt="ErdOS" width="1265" height="278"></span></a>
+      <nav aria-label="Main navigation"><a href="https://patx.gitman.io/erdos/guide.html" aria-current="page">User guide</a><a href="https://patx.gitman.io/erdos/#download">Download</a><a href="https://github.com/patx/erdos">GitHub</a></nav>
+    </div>
+  </header>
+  <main id="content">
+    <div class="guide-intro">
+      <div class="shell">
+        <h1>User guide</h1>
+        <p>ErdOS 1 Beta 2 adds signed component updates, expanded Settings controls and version information in About. It keeps the window-only overview, menu clock and battery, and on-demand PCManFM. This is a beta prerelease: start in a VM and keep backups before installing on real disks. The image identifies itself as <code>1.0.0-beta.2</code>.</p>
+      </div>
+    </div>
+    <div class="guide-layout shell">
+      <nav class="guide-nav" aria-labelledby="guide-nav-title">
+        <h2 id="guide-nav-title">On this page</h2>
+        <div>
+          <a href="https://patx.gitman.io/erdos/guide.html#limitations">Defaults and limitations</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#try">Try the live desktop</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#verify">Verify a download</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#install">Install to disk</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#desktop">Desktop and apps</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#footprint">Disk and RAM usage</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#settings">Settings</a>
+          <a href="https://patx.gitman.io/erdos/updates.md">System updates</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#extra-apps">Install more apps</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#panels">Add a panel</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#optional-locking">Optional locking</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#login-screen">Add a login screen</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#defaults">Default programs</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#background">Backgrounds</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#menu">Customize menu</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#shortcuts">Keyboard shortcuts</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#gestures">Touchpad gestures</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#monitors">Multiple monitors</a>
+          <a href="https://patx.gitman.io/erdos/guide.html#troubleshooting">Troubleshooting</a>
+        </div>
+      </nav>
+      <article class="guide-content">
       <section id="limitations"><h2>What the minimal install leaves out</h2>
         <p>ErdOS provides a small desktop, not a full desktop environment. These are deliberate defaults you can change:</p>
         <ul>
@@ -234,8 +267,9 @@ sudo systemctl set-default multi-user.target</code></pre>
         <p>For a reproducible bug, include the ISO checksum, boot mode, live/installed status, hardware or VM model and steps in a <a href="https://github.com/patx/erdos/issues">GitHub issue</a>. Redact private information. <a href="https://patx.gitman.io/erdos/testing.md">Validation and known limitations</a> describe the test coverage.</p>
       </section>
       <a class="back-link" href="https://patx.gitman.io/erdos/">← Back to ErdOS</a>
-    </article>
-</main>
-  <footer class="site-footer wrap"><p>ErdOS · An independent project built on Debian.</p><nav aria-label="Footer navigation"><a href="https://github.com/patx/erdos/blob/main/LICENSE">Licenses</a><a href="https://github.com/patx/erdos/issues">Issues</a><a href="https://patx.gitman.io/erdos/building.md">Build from source</a></nav></footer>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer shell"><p>ErdOS · An independent project built on Debian.</p><nav aria-label="Footer navigation"><a href="https://github.com/patx/erdos/blob/main/LICENSE">Licenses</a><a href="https://github.com/patx/erdos/issues">Issues</a><a href="https://patx.gitman.io/erdos/building.md">Build from source</a></nav></footer>
 </body>
 </html>

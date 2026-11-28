@@ -1,19 +1,9 @@
 /* ErdOS home */
-.home { --muted: #b4bdc8; --line: #303944; background: #151a21; }
-.home .shell { width: min(100% - 80px, 1200px); margin-inline: auto; }
-.home .header-band, .home .hero-band { background-color: #171d25; }
-.home .site-header { padding-block: 24px; }
-.home .site-header nav { gap: 12px 26px; }
-.home .site-header nav a { color: #d9e0e8; font-weight: 600; }
-.home .site-header a, .home .site-footer a { text-decoration: none; }
-.home .site-header nav a:hover, .home .site-footer a:hover { color: #fff; }
-.home h1, .home h2, .home h3 { font-family: Arial, Helvetica, sans-serif; }
-.home h1 { margin: 0; font-size: clamp(2.75rem, 4.8vw, 4.25rem); line-height: 1; letter-spacing: -.06em; text-wrap: balance; }
-.home h2 { margin: 0 0 24px; font-size: clamp(1.75rem, 3.5vw, 2.5rem); line-height: 1.1; letter-spacing: -.04em; }
 .home main > section { margin-bottom: 0; padding-block: 40px; border-bottom: 1px solid var(--line); }
 
 .home .hero-band {
   padding-block: clamp(56px, 8vw, 120px) clamp(36px, 5vw, 72px);
+  background-color: var(--band);
   background-image: radial-gradient(ellipse 72% 48% at 74% 48%, #283747, transparent);
 }
 .home .hero-band .shell { width: min(100% - clamp(36px, 6vw, 80px), 1440px); }
@@ -170,22 +160,16 @@ html:has(.screenshot-dialog[open]) { overflow: hidden; }
   font-size: .8125rem;
 }
 .app-controls-reference { font-size: .8125rem; }
-.home .site-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px 24px; margin-top: 0; padding-block: 22px; border-top: 0; }
-.home .site-footer p { margin: 0; }
+.home .site-footer { border-top: 0; }
 
 @media (max-width: 960px) {
   .app-list { --app-columns: 3; }
 }
 @media (max-width: 820px) {
-  .home .shell { width: calc(100% - 48px); }
   .hero-stage { grid-template-columns: 1fr; }
   .feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 640px) {
-  .home .shell { width: calc(100% - 36px); }
-  .home .site-header { padding-block: 18px; gap: 12px; }
-  .home .site-header .wordmark { width: 110px; }
-  .home .site-header nav { justify-content: flex-end; gap: 4px 12px; }
   .home main > section { padding-block: 32px; }
   .release-links { font-size: .875rem; gap: 12px 16px; }
   .app-list { --app-columns: 2; }
