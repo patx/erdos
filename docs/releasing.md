@@ -144,8 +144,9 @@ Node.js, npm, frontend build step, analytics or external font dependency.
 
 The repository is mirrored on GitHub and Gitman. Publish the contents of `docs/`
 with Gitman Pages at <https://patx.gitman.io/erdos/>. Use full URLs under that
-prefix for published pages and assets. Review the rendered site on Gitman Pages,
-where stylesheets, scripts, and images load from the same origin as the pages.
+prefix for published pages and assets. The Content Security Policy allows those
+resources on the GitHub Pages mirror at <https://patx.github.io/erdos/>. Review
+both sites after publishing a change to resource URLs or the policy.
 ISO downloads use Cloudflare R2 at <https://downloads.erd.sh/>. Release notes
 are on GitHub Releases. The user guide and download links work without JavaScript.
 Build details and checksums are available on the GitHub release page. Keep
